@@ -28,8 +28,8 @@ type LoginRequest struct {
 // @Produce json
 // @Param credentials body LoginRequest true "Login credentials"
 // @Success 200 {object} map[string]string
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest

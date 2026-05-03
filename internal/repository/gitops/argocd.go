@@ -94,34 +94,26 @@ func (r *repository) GetApplicationStatus(ctx context.Context, name string) (*en
 
 // SyncApplication triggers a manual sync of an ArgoCD Application
 func (r *repository) SyncApplication(ctx context.Context, name string) error {
-	// First, get the current application to retrieve the resourceVersion
+	// First, get the current application
 	app, err := r.client.DynamicClient.Resource(applicationGVR).Namespace(r.argocdNS).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	// Create an operation to sync the application
-	operation := map[string]interface{}{
-		"apiVersion": "argoproj.io/v1alpha1",
-		"kind":       "Application",
-		"metadata": map[string]interface{}{
-			"name":              name,
-			"namespace":         r.argocdNS,
-			"resourceVersion":   app.GetResourceVersion(),
-		},
-		"operation": map[string]interface{}{
-			"sync": map[string]interface{}{
-				"syncStrategy": map[string]interface{}{
-					"apply": map[string]interface{}{},
-				},
+	// Add the operation to trigger a sync
+	err = unstructured.SetNestedField(app.Object, map[string]interface{}{
+		"sync": map[string]interface{}{
+			"syncStrategy": map[string]interface{}{
+				"apply": map[string]interface{}{},
 			},
 		},
+	}, "operation")
+	if err != nil {
+		return err
 	}
 
-	patch := &unstructured.Unstructured{Object: operation}
-
-	// Use JSON patch to add the operation
-	_, err = r.client.DynamicClient.Resource(applicationGVR).Namespace(r.argocdNS).Update(ctx, patch, metav1.UpdateOptions{})
+	// Update the application with the operation
+	_, err = r.client.DynamicClient.Resource(applicationGVR).Namespace(r.argocdNS).Update(ctx, app, metav1.UpdateOptions{})
 	return err
 }
 

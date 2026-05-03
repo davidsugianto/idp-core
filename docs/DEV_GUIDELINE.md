@@ -824,16 +824,16 @@ make dev-status
 ## Accessing ArgoCD UI (Optional)
 
 ```bash
-# Port-forward ArgoCD server
+# Port-forward ArgoCD server (uses port 8090 to avoid conflict with app on 8080)
 make dev-k8s-argocd-ui
 
 # Or manually:
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+kubectl port-forward svc/argocd-server -n argocd 8090:443
 
 # Get initial admin password
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 
-# Open https://localhost:8080
+# Open https://localhost:8090
 # Username: admin
 ```
 
@@ -858,3 +858,4 @@ Tests automatically skip if dependencies are not available:
 - Tests skip with `-short` flag
 - Tests skip if kubeconfig not found
 - Tests skip if ArgoCD not installed
+

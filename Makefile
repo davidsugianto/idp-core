@@ -232,11 +232,11 @@ dev-k8s-teardown:
 
 ## dev-k8s-argocd-ui: Port-forward ArgoCD UI
 dev-k8s-argocd-ui:
-	@echo "==> Port-forwarding ArgoCD UI to https://localhost:8080"
+	@echo "==> Port-forwarding ArgoCD UI to https://localhost:8090"
 	@echo "==> Getting initial admin password..."
 	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null | base64 -d && echo ""
 	@echo ""
-	kubectl port-forward svc/argocd-server -n argocd 8080:443
+	kubectl port-forward svc/argocd-server -n argocd 8090:443
 
 # =============================================================================
 # Development Environment (Full Setup)
