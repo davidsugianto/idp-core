@@ -1,0 +1,46 @@
+#!/bin/bash
+
+echo "Running pre-commit checks..."
+
+# Run go fmt
+echo "==> Running go fmt..."
+gofmt -l -w .
+if [ $? -ne 0 ]; then
+    echo "go fmt failed"
+    exit 1
+fi
+
+# Run goimports
+echo "==> Running goimports..."
+goimports -l -w -local github.com/davidsugianto/idp-core .
+if [ $? -ne 0 ]; then
+    echo "goimports failed"
+    exit 1
+fi
+
+# Run go mod tidy
+echo "==> Running go mod tidy..."
+go mod tidy
+if [ $? -ne 0 ]; then
+    echo "go mod tidy failed"
+    exit 1
+fi
+
+# Run golangci-lint
+echo "==> Running golangci-lint..."
+golangci-lint run ./...
+if [ $? -ne 0 ]; then
+    echo "golangci-lint failed"
+    exit 1
+fi
+
+# Run tests
+echo "==> Running tests..."
+go test -short ./...
+if [ $? -ne 0 ]; then
+    echo "tests failed"
+    exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+exit 0

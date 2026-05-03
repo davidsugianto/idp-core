@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-core-config
+  namespace: idp-core
+  labels:
+    app.kubernetes.io/name: idp-core
+    app.kubernetes.io/component: api-server
+data:
+  # Server configuration
+  SERVER_PORT: "8080"
+
+  # Database configuration (non-sensitive)
+  DB_HOST: "postgres.idp-core.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "idp_core"
+  DB_SSLMODE: "disable"
+
+  # Kubernetes configuration
+  K8S_IN_CLUSTER: "true"
+
+  # ArgoCD configuration
+  ARGOCD_NAMESPACE: "argocd"
+  ARGOCD_BASE_URL: "http://argocd-server.argocd.svc.cluster.local:80"

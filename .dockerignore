@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.air.toml
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+Makefile
+
+# Test files
+*_test.go
+testdata/
+coverage.out
+coverage.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+bin/
+tmp/
+
+# Dependencies
+vendor/
+
+# Environment files
+.env
+.env.*
+!.env.example
