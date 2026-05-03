@@ -1,12 +1,13 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Build output
+bin/
+dist/
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,17 +17,64 @@
 coverage.*
 *.coverprofile
 profile.cov
+coverage.html
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+vendor/
 
 # Go workspace file
 go.work
 go.work.sum
 
-# env file
+# Environment files
 .env
+.env.local
+.env.*.local
+*.env
+
+# Local config overrides
+configs/config.local.yaml
+configs/config.*.local.yaml
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Generated swagger docs (uncomment if you don't want to commit)
+# docs/docs.go
+# docs/swagger.json
+# docs/swagger.yaml
+
+# macOS
+.DS_Store
+
+# Air hot-reload temp files
+tmp/
+.air.toml.tmp
+
+# Log files
+*.log
+logs/
+
+# Debug files
+debug
+__debug_bin*
+
+# Kubernetes credentials
+*.kubeconfig
+kubeconfig
+
+# TLS certificates
+*.pem
+*.key
+*.crt
+
+# Temporary files
+tmp/
+temp/
+
+# Unused files directory (optional - remove from tracking)
+# unused-files/
