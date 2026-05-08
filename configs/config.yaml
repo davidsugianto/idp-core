@@ -2,7 +2,7 @@ server:
   port: 8989
 
 database:
-  host: postgres
+  host: localhost      # Use localhost for local dev, Docker overrides with DB_HOST
   port: 5432
   user: postgres
   password: postgres
@@ -10,20 +10,26 @@ database:
   sslmode: disable
 
 auth:
-  jwt_secret: "change-me-in-production"
+  jwt_secret: "dev-secret-key-change-in-production"
+  jwt_expiry: "24h"
 
 cors:
   allowed_origins:
     - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "http://localhost:8989"
   allowed_methods:
     - "GET"
     - "POST"
     - "PUT"
     - "DELETE"
+    - "PATCH"
+    - "OPTIONS"
   allowed_headers:
     - "Content-Type"
     - "Authorization"
     - "X-Request-ID"
+    - "X-API-Key"
   allow_credentials: true
 
 kubernetes:
@@ -31,5 +37,7 @@ kubernetes:
   kubeconfig_path: "~/.kube/config"
 
 argocd:
-  base_url: "https://argocd.example.com"
+  base_url: "http://argocd-server.argocd.svc.cluster.local:80"
+  namespace: "argocd"
   token: ""
+

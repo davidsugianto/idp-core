@@ -14,6 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/davidsugianto/idp-core/docs/swagger" // swagger docs
 )
 
 type Server struct {
@@ -44,22 +46,34 @@ func New(deps Dependencies) *Server {
 	}
 }
 
-func (s *Server) v1Endpoint(r *gin.Engine) {
-	g := r.Group("/v1")
-	g.Use(gin.Recovery(), middleware.RequestID(), middleware.Logger(s.logger))
+func (s *Server) setupPublicRoutes(r *gin.Engine) {
+	// Swagger documentation endpoint (public)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Swagger documentation endpoint
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Health check (public)
+	r.GET("/ping", s.handler.Ping)
+	r.GET("/health", s.handler.Ping)
+	r.GET("/ready", s.handler.Ping)
 
-	// health check (public)
-	g.GET("/ping", s.handler.Ping)
+	// Metrics endpoint
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// auth routes (public)
-	auth := g.Group("/auth")
+	// Auth routes (public)
+	auth := r.Group("/auth")
 	auth.POST("/login", s.authHandler.Login)
 
-	// environment routes (protected)
-	envs := g.Group("/environments")
+	// Admission webhook endpoint (public)
+	admission := r.Group("/admission")
+	admission.POST("/validate", s.webhookHandler.Validate)
+}
+
+func (s *Server) setupAPIRoutes(r *gin.Engine) {
+	// API v1 routes (protected)
+	v1 := r.Group("/v1")
+	v1.Use(gin.Recovery(), middleware.RequestID(), middleware.Logger(s.logger))
+
+	// Environment routes (protected with JWT)
+	envs := v1.Group("/environments")
 	envs.Use(middleware.JWT(&s.config.Auth))
 	envs.GET("", s.handler.ListEnvironments)
 	envs.GET("/:id", s.handler.GetEnvironment)
@@ -70,13 +84,6 @@ func (s *Server) v1Endpoint(r *gin.Engine) {
 	envs.POST("", s.handler.CreateEnvironment)
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
-
-	// Metrics endpoint
-	g.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
-	// Admission webhook endpoint
-	admission := g.Group("/admission")
-	admission.POST("/validate", s.webhookHandler.Validate)
 }
 
 func (s *Server) Run(port string) error {
@@ -90,7 +97,9 @@ func (s *Server) Run(port string) error {
 	}
 	r.Use(cors.New(corsConfig))
 
-	s.v1Endpoint(r)
+	// Setup routes
+	s.setupPublicRoutes(r)
+	s.setupAPIRoutes(r)
 
 	s.Addr = port
 	s.Handler = r
