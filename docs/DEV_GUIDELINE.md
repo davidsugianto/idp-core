@@ -241,6 +241,8 @@ TIMEOUT=900 make dev-k8s-setup
 
 ## Testing
 
+For detailed test documentation, see [TEST.md](./TEST.md).
+
 ### Test Structure
 
 ```
@@ -257,6 +259,11 @@ internal/
     ├── environment_repository.go
     ├── provisioner_repository.go
     └── gitops_repository.go
+tests/
+├── e2e/
+│   └── e2e_test.go                      # End-to-end tests
+└── contract/
+    └── openapi_test.go                  # OpenAPI contract tests
 ```
 
 ### Test Categories
@@ -267,6 +274,8 @@ internal/
 | PostgreSQL      | `make test-db`              | `make dev-db-up`     |
 | Kubernetes      | `make test-k8s`             | `make dev-k8s-setup` |
 | ArgoCD          | `make test-argocd`          | `make dev-k8s-setup` |
+| E2E Tests       | `make test-e2e`             | `make dev-k8s-setup` |
+| Contract Tests  | `make test-contract`        | `make swagger-gen`   |
 | All Integration | `make test-all-integration` | `make dev-setup`     |
 
 ### Unit Tests
@@ -503,7 +512,7 @@ All configuration can be overridden via environment variables:
 
 ```bash
 # Server
-SERVER_PORT=8080
+SERVER_PORT=8989
 
 # Database
 DB_HOST=localhost
@@ -538,7 +547,7 @@ Default configuration in `configs/config.yaml`:
 
 ```yaml
 server:
-  port: 8080
+  port: 8989
 
 database:
   host: postgres      # Docker service name (use localhost for local dev)
@@ -658,6 +667,8 @@ make test-unit             # Unit tests only (fast, no deps)
 make test-db               # PostgreSQL tests (requires: dev-db-up)
 make test-k8s              # Kubernetes tests (requires: dev-k8s-setup)
 make test-argocd           # ArgoCD tests (requires: dev-k8s-setup)
+make test-e2e              # E2E tests (requires: dev-k8s-setup)
+make test-contract         # OpenAPI contract tests
 make test-all-integration  # All integration tests
 make test-coverage         # Generate coverage report
 
@@ -758,14 +769,14 @@ make db-migrate
 ### Port Conflicts
 
 ```bash
-# Check what's using port 8080
-lsof -i :8080
+# Check what's using port 8989
+lsof -i :8989
 
 # Kill process
 kill -9 <PID>
 
 # Or use different port
-SERVER_PORT=8081 make dev-run
+SERVER_PORT=8990 make dev-run
 ```
 
 ### Docker Issues
@@ -824,7 +835,7 @@ make dev-status
 ## Accessing ArgoCD UI (Optional)
 
 ```bash
-# Port-forward ArgoCD server (uses port 8090 to avoid conflict with app on 8080)
+# Port-forward ArgoCD server (uses port 8090)
 make dev-k8s-argocd-ui
 
 # Or manually:

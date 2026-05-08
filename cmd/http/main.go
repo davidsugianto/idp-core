@@ -13,6 +13,23 @@ import (
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 )
 
+// @title IDP Core API
+// @version 1.0
+// @description Internal Developer Platform API for self-provisioning Kubernetes environments
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Platform Engineering Team
+// @contact.email platform@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8989
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
 func main() {
 	// Logger
 	logs := logger.NewWithConfig(logger.Config{

@@ -9,32 +9,93 @@ A foundational Internal Developer Platform (IDP) API built with Go. Provides sel
 - **Live Status**: Real-time workload status via Kubernetes informers
 - **Team Isolation**: Multi-tenant with team-scoped access control
 - **Policy Enforcement**: Admission webhook for resource validation
+- **JWT Authentication**: Token-based authentication with team context
 
 ## Architecture
 
+idp-core follows clean architecture with strict layer separation:
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        cmd/http                                  │
-│                    (Entry Point & Server)                        │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────────┐
-│                    internal/handler/http                         │
-│                    (HTTP Handlers / Controllers)                 │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────────┐
-│                    internal/usecase                              │
-│                       (Business Logic)                           │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────────┐
-│                   internal/repository                            │
-│                     (Data Access Layer)                          │
-├─────────────────────┬─────────────────────┬─────────────────────┤
-│      environment    │        k8s          │       argocd        │
-│  (Environment DB)   │  (Kubernetes API)   │   (ArgoCD API)      │
-└─────────────────────┴─────────────────────┴─────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              External Systems                                │
+│    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                   │
+│    │ PostgreSQL  │    │ Kubernetes  │    │   ArgoCD    │                   │
+│    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘                   │
+└───────────┼──────────────────┼──────────────────┼───────────────────────────┘
+            │                  │                  │
+            ▼                  ▼                  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Repository Layer                                     │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
+│  │   Environment    │  │   Provisioner    │  │     GitOps       │          │
+│  │   Repository     │  │   Repository     │  │   Repository     │          │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘          │
+└───────────┼────────────────────┼────────────────────┼──────────────────────┘
+            │                    │                    │
+            ▼                    ▼                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Use Case Layer                                     │
+│                    ┌─────────────────────────────┐                          │
+│                    │    Environment UseCase      │                          │
+│                    │  - CreateEnvironment        │                          │
+│                    │  - GetEnvironment           │                          │
+│                    │  - DeleteEnvironment        │                          │
+│                    │  - TriggerSync              │                          │
+│                    │  - GetWorkloads             │                          │
+│                    └──────────────┬──────────────┘                          │
+└───────────────────────────────────┼─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Handler Layer                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │    Auth      │  │ Environment  │  │   Webhook    │  │    Health    │    │
+│  │   Handler    │  │   Handler    │  │   Handler    │  │   Handler    │    │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘    │
+│         │                 │                 │                 │             │
+│  ┌──────▼─────────────────▼─────────────────▼─────────────────▼───────┐    │
+│  │                    Middleware (JWT, Logging, RequestID)             │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Entry Point                                        │
+│                    ┌─────────────────────────────┐                          │
+│                    │        cmd/http/main.go     │                          │
+│                    │    (Server Setup & Wire)    │                          │
+│                    └─────────────────────────────┘                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layer Rules
+
+| Layer | Depends On | Responsibility |
+|-------|------------|----------------|
+| Handler | UseCase | HTTP request/response handling, validation |
+| UseCase | Repository | Business logic, orchestration |
+| Repository | External APIs | Data access, external integrations |
+
+### Dependency Injection
+
+Each layer uses a `Dependencies` struct for constructor injection:
+
+```go
+type Dependencies struct {
+    EnvironmentRepo environmentRepo.Repository
+    ProvisionerRepo provisionerRepo.Repository
+    GitOpsRepo      gitopsRepo.Repository
+}
+
+func New(deps Dependencies) Usecase { ... }
+```
+
+### Data Flow
+
+```
+Request → Middleware → Handler → UseCase → Repository → External System
+                                                      ↓
+Response ← Middleware ← Handler ← UseCase ← Repository ←
 ```
 
 ## Quick Start
@@ -42,7 +103,7 @@ A foundational Internal Developer Platform (IDP) API built with Go. Provides sel
 ### Prerequisites
 
 - Go 1.25+
-- Docker (for PostgreSQL)
+- Docker (for PostgreSQL and/or app)
 - kubectl (for Kubernetes integration tests)
 - kind (installed automatically via make)
 
@@ -52,8 +113,11 @@ A foundational Internal Developer Platform (IDP) API built with Go. Provides sel
 # Start PostgreSQL in Docker
 make dev-db-up
 
-# Run the application with hot-reload
+# Run the application with hot-reload (requires air)
 make dev-run
+
+# Or run app in Docker
+make dev-app-up
 
 # Run tests
 make test-unit
@@ -72,6 +136,9 @@ make dev-k8s-setup
 # Run Kubernetes integration tests
 make test-k8s
 make test-argocd
+
+# Access ArgoCD UI (https://localhost:8090)
+make dev-k8s-argocd-ui
 
 # Teardown
 make dev-k8s-teardown
@@ -97,6 +164,8 @@ make dev-teardown
 | GET | `/health` | Health check |
 | GET | `/ready` | Readiness check |
 | GET | `/metrics` | Prometheus metrics |
+| GET | `/swagger/*any` | Swagger UI |
+| POST | `/auth/login` | Login (get JWT token) |
 | POST | `/v1/environments` | Create environment |
 | GET | `/v1/environments` | List environments |
 | GET | `/v1/environments/:id` | Get environment |
@@ -106,7 +175,6 @@ make dev-teardown
 | GET | `/v1/environments/:id/gitops/status` | Get ArgoCD status |
 | GET | `/v1/environments/:id/workloads` | List workloads |
 | GET | `/v1/environments/:id/workloads/:name` | Get workload details |
-| POST | `/auth/login` | Login (get JWT token) |
 | POST | `/admission/validate` | Admission webhook |
 
 ## Configuration
@@ -115,10 +183,10 @@ Configuration is loaded from `configs/config.yaml` with environment variable ove
 
 ```yaml
 server:
-  port: 8080
+  port: 8989
 
 database:
-  host: localhost
+  host: postgres      # Docker service name (use localhost for local dev)
   port: 5432
   user: postgres
   password: postgres
@@ -134,7 +202,7 @@ kubernetes:
 
 argocd:
   base_url: "http://argocd-server.argocd.svc.cluster.local:80"
-  namespace: argocd
+  token: ""
 ```
 
 ### Environment Variables
@@ -142,15 +210,26 @@ argocd:
 All configuration can be overridden via environment variables:
 
 ```bash
-SERVER_PORT=8080
+# Server
+SERVER_PORT=8989
+
+# Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=secret
 DB_NAME=idp_core
-K8S_IN_CLUSTER=false
-ARGOCD_NAMESPACE=argocd
+
+# Auth
 JWT_SECRET=your-secret-key
+
+# Kubernetes
+K8S_IN_CLUSTER=false
+KUBECONFIG_PATH=~/.kube/config
+
+# ArgoCD
+ARGOCD_BASE_URL=http://argocd-server.argocd.svc.cluster.local:80
+ARGOCD_TOKEN=your-token
 ```
 
 ## Project Structure
@@ -167,8 +246,16 @@ idp-core/
 │       └── overlays/            # Environment overlays
 ├── dev/                         # Development scripts
 ├── docs/                        # Documentation
+│   ├── prd/                     # Product requirements
+│   │   ├── PRD.md               # PRD overview
+│   │   └── PRD_PHASE_1.md       # Phase 1 requirements
+│   ├── DEV_GUIDELINE.md         # Development guidelines
+│   ├── TEST.md                  # Test documentation
+│   ├── RBAC.md                  # RBAC permissions
+│   └── RUNBOOK.md               # On-call runbook
 ├── internal/
 │   ├── handler/http/            # HTTP handlers
+│   │   └── middleware/          # HTTP middleware (JWT, logging, etc.)
 │   ├── usecase/                 # Business logic
 │   ├── repository/              # Data access
 │   ├── model/                   # Domain models
@@ -179,8 +266,11 @@ idp-core/
 │       ├── argocd/              # ArgoCD client
 │       ├── validator/           # Request validation
 │       └── errors/              # Error types
+├── tests/
+│   ├── e2e/                     # End-to-end tests
+│   └── contract/                # OpenAPI contract tests
 ├── Makefile                     # Build automation
-├── Dockerfile                   # Container build
+├── Dockerfile                   # Multi-stage build
 └── docker-compose.yml           # Local services
 ```
 
@@ -191,18 +281,24 @@ idp-core/
 ```bash
 # Development
 make dev-db-up          # Start PostgreSQL
-make dev-run            # Run with hot-reload
+make dev-run            # Run with hot-reload (requires air)
+make dev-app-up         # Run app in Docker
 make dev-db-down        # Stop PostgreSQL
 
 # Kubernetes
 make dev-k8s-setup      # Setup Kind + ArgoCD
+make dev-k8s-setup-quick # Minimal ArgoCD setup
 make dev-k8s-status     # Check K8s status
+make dev-k8s-argocd-ui  # Port-forward ArgoCD UI
 make dev-k8s-teardown   # Delete cluster
 
 # Testing
 make test-unit          # Unit tests (fast)
 make test-db            # PostgreSQL tests
 make test-k8s           # Kubernetes tests
+make test-argocd        # ArgoCD tests
+make test-e2e           # E2E tests
+make test-contract      # OpenAPI contract tests
 make test-coverage      # Coverage report
 
 # Code Quality
@@ -230,6 +326,13 @@ make test-db
 make test-k8s
 make test-argocd
 
+# E2E tests (requires: make dev-k8s-setup)
+make test-e2e
+
+# Contract tests (requires: make swagger-gen)
+make swagger-gen
+make test-contract
+
 # All integration tests
 make test-all-integration
 ```
@@ -255,7 +358,7 @@ See [deployments/kubernetes/README.md](deployments/kubernetes/README.md) for det
 docker build -t idp-core:latest .
 
 # Run
-docker run -p 8080:8080 \
+docker run -p 8989:8989 \
   -e DB_HOST=postgres \
   -e DB_PASSWORD=secret \
   -e JWT_SECRET=your-secret \
@@ -264,10 +367,13 @@ docker run -p 8080:8080 \
 
 ## Documentation
 
-- [Development Guidelines](docs/DEV_GUIDELINE.md)
-- [RBAC Permissions](docs/RBAC.md)
-- [On-Call Runbook](docs/RUNBOOK.md)
-- [Development TODO List](docs/DEV_TODO_LIST_PHASE_1.md)
+- [Development Guidelines](docs/DEV_GUIDELINE.md) - Detailed development guide
+- [Test Documentation](docs/TEST.md) - Testing strategy and E2E tests
+- [RBAC Permissions](docs/RBAC.md) - Kubernetes RBAC requirements
+- [On-Call Runbook](docs/RUNBOOK.md) - Operational runbook
+- [PRD Overview](docs/prd/PRD.md) - Product requirements
+- [Phase 1 MVP PRD](docs/prd/PRD_PHASE_1.md) - Detailed Phase 1 requirements
+- [Development TODO List](docs/DEV_TODO_LIST_PHASE_1.md) - Phase 1 progress
 
 ## Tech Stack
 
@@ -278,10 +384,19 @@ docker run -p 8080:8080 \
 | ORM | GORM |
 | Database | PostgreSQL |
 | Kubernetes Client | client-go |
+| ArgoCD Client | REST API (v2.11+) |
 | Configuration | Viper |
 | Logging | zerolog |
 | OpenAPI | swaggo |
-| Testing | testify, gomock |
+| Testing | testify, gomock, testcontainers-go |
+
+## Ports
+
+| Service | Port |
+|---------|------|
+| API Server | 8989 |
+| ArgoCD UI | 8090 |
+| PostgreSQL | 5432 |
 
 ## License
 

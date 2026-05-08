@@ -1,0 +1,660 @@
+basePath: /
+definitions:
+  environment.ArgoStatus:
+    properties:
+      health_status:
+        type: string
+      message:
+        type: string
+      revision:
+        type: string
+      sync_status:
+        type: string
+    type: object
+  environment.CreateEnvironmentRequest:
+    properties:
+      cluster_name:
+        description: Optional cluster override
+        type: string
+      description:
+        type: string
+      expires_at:
+        description: Optional expiration
+        type: string
+      git_repo_url:
+        type: string
+      git_revision:
+        description: optional, defaults to "main"
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        description: Optional labels
+        type: object
+      manifest_path:
+        type: string
+      name:
+        type: string
+      resource_quota_cpu:
+        description: Optional resource quotas
+        type: string
+      resource_quota_memory:
+        type: string
+    required:
+    - git_repo_url
+    - manifest_path
+    - name
+    type: object
+  environment.DeploymentSummary:
+    properties:
+      available:
+        type: integer
+      desired:
+        type: integer
+      ready:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  environment.EnvironmentResponse:
+    properties:
+      argo_app_name:
+        type: string
+      cluster_name:
+        description: Cluster info
+        type: string
+      cluster_server:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      error_count:
+        type: integer
+      expires_at:
+        type: string
+      git_repo_url:
+        type: string
+      git_revision:
+        type: string
+      id:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        description: Metadata
+        type: object
+      last_error:
+        description: Error tracking
+        type: string
+      last_sync_at:
+        type: string
+      manifest_path:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      owner_id:
+        description: Lifecycle
+        type: string
+      resource_quota_cpu:
+        description: Resource quotas
+        type: string
+      resource_quota_memory:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  environment.EnvironmentStatusResponse:
+    properties:
+      argo_app_name:
+        type: string
+      argo_status:
+        $ref: '#/definitions/environment.ArgoStatus'
+      cluster_name:
+        description: Cluster info
+        type: string
+      cluster_server:
+        type: string
+      created_at:
+        type: string
+      deployment_summary:
+        $ref: '#/definitions/environment.DeploymentSummary'
+      description:
+        type: string
+      error_count:
+        type: integer
+      expires_at:
+        type: string
+      git_repo_url:
+        type: string
+      git_revision:
+        type: string
+      id:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        description: Metadata
+        type: object
+      last_error:
+        description: Error tracking
+        type: string
+      last_sync_at:
+        type: string
+      manifest_path:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      owner_id:
+        description: Lifecycle
+        type: string
+      pod_summary:
+        $ref: '#/definitions/environment.PodSummary'
+      resource_quota_cpu:
+        description: Resource quotas
+        type: string
+      resource_quota_memory:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  environment.PodSummary:
+    properties:
+      failed:
+        type: integer
+      pending:
+        type: integer
+      running:
+        type: integer
+      total:
+        type: integer
+    type: object
+  http.LoginRequest:
+    properties:
+      team_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - team_id
+    - user_id
+    type: object
+  workload.WorkloadInfo:
+    properties:
+      desired_replicas:
+        type: integer
+      image:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+      ready_replicas:
+        type: integer
+      status:
+        type: string
+    type: object
+  workload.WorkloadStatusResponse:
+    properties:
+      environment_id:
+        type: string
+      namespace:
+        type: string
+      summary:
+        $ref: '#/definitions/workload.WorkloadSummary'
+      workloads:
+        items:
+          $ref: '#/definitions/workload.WorkloadInfo'
+        type: array
+    type: object
+  workload.WorkloadSummary:
+    properties:
+      degraded_workloads:
+        type: integer
+      failed_pods:
+        type: integer
+      healthy_workloads:
+        type: integer
+      pending_pods:
+        type: integer
+      running_pods:
+        type: integer
+      total_pods:
+        type: integer
+      total_workloads:
+        type: integer
+    type: object
+host: localhost:8989
+info:
+  contact:
+    email: platform@example.com
+    name: Platform Engineering Team
+  description: Internal Developer Platform API for self-provisioning Kubernetes environments
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: IDP Core API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /v1/environments:
+    get:
+      description: List all environments for the caller's team
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environment.EnvironmentResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List environments
+      tags:
+      - environments
+    post:
+      consumes:
+      - application/json
+      description: Create a new Kubernetes environment with ArgoCD integration
+      parameters:
+      - description: Environment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environment.CreateEnvironmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/environment.EnvironmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new environment
+      tags:
+      - environments
+  /v1/environments/{id}:
+    delete:
+      description: Tear down an environment and all its resources
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete environment
+      tags:
+      - environments
+    get:
+      description: Get details of a specific environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environment.EnvironmentResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get environment details
+      tags:
+      - environments
+  /v1/environments/{id}/gitops/status:
+    get:
+      description: Get the ArgoCD sync and health status for an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environment.ArgoStatus'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get GitOps status
+      tags:
+      - environments
+  /v1/environments/{id}/status:
+    get:
+      description: Get live status of an environment including pod and ArgoCD sync
+        status
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environment.EnvironmentStatusResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get environment status
+      tags:
+      - environments
+  /v1/environments/{id}/sync:
+    post:
+      description: Trigger a manual sync of the ArgoCD application for an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Trigger environment sync
+      tags:
+      - environments
+  /v1/environments/{id}/workloads:
+    get:
+      description: Get all workloads (deployments) and their pods in an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/workload.WorkloadStatusResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get environment workloads
+      tags:
+      - environments
+  /v1/environments/{id}/workloads/{name}:
+    get:
+      description: Get details of a specific workload in an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Workload name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/workload.WorkloadInfo'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get workload details
+      tags:
+      - environments
+  /v1/ping:
+    get:
+      description: Check if the API is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
