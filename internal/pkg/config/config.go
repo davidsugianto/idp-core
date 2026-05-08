@@ -53,6 +53,9 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("JWT_SECRET"); v != "" {
 		c.Auth.JWTSecret = v
 	}
+	if v := os.Getenv("JWT_EXPIRY"); v != "" {
+		c.Auth.JWTExpiry = v
+	}
 
 	// Kubernetes
 	if v := os.Getenv("K8S_IN_CLUSTER"); v != "" {
@@ -67,6 +70,9 @@ func (c *Config) applyEnvOverrides() {
 	// ArgoCD
 	if v := os.Getenv("ARGOCD_BASE_URL"); v != "" {
 		c.ArgoCD.BaseURL = v
+	}
+	if v := os.Getenv("ARGOCD_NAMESPACE"); v != "" {
+		c.ArgoCD.Namespace = v
 	}
 	if v := os.Getenv("ARGOCD_TOKEN"); v != "" {
 		c.ArgoCD.Token = v
@@ -97,6 +103,7 @@ type DatabaseConfig struct {
 
 type AuthConfig struct {
 	JWTSecret string `json:"jwt_secret" yaml:"jwt_secret"`
+	JWTExpiry string `json:"jwt_expiry" yaml:"jwt_expiry"`
 }
 
 type CORSConfig struct {
@@ -112,6 +119,7 @@ type KubernetesConfig struct {
 }
 
 type ArgoCDConfig struct {
-	BaseURL string `json:"base_url" yaml:"base_url"`
-	Token   string `json:"token" yaml:"token"`
+	BaseURL   string `json:"base_url" yaml:"base_url"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+	Token     string `json:"token" yaml:"token"`
 }
