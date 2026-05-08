@@ -324,6 +324,21 @@ test-all-integration:
 	$(GOTEST) -v ./internal/repository/...
 	@echo "✅ All integration tests complete!"
 
+## test-e2e: Run E2E tests (requires: make dev-k8s-setup)
+test-e2e:
+	@echo "==> Running E2E tests..."
+	@if ! command -v kubectl >/dev/null 2>&1; then \
+		echo "Error: kubectl not found"; exit 1; \
+	fi
+	$(GOTEST) -v ./tests/e2e/...
+	@echo "✅ E2E tests complete!"
+
+## test-contract: Run OpenAPI contract tests
+test-contract:
+	@echo "==> Running contract tests..."
+	$(GOTEST) -v ./tests/contract/...
+	@echo "✅ Contract tests complete!"
+
 ## test-full: Run all tests with full environment setup
 test-full: dev-setup
 	@echo "==> Running all tests..."
