@@ -9,6 +9,8 @@ import (
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
+	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -23,12 +25,16 @@ type Server struct {
 	handler        *httpHandler.Handler
 	authHandler    *httpHandler.AuthHandler
 	webhookHandler *httpHandler.WebhookHandler
+	userHandler    *httpHandler.UserHandler
+	teamHandler    *httpHandler.TeamHandler
 	config         *config.Config
 	logger         *extlogger.Logger
 }
 
 type Dependencies struct {
 	EnvironmentUseCase environmentUC.Usecase
+	UserUseCase        userUC.Usecase
+	TeamUseCase        teamUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
 }
@@ -41,6 +47,8 @@ func New(deps Dependencies) *Server {
 		}),
 		authHandler:    httpHandler.NewAuthHandler(&deps.Config.Auth),
 		webhookHandler: httpHandler.NewWebhookHandler(),
+		userHandler:    httpHandler.NewUserHandler(deps.UserUseCase),
+		teamHandler:    httpHandler.NewTeamHandler(deps.TeamUseCase),
 		config:         deps.Config,
 		logger:         deps.Logger,
 	}
@@ -84,6 +92,29 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("", s.handler.CreateEnvironment)
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
+
+	// User routes (protected with JWT)
+	users := v1.Group("/users")
+	users.Use(middleware.JWT(&s.config.Auth))
+	users.GET("", s.userHandler.ListUsers)
+	users.POST("", s.userHandler.CreateUser)
+	users.GET("/:id", s.userHandler.GetUser)
+	users.PATCH("/:id", s.userHandler.UpdateUser)
+	users.DELETE("/:id", s.userHandler.DeleteUser)
+	users.PUT("/:id/status", s.userHandler.UpdateUserStatus)
+
+	// Team routes (protected with JWT)
+	teams := v1.Group("/teams")
+	teams.Use(middleware.JWT(&s.config.Auth))
+	teams.GET("", s.teamHandler.ListTeams)
+	teams.POST("", s.teamHandler.CreateTeam)
+	teams.GET("/:id", s.teamHandler.GetTeam)
+	teams.PATCH("/:id", s.teamHandler.UpdateTeam)
+	teams.DELETE("/:id", s.teamHandler.DeleteTeam)
+	teams.GET("/:id/members", s.teamHandler.ListTeamMembers)
+	teams.POST("/:id/members", s.teamHandler.AddTeamMember)
+	teams.PATCH("/:id/members/:userId", s.teamHandler.UpdateTeamMember)
+	teams.DELETE("/:id/members/:userId", s.teamHandler.RemoveTeamMember)
 }
 
 func (s *Server) Run(port string) error {
