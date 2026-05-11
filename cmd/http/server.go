@@ -8,7 +8,10 @@ import (
 	httpHandler "github.com/davidsugianto/idp-core/internal/handler/http"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
+	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -20,17 +23,18 @@ import (
 
 type Server struct {
 	*http.Server
-	handler        *httpHandler.Handler
-	authHandler    *httpHandler.AuthHandler
-	webhookHandler *httpHandler.WebhookHandler
-	config         *config.Config
-	logger         *extlogger.Logger
+	handler *httpHandler.Handler
+	config  *config.Config
+	logger  *extlogger.Logger
 }
 
 type Dependencies struct {
 	EnvironmentUseCase environmentUC.Usecase
+	UserUseCase        userUC.Usecase
+	TeamUseCase        teamUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
+	WebhookValidator   *webhook.Validator
 }
 
 func New(deps Dependencies) *Server {
@@ -38,11 +42,13 @@ func New(deps Dependencies) *Server {
 		Server: &http.Server{},
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
+			UserUseCase:        deps.UserUseCase,
+			TeamUseCase:        deps.TeamUseCase,
+			AuthConfig:         &deps.Config.Auth,
+			WebhookValidator:   deps.WebhookValidator,
 		}),
-		authHandler:    httpHandler.NewAuthHandler(&deps.Config.Auth),
-		webhookHandler: httpHandler.NewWebhookHandler(),
-		config:         deps.Config,
-		logger:         deps.Logger,
+		config: deps.Config,
+		logger: deps.Logger,
 	}
 }
 
@@ -60,11 +66,11 @@ func (s *Server) setupPublicRoutes(r *gin.Engine) {
 
 	// Auth routes (public)
 	auth := r.Group("/auth")
-	auth.POST("/login", s.authHandler.Login)
+	auth.POST("/login", s.handler.Login)
 
 	// Admission webhook endpoint (public)
 	admission := r.Group("/admission")
-	admission.POST("/validate", s.webhookHandler.Validate)
+	admission.POST("/validate", s.handler.Validate)
 }
 
 func (s *Server) setupAPIRoutes(r *gin.Engine) {
@@ -84,6 +90,29 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("", s.handler.CreateEnvironment)
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
+
+	// User routes (protected with JWT)
+	users := v1.Group("/users")
+	users.Use(middleware.JWT(&s.config.Auth))
+	users.GET("", s.handler.ListUsers)
+	users.POST("", s.handler.CreateUser)
+	users.GET("/:id", s.handler.GetUser)
+	users.PATCH("/:id", s.handler.UpdateUser)
+	users.DELETE("/:id", s.handler.DeleteUser)
+	users.PUT("/:id/status", s.handler.UpdateUserStatus)
+
+	// Team routes (protected with JWT)
+	teams := v1.Group("/teams")
+	teams.Use(middleware.JWT(&s.config.Auth))
+	teams.GET("", s.handler.ListTeams)
+	teams.POST("", s.handler.CreateTeam)
+	teams.GET("/:id", s.handler.GetTeam)
+	teams.PATCH("/:id", s.handler.UpdateTeam)
+	teams.DELETE("/:id", s.handler.DeleteTeam)
+	teams.GET("/:id/members", s.handler.ListTeamMembers)
+	teams.POST("/:id/members", s.handler.AddTeamMember)
+	teams.PATCH("/:id/members/:userId", s.handler.UpdateTeamMember)
+	teams.DELETE("/:id/members/:userId", s.handler.RemoveTeamMember)
 }
 
 func (s *Server) Run(port string) error {

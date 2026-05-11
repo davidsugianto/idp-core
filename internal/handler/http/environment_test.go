@@ -9,6 +9,8 @@ import (
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	"github.com/davidsugianto/idp-core/internal/mocks"
+	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
@@ -35,6 +37,8 @@ func setupTestHandler(ctrl *gomock.Controller) (*Handler, *mocks.MockEnvironment
 
 	handler := New(Dependencies{
 		EnvironmentUseCase: uc,
+		AuthConfig:         &config.AuthConfig{JWTSecret: "test-secret"},
+		WebhookValidator:   webhook.NewValidator(),
 	})
 
 	return handler, mockEnvRepo, mockProvRepo, mockGitopsRepo
@@ -192,9 +196,11 @@ func TestListEnvironments(t *testing.T) {
 			assert.Equal(t, tt.wantStatus, w.Code)
 
 			if tt.wantStatus == http.StatusOK {
-				var response []*environment.EnvironmentResponse
+				var response map[string]interface{}
 				json.Unmarshal(w.Body.Bytes(), &response)
-				assert.Len(t, response, tt.wantLen)
+				data, ok := response["data"].([]interface{})
+				assert.True(t, ok)
+				assert.Len(t, data, tt.wantLen)
 			}
 		})
 	}
@@ -641,9 +647,12 @@ func TestPing(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var response map[string]string
+	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, "ok", response["status"])
+
+	data, ok := response["data"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "ok", data["status"])
 }
 
 func TestGetWorkloadDetails(t *testing.T) {

@@ -4,13 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/davidsugianto/idp-core/internal/model/team"
+	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
 	"github.com/davidsugianto/go-pkgs/logger"
 
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
+	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
+	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
+	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 )
 
 // @title IDP Core API
@@ -58,8 +65,19 @@ func main() {
 	}
 	dbClient := dbClientWrapper.DB
 
+	// Auto-migrate Phase 2 tables
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}); err != nil {
+		logs.Fatal().Err(err).Msg("cannot migrate database")
+	}
+
 	// Repositories
 	envRepo := envRepository.New(envRepository.Dependencies{
+		Database: dbClient,
+	})
+	userRepo := userRepository.New(userRepository.Dependencies{
+		Database: dbClient,
+	})
+	teamRepo := teamRepository.New(teamRepository.Dependencies{
 		Database: dbClient,
 	})
 
@@ -67,11 +85,24 @@ func main() {
 	envUC := envUsecase.New(envUsecase.Dependencies{
 		EnvironmentRepo: envRepo,
 	})
+	userUC := userUsecase.New(userUsecase.Dependencies{
+		UserRepo: userRepo,
+	})
+	teamUC := teamUsecase.New(teamUsecase.Dependencies{
+		TeamRepo: teamRepo,
+		UserRepo: userRepo,
+	})
+
+	// Webhook validator
+	webhookValidator := webhook.NewValidator()
 
 	server := New(Dependencies{
 		EnvironmentUseCase: envUC,
+		UserUseCase:        userUC,
+		TeamUseCase:        teamUC,
 		Config:             cfg,
 		Logger:             logs,
+		WebhookValidator:   webhookValidator,
 	})
 
 	logs.Info().Int("port", cfg.Server.Port).Msg("listening on port")

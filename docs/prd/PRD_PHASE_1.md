@@ -1,12 +1,12 @@
 # 📋 idp-core — Phase 1 MVP Product Requirements Document (PRD)
 
-> **Project**: `idp-core`  
-> **Phase**: 1 (MVP)  
-> **Owner**: Platform Engineering Team  
-> **Last Updated**: April 2026  
+> **Project**: `idp-core`\
+> **Phase**: 1 (MVP)\
+> **Owner**: Platform Engineering Team\
+> **Last Updated**: April 2026\
 > **Status**: ✅ Approved for Development
 
----
+***
 
 ## 🎯 1. Executive Summary
 
@@ -51,38 +51,40 @@ flowchart LR
     style GitRepo fill:#ffffff,stroke:#3b82f6,stroke-width:2px,color:#1e1b4b,rx:8,ry:8
 ```
 
----
+***
 
 ## 👥 2. Target Users & Personas
 
-| Persona | Role | Primary Needs |
-|---------|------|--------------|
-| **Alex (App Developer)** | Backend/Frontend Engineer | "I need a fresh K8s namespace with my app deployed in <5 mins for feature testing" |
-| **Sam (SRE/Platform Engineer)** | Platform/Infra Engineer | "I need a reliable, auditable API to automate environment lifecycle without manual kubectl" |
-| **Jordan (Tech Lead)** | Engineering Manager | "I need visibility into team environments and deployment status without cluster access" |
-| **Taylor (Security Engineer)** | Security/Compliance | "I need audit trails for environment creation and GitOps actions" |
+| Persona                         | Role                      | Primary Needs                                                                               |
+| ------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| **Alex (App Developer)**        | Backend/Frontend Engineer | "I need a fresh K8s namespace with my app deployed in <5 mins for feature testing"          |
+| **Sam (SRE/Platform Engineer)** | Platform/Infra Engineer   | "I need a reliable, auditable API to automate environment lifecycle without manual kubectl" |
+| **Jordan (Tech Lead)**          | Engineering Manager       | "I need visibility into team environments and deployment status without cluster access"     |
+| **Taylor (Security Engineer)**  | Security/Compliance       | "I need audit trails for environment creation and GitOps actions"                           |
 
----
+***
 
 ## 🎯 3. Goals & Success Metrics
 
 ### Primary Goals
-| Goal | Metric | Target |
-|------|--------|--------|
-| Reduce environment provisioning time | Time from API call → ready namespace | < 3 minutes |
-| Enable self-service without cluster access | % of env requests via API (vs manual) | > 90% |
-| Provide real-time workload visibility | Status freshness (last updated) | < 30 seconds |
-| Ensure GitOps consistency | % of envs with successful ArgoCD sync | > 95% |
-| Maintain API reliability | Uptime (SLA) | 99.9% |
+
+| Goal                                       | Metric                                | Target       |
+| ------------------------------------------ | ------------------------------------- | ------------ |
+| Reduce environment provisioning time       | Time from API call → ready namespace  | < 3 minutes  |
+| Enable self-service without cluster access | % of env requests via API (vs manual) | > 90%        |
+| Provide real-time workload visibility      | Status freshness (last updated)       | < 30 seconds |
+| Ensure GitOps consistency                  | % of envs with successful ArgoCD sync | > 95%        |
+| Maintain API reliability                   | Uptime (SLA)                          | 99.9%        |
 
 ### Non-Goals (Phase 1)
+
 - ❌ User authentication/authorization (Phase 2: RBAC)
 - ❌ Multi-cluster cost analysis (Phase 2: FinOps)
 - ❌ Automated resource rightsizing (Phase 2)
 - ❌ Developer portal UI (Phase 3)
 - ❌ Service catalog discovery (Phase 2)
 
----
+***
 
 ## 🔄 4. System Architecture
 
@@ -148,7 +150,7 @@ sequenceDiagram
     API-->>Dev: 201 Created {env_id, status, argocd_url}
 ```
 
----
+***
 
 ## 📡 5. API Specification (Phase 1)
 
@@ -166,30 +168,34 @@ https://api.idp-core.internal/v1
 ### Endpoints
 
 #### 🔹 Environment Management
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
-| POST | `/environments` | Create new K8s environment | `{name, team, template: "dev\|staging", git_repo_url}` | 201: `{id, namespace, status, created_at}` |
-| GET | `/environments` | List environments (filter by team/status) | Query: `?team=platform&status=active` | 200: `[{id, name, team, status, created_at}]` |
-| GET | `/environments/:id` | Get environment details | - | 200: `{id, namespace, config, argocd_app, status}` |
-| DELETE | `/environments/:id` | Decommission environment | - | 204: No Content |
+
+| Method | Endpoint            | Description                               | Request Body                                           | Response                                           |
+| ------ | ------------------- | ----------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| POST   | `/environments`     | Create new K8s environment                | `{name, team, template: "dev\|staging", git_repo_url}` | 201: `{id, namespace, status, created_at}`         |
+| GET    | `/environments`     | List environments (filter by team/status) | Query: `?team=platform&status=active`                  | 200: `[{id, name, team, status, created_at}]`      |
+| GET    | `/environments/:id` | Get environment details                   | -                                                      | 200: `{id, namespace, config, argocd_app, status}` |
+| DELETE | `/environments/:id` | Decommission environment                  | -                                                      | 204: No Content                                    |
 
 #### 🔹 GitOps Integration
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
-| POST | `/environments/:id/sync` | Trigger ArgoCD sync | `{revision?: string}` | 202: `{sync_id, operation_id, status}` |
-| GET | `/environments/:id/gitops/status` | Get ArgoCD sync status | - | 200: `{sync_status, health_status, last_sync, revision}` |
+
+| Method | Endpoint                          | Description            | Request Body          | Response                                                 |
+| ------ | --------------------------------- | ---------------------- | --------------------- | -------------------------------------------------------- |
+| POST   | `/environments/:id/sync`          | Trigger ArgoCD sync    | `{revision?: string}` | 202: `{sync_id, operation_id, status}`                   |
+| GET    | `/environments/:id/gitops/status` | Get ArgoCD sync status | -                     | 200: `{sync_status, health_status, last_sync, revision}` |
 
 #### 🔹 Workload Monitoring
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
-| GET | `/environments/:id/workloads` | List live workloads | Query: `?kind=deployment\|pod` | 200: `[{name, kind, status, replicas, image, created_at}]` |
-| GET | `/environments/:id/workloads/:name` | Get specific workload details | - | 200: `{name, kind, status, pods: [{name, node, phase, ready}], logs_url}` |
+
+| Method | Endpoint                            | Description                   | Request Body                   | Response                                                                  |
+| ------ | ----------------------------------- | ----------------------------- | ------------------------------ | ------------------------------------------------------------------------- |
+| GET    | `/environments/:id/workloads`       | List live workloads           | Query: `?kind=deployment\|pod` | 200: `[{name, kind, status, replicas, image, created_at}]`                |
+| GET    | `/environments/:id/workloads/:name` | Get specific workload details | -                              | 200: `{name, kind, status, pods: [{name, node, phase, ready}], logs_url}` |
 
 #### 🔹 System Health
-| Method | Endpoint | Description | Response |
-|--------|----------|-------------|----------|
-| GET | `/health` | Liveness probe | 200: `{"status":"ok"}` |
-| GET | `/ready` | Readiness probe (deps healthy) | 200: `{"k8s":"ok","argocd":"ok","db":"ok"}` |
+
+| Method | Endpoint  | Description                    | Response                                    |
+| ------ | --------- | ------------------------------ | ------------------------------------------- |
+| GET    | `/health` | Liveness probe                 | 200: `{"status":"ok"}`                      |
+| GET    | `/ready`  | Readiness probe (deps healthy) | 200: `{"k8s":"ok","argocd":"ok","db":"ok"}` |
 
 ### Example Request/Response
 
@@ -245,7 +251,7 @@ curl -X GET https://api.idp-core.internal/v1/environments/env_7x9k2m/workloads \
 }
 ```
 
----
+***
 
 ## 🗃️ 6. Data Models (Phase 1)
 
@@ -329,21 +335,23 @@ type APIKey struct {
 }
 ```
 
----
+***
 
 ## ⚙️ 7. Technical Requirements
 
 ### Infrastructure Stack
-| Component | Requirement | Rationale |
-|-----------|-------------|-----------|
-| Runtime | Go 1.22+, compiled to Linux amd64/arm64 | Performance, single binary deployment |
-| Framework | Gin v1.10+, with middleware for logging/recovery | Lightweight, mature, excellent ecosystem |
-| Database | PostgreSQL 15+ (GORM ORM) | JSONB support for flexible config, reliable transactions |
-| K8s Client | client-go v0.30+, with dynamic client for CRDs | Official client, full API coverage |
-| ArgoCD Integration | REST API client (v2.11+), fallback to git commit webhook | Direct control + GitOps best practices |
-| Observability | Structured logging (Logrus), Prometheus metrics endpoint `/metrics` | Standard tooling, easy integration with existing infra |
+
+| Component          | Requirement                                                         | Rationale                                                |
+| ------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
+| Runtime            | Go 1.22+, compiled to Linux amd64/arm64                             | Performance, single binary deployment                    |
+| Framework          | Gin v1.10+, with middleware for logging/recovery                    | Lightweight, mature, excellent ecosystem                 |
+| Database           | PostgreSQL 15+ (GORM ORM)                                           | JSONB support for flexible config, reliable transactions |
+| K8s Client         | client-go v0.30+, with dynamic client for CRDs                      | Official client, full API coverage                       |
+| ArgoCD Integration | REST API client (v2.11+), fallback to git commit webhook            | Direct control + GitOps best practices                   |
+| Observability      | Structured logging (Logrus), Prometheus metrics endpoint `/metrics` | Standard tooling, easy integration with existing infra   |
 
 ### Performance & Reliability
+
 - **API response time (p95):** < 500ms for read, < 2s for write (excluding K8s/ArgoCD async ops)
 - **Concurrent environment creations:** Support 10+ parallel requests
 - **Idempotency:** `POST /environments` with same name+team returns existing env (no duplicate)
@@ -352,25 +360,26 @@ type APIKey struct {
 - **Graceful shutdown:** Drain in-flight requests on SIGTERM (30s timeout)
 
 ### Security (Phase 1 Baseline)
+
 - **API Key authentication:** via `X-API-Key` header (stored hashed in DB using bcrypt)
 - **TLS termination:** at ingress (API server assumes internal network)
 - **Input validation:** All requests validated with `go-playground/validator/v10`
-- **Audit logging:** Log all create/delete/sync actions with trace_id, env_id, team, user_agent
+- **Audit logging:** Log all create/delete/sync actions with trace\_id, env\_id, team, user\_agent
 - **Secrets management:** Never log or expose K8s tokens/ArgoCD credentials; use Kubernetes Secrets or Vault (Phase 2)
 - **Rate limiting:** Per-API-key rate limiting (100 req/min default, configurable)
 
----
+***
 
 ## 🧪 8. Testing Strategy
 
-| Test Type | Scope | Tools | Coverage Target | Frequency |
-|-----------|-------|-------|-----------------|-----------|
-| Unit Tests | Handlers, Use Cases, Utils, Validators | `testing`, `testify`, `gomock` | > 80% | On every commit |
-| Integration Tests | K8s client, ArgoCD client, DB repository layer | `testcontainers-go`, kind cluster | Critical paths | CI pipeline |
-| E2E Tests | Full flow: API → K8s → ArgoCD → status | `ginkgo`, `gomega`, ephemeral env | MVP happy path | Pre-release |
-| Contract Tests | OpenAPI spec validation, request/response schema | `swaggo/swag`, `dredd` | 100% of endpoints | CI pipeline |
-| Load Tests | Concurrent env creation, sustained throughput | `k6`, `hey` | Validate p95 targets | Weekly |
-| Security Tests | API key validation, input sanitization, auth bypass | `gosec`, manual pen-test | Critical auth paths | Pre-release |
+| Test Type         | Scope                                               | Tools                             | Coverage Target      | Frequency       |
+| ----------------- | --------------------------------------------------- | --------------------------------- | -------------------- | --------------- |
+| Unit Tests        | Handlers, Use Cases, Utils, Validators              | `testing`, `testify`, `gomock`    | > 80%                | On every commit |
+| Integration Tests | K8s client, ArgoCD client, DB repository layer      | `testcontainers-go`, kind cluster | Critical paths       | CI pipeline     |
+| E2E Tests         | Full flow: API → K8s → ArgoCD → status              | `ginkgo`, `gomega`, ephemeral env | MVP happy path       | Pre-release     |
+| Contract Tests    | OpenAPI spec validation, request/response schema    | `swaggo/swag`, `dredd`            | 100% of endpoints    | CI pipeline     |
+| Load Tests        | Concurrent env creation, sustained throughput       | `k6`, `hey`                       | Validate p95 targets | Weekly          |
+| Security Tests    | API key validation, input sanitization, auth bypass | `gosec`, manual pen-test          | Critical auth paths  | Pre-release     |
 
 ### Test Environment Setup
 
@@ -385,7 +394,7 @@ make dev-e2e         # Run E2E tests against ephemeral environment
 # See: .github/workflows/test.yml
 ```
 
----
+***
 
 ## 📦 9. Deployment & Operations
 
@@ -548,45 +557,49 @@ groups:
       summary: "ArgoCD integration failing"
 ```
 
----
+***
 
 ## 🗓️ 10. Phase 1 Timeline & Milestones
 
 ### Milestone Deliverables
-| Milestone | Date | Deliverable | Success Criteria |
-|-----------|------|-------------|------------------|
-| M1: Foundation | May 7 | Repo initialized, CI/CD pipeline, config layer | `make test` passes locally & in CI |
-| M2: Core Integration | May 21 | K8s provisioner + ArgoCD client working | Can create namespace + ArgoCD app via API |
-| M3: API Complete | May 29 | All Phase 1 endpoints implemented + documented | OpenAPI spec validates; Swagger UI renders |
-| M4: Validation | June 4 | Integration + E2E tests passing | 95%+ test pass rate; p95 latency < targets |
-| M5: MVP Launch | June 7 | v0.1.0 deployed to staging, ready for pilot | Zero critical bugs; on-call runbook complete |
 
----
+| Milestone            | Date   | Deliverable                                    | Success Criteria                             |
+| -------------------- | ------ | ---------------------------------------------- | -------------------------------------------- |
+| M1: Foundation       | May 7  | Repo initialized, CI/CD pipeline, config layer | `make test` passes locally & in CI           |
+| M2: Core Integration | May 21 | K8s provisioner + ArgoCD client working        | Can create namespace + ArgoCD app via API    |
+| M3: API Complete     | May 29 | All Phase 1 endpoints implemented + documented | OpenAPI spec validates; Swagger UI renders   |
+| M4: Validation       | June 4 | Integration + E2E tests passing                | 95%+ test pass rate; p95 latency < targets   |
+| M5: MVP Launch       | June 7 | v0.1.0 deployed to staging, ready for pilot    | Zero critical bugs; on-call runbook complete |
+
+***
 
 ## ⚠️ 11. Risks & Mitigations
-| Risk | Impact | Likelihood | Mitigation | Owner |
-|------|--------|------------|------------|-------|
-| ArgoCD API changes/breaking updates | High | Medium | Abstract client behind GitOpsClient interface; pin ArgoCD version; add contract tests | Platform Eng |
-| K8s cluster permission boundaries | Medium | High | Use dedicated service account with minimal RBAC; document required permissions upfront; add `make validate-rbac` | SRE |
-| Environment name collisions | Medium | Medium | Enforce name+team uniqueness at API + DB layer; provide suggestion API (`GET /environments/suggest?name=foo`) | Backend Eng |
-| Git webhook reliability (ArgoCD trigger) | Low | Medium | Fallback to polling ArgoCD app status every 10s; idempotent sync operations; log webhook failures | Platform Eng |
-| Configuration drift (template vs actual) | Medium | Low | Store template + overrides in DB; add `GET /environments/:id/diff` endpoint (Phase 2); document manual override policy | Platform Eng |
-| API key leakage in logs | High | Low | Never log `X-API-Key` header; use structured logging middleware that redacts sensitive headers; audit log access | Security Eng |
 
----
+| Risk                                     | Impact | Likelihood | Mitigation                                                                                                             | Owner        |
+| ---------------------------------------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------- | ------------ |
+| ArgoCD API changes/breaking updates      | High   | Medium     | Abstract client behind GitOpsClient interface; pin ArgoCD version; add contract tests                                  | Platform Eng |
+| K8s cluster permission boundaries        | Medium | High       | Use dedicated service account with minimal RBAC; document required permissions upfront; add `make validate-rbac`       | SRE          |
+| Environment name collisions              | Medium | Medium     | Enforce name+team uniqueness at API + DB layer; provide suggestion API (`GET /environments/suggest?name=foo`)          | Backend Eng  |
+| Git webhook reliability (ArgoCD trigger) | Low    | Medium     | Fallback to polling ArgoCD app status every 10s; idempotent sync operations; log webhook failures                      | Platform Eng |
+| Configuration drift (template vs actual) | Medium | Low        | Store template + overrides in DB; add `GET /environments/:id/diff` endpoint (Phase 2); document manual override policy | Platform Eng |
+| API key leakage in logs                  | High   | Low        | Never log `X-API-Key` header; use structured logging middleware that redacts sensitive headers; audit log access       | Security Eng |
+
+***
 
 ## 📎 12. Appendix
 
 ### A. Glossary
-| Term | Definition |
-|------|------------|
+
+| Term        | Definition                                                                                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------------- |
 | Environment | A namespaced Kubernetes context for a feature/team, including deployed workloads, configured via templates |
-| Template | Predefined K8s manifests + ArgoCD Application spec (variants: dev, staging, prod) stored in a Git repo |
-| GitOps Sync | ArgoCD reconciling desired state (Git repository) with actual state (Kubernetes cluster) |
-| Workload | A Kubernetes resource representing a running application component (Deployment, StatefulSet, Pod, etc.) |
-| Provisioner | Internal component responsible for creating K8s resources (Namespace, ResourceQuota, NetworkPolicy, etc.) |
+| Template    | Predefined K8s manifests + ArgoCD Application spec (variants: dev, staging, prod) stored in a Git repo     |
+| GitOps Sync | ArgoCD reconciling desired state (Git repository) with actual state (Kubernetes cluster)                   |
+| Workload    | A Kubernetes resource representing a running application component (Deployment, StatefulSet, Pod, etc.)    |
+| Provisioner | Internal component responsible for creating K8s resources (Namespace, ResourceQuota, NetworkPolicy, etc.)  |
 
 ### B. Open Questions (to resolve before dev start)
+
 - **Async vs Sync API:** Should environment creation be async (202 Accepted + webhook/callback) or sync (201 Created + polling)?
   - **→ Recommendation:** Sync for Phase 1 MVP (simpler DX), with timeout of 120s; add async option in Phase 2.
 - **Multi-cluster support:** How to handle multiple Kubernetes clusters in Phase 1?
@@ -597,6 +610,7 @@ groups:
   - **→ Recommendation:** URL path versioning (`/v1/`, `/v2/`); deprecate with 3-month notice; document in OpenAPI spec.
 
 ### C. References
+
 - ArgoCD REST API Documentation
 - Kubernetes client-go Examples
 - Gin Web Framework Best Practices

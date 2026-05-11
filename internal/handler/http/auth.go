@@ -3,17 +3,8 @@ package http
 import (
 	"github.com/davidsugianto/go-pkgs/response"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
-	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/gin-gonic/gin"
 )
-
-type AuthHandler struct {
-	authConfig *config.AuthConfig
-}
-
-func NewAuthHandler(cfg *config.AuthConfig) *AuthHandler {
-	return &AuthHandler{authConfig: cfg}
-}
 
 type LoginRequest struct {
 	UserID string `json:"user_id" binding:"required"`
@@ -31,7 +22,7 @@ type LoginRequest struct {
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /auth/login [post]
-func (h *AuthHandler) Login(c *gin.Context) {
+func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.GinBadRequest(c, err)
