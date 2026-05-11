@@ -1,12 +1,25 @@
 # idp-core
 
-**Internal Developer Platform (IDP) API** — Self-service Kubernetes environment provisioning with GitOps integration.
+**Internal Developer Platform (IDP) API** — Enables engineering teams to self-provision isolated Kubernetes environments, manage GitOps deployments via ArgoCD, and monitor workload status — all through a RESTful API without direct cluster access.
 
 ## Overview
 
-`idp-core` enables engineering teams to self-provision Kubernetes environments on-demand, trigger GitOps deployments via ArgoCD, and monitor live workload status through a clean REST API.
+`idp-core` is a self-service platform API that abstracts Kubernetes complexity from developers. Teams can request isolated environments (namespaces), deploy applications via GitOps, and monitor resources in real-time — without needing `kubectl` access or Kubernetes expertise.
 
-**Vision**: Reduce environment provisioning time from days to minutes while abstracting Kubernetes complexity from developers.
+**Key Capabilities:**
+- 🚀 **Self-Service Provisioning** — Request K8s environments in minutes, not days
+- 🎯 **GitOps Native** — ArgoCD integration for declarative, version-controlled deployments
+- 📊 **Real-Time Visibility** — Live workload status, health, and resource metrics
+- 👥 **Multi-Tenant** — Team-scoped resources with RBAC for secure access control
+- 🔐 **Secure by Default** — JWT authentication, team isolation, policy enforcement
+
+**Use Cases:**
+| Who | What |
+|-----|------|
+| Developers | Spin up dev/test environments for feature testing |
+| SREs | Automate environment lifecycle with audit trails |
+| Tech Leads | Monitor team deployments without cluster access |
+| Platform Teams | Enforce policies and governance across environments |
 
 ## Features
 
