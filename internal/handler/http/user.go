@@ -11,18 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserHandler handles user-related HTTP requests
-type UserHandler struct {
-	userUseCase userUsecase.Usecase
-}
-
-// NewUserHandler creates a new user handler
-func NewUserHandler(userUC userUsecase.Usecase) *UserHandler {
-	return &UserHandler{
-		userUseCase: userUC,
-	}
-}
-
 // CreateUser godoc
 // @Summary Create a new user
 // @Description Create a new user
@@ -36,8 +24,8 @@ func NewUserHandler(userUC userUsecase.Usecase) *UserHandler {
 // @Failure 401 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users [post]
-func (h *UserHandler) CreateUser(c *gin.Context) {
+// @Router /v1/users [post]
+func (h *Handler) CreateUser(c *gin.Context) {
 	var req user.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.GinBadRequest(c, err)
@@ -68,8 +56,8 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Success 200 {object} user.UserListResponse
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users [get]
-func (h *UserHandler) ListUsers(c *gin.Context) {
+// @Router /v1/users [get]
+func (h *Handler) ListUsers(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
@@ -93,8 +81,8 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users/{id} [get]
-func (h *UserHandler) GetUser(c *gin.Context) {
+// @Router /v1/users/{id} [get]
+func (h *Handler) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing user id"))
@@ -128,8 +116,8 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users/{id} [patch]
-func (h *UserHandler) UpdateUser(c *gin.Context) {
+// @Router /v1/users/{id} [patch]
+func (h *Handler) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing user id"))
@@ -166,8 +154,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users/{id} [delete]
-func (h *UserHandler) DeleteUser(c *gin.Context) {
+// @Router /v1/users/{id} [delete]
+func (h *Handler) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing user id"))
@@ -199,8 +187,8 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users/{id}/status [put]
-func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
+// @Router /v1/users/{id}/status [put]
+func (h *Handler) UpdateUserStatus(c *gin.Context) {
 	id := c.Param("id")
 	status := c.Query("status")
 

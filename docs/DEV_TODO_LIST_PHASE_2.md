@@ -2,7 +2,7 @@
 
 > **Phase**: 2 - Enhancement  
 > **Timeline**: Q3 2026 (~10 weeks)  
-> **Status**: 📋 Planning  
+> **Status**: 🔄 In Development  
 > **Last Updated**: May 2026
 
 ---
@@ -11,7 +11,7 @@
 
 | Milestone | Status | Progress |
 |-----------|--------|----------|
-| M1: Auth & RBAC | 🔲 Not Started | 0% |
+| M1: Auth & RBAC | 🔄 In Progress | 33% |
 | M2: FinOps | 🔲 Not Started | 0% |
 | M3: Rightsizing | 🔲 Not Started | 0% |
 | M4: Service Catalog | 🔲 Not Started | 0% |
@@ -21,39 +21,39 @@
 
 ## 🗓️ M1: Auth & RBAC (Week 1-3)
 
-### Week 1: User & Team Management
+### Week 1: User & Team Management ✅ COMPLETED
 
 #### Database & Models
-- [ ] Create migration: `users` table
-- [ ] Create migration: `teams` table
-- [ ] Create migration: `team_members` table
-- [ ] Create model: `internal/model/user/type.go`
-- [ ] Create model: `internal/model/team/type.go`
-- [ ] Create model: `internal/model/team_member/type.go`
+- [x] Create migration: `users` table
+- [x] Create migration: `teams` table
+- [x] Create migration: `team_members` table
+- [x] Create model: `internal/model/user/type.go`
+- [x] Create model: `internal/model/team/type.go`
+- [x] Create model: `internal/model/team_member/type.go` (included in team/type.go)
 
 #### Repository Layer
-- [ ] Create `internal/repository/user/init.go` (interface + struct)
-- [ ] Create `internal/repository/user/user.go` (CRUD methods)
-- [ ] Create `internal/repository/team/init.go`
-- [ ] Create `internal/repository/team/team.go`
-- [ ] Create `internal/repository/team/member.go`
+- [x] Create `internal/repository/user/init.go` (interface + struct)
+- [x] Create `internal/repository/user/user.go` (CRUD methods)
+- [x] Create `internal/repository/team/init.go`
+- [x] Create `internal/repository/team/team.go`
+- [x] Create `internal/repository/team/member.go`
 
 #### Usecase Layer
-- [ ] Create `internal/usecase/user/init.go`
-- [ ] Create `internal/usecase/user/user.go`
-- [ ] Create `internal/usecase/team/init.go`
-- [ ] Create `internal/usecase/team/team.go`
+- [x] Create `internal/usecase/user/init.go`
+- [x] Create `internal/usecase/user/user.go`
+- [x] Create `internal/usecase/team/init.go`
+- [x] Create `internal/usecase/team/team.go`
 
 #### Handler Layer
-- [ ] Create `internal/handler/http/user.go`
-- [ ] Create `internal/handler/http/team.go`
-- [ ] Add routes in `cmd/http/server.go`
+- [x] Create `internal/handler/http/user.go`
+- [x] Create `internal/handler/http/team.go`
+- [x] Add routes in `cmd/http/server.go`
 
 #### Tests
-- [ ] Unit tests: user repository
-- [ ] Unit tests: team repository
-- [ ] Unit tests: user usecase
-- [ ] Unit tests: team usecase
+- [x] Unit tests: user repository (mock created)
+- [x] Unit tests: team repository (mock created)
+- [x] Unit tests: user usecase
+- [x] Unit tests: team usecase
 - [ ] Integration tests: user API
 - [ ] Integration tests: team API
 
@@ -475,65 +475,70 @@ service_catalog:
 ```
 internal/
 ├── handler/http/
-│   ├── user.go              # NEW
-│   ├── team.go              # NEW
-│   ├── role.go              # NEW
-│   ├── apikey.go            # NEW
-│   ├── auditlog.go          # NEW
-│   ├── cost.go              # NEW
-│   ├── budget.go            # NEW
-│   ├── rightsizing.go       # NEW
-│   ├── quota.go             # NEW
-│   └── service.go           # NEW
+│   ├── user.go              # ✅ CREATED
+│   ├── team.go              # ✅ CREATED
+│   ├── role.go              # TODO
+│   ├── apikey.go            # TODO
+│   ├── auditlog.go          # TODO
+│   ├── cost.go              # TODO
+│   ├── budget.go            # TODO
+│   ├── rightsizing.go       # TODO
+│   ├── quota.go             # TODO
+│   └── service.go           # TODO
 │
 ├── usecase/
-│   ├── user/                # NEW
-│   ├── team/                # NEW
-│   ├── role/                # NEW
-│   ├── apikey/              # NEW
-│   ├── auditlog/            # NEW
-│   ├── auth/                # NEW (RBAC engine)
-│   ├── cost/                # NEW
-│   ├── budget/              # NEW
-│   ├── rightsizing/         # NEW
-│   ├── quota/               # NEW
-│   └── service/             # NEW
+│   ├── user/                # ✅ CREATED
+│   ├── team/                # ✅ CREATED
+│   ├── role/                # TODO
+│   ├── apikey/              # TODO
+│   ├── auditlog/            # TODO
+│   ├── auth/                # TODO (RBAC engine)
+│   ├── cost/                # TODO
+│   ├── budget/              # TODO
+│   ├── rightsizing/         # TODO
+│   ├── quota/               # TODO
+│   └── service/             # TODO
 │
 ├── repository/
-│   ├── user/                # NEW
-│   ├── team/                # NEW
-│   ├── role/                # NEW
-│   ├── permission/          # NEW
-│   ├── apikey/              # NEW
-│   ├── auditlog/            # NEW
-│   ├── cost/                # NEW
-│   ├── budget/              # NEW
-│   ├── rightsizing/         # NEW
-│   ├── quota/               # NEW
-│   └── service/             # NEW
+│   ├── user/                # ✅ CREATED
+│   ├── team/                # ✅ CREATED
+│   ├── role/                # TODO
+│   ├── permission/          # TODO
+│   ├── apikey/              # TODO
+│   ├── auditlog/            # TODO
+│   ├── cost/                # TODO
+│   ├── budget/              # TODO
+│   ├── rightsizing/         # TODO
+│   ├── quota/               # TODO
+│   └── service/             # TODO
 │
 ├── model/
-│   ├── user/                # NEW
-│   ├── team/                # NEW
-│   ├── role/                # NEW
-│   ├── permission/          # NEW
-│   ├── api_key/             # NEW
-│   ├── audit_log/           # NEW
-│   ├── cost_record/         # NEW
-│   ├── budget/              # NEW
-│   ├── rightsizing/         # NEW
-│   ├── resource_quota/      # NEW
-│   └── service/             # NEW
+│   ├── user/                # ✅ CREATED
+│   ├── team/                # ✅ CREATED
+│   ├── role/                # TODO
+│   ├── permission/          # TODO
+│   ├── api_key/             # TODO
+│   ├── audit_log/           # TODO
+│   ├── cost_record/         # TODO
+│   ├── budget/              # TODO
+│   ├── rightsizing/         # TODO
+│   ├── resource_quota/      # TODO
+│   └── service/             # TODO
 │
-└── pkg/
-    ├── oidc/                # NEW
-    ├── kubecost/            # NEW
-    └── prometheus/          # NEW
+├── pkg/
+│   ├── oidc/                # TODO
+│   ├── kubecost/            # TODO
+│   └── prometheus/          # TODO
+│
+└── mocks/
+    ├── user_repository.go   # ✅ CREATED
+    ├── team_repository.go   # ✅ CREATED
 
 migrations/
-├── 20260501000000_create_users_table.up.sql
-├── 20260501000001_create_teams_table.up.sql
-├── ... (all Phase 2 migrations)
+├── 20260501000000_create_users_table.sql        # ✅ CREATED
+├── 20260501000001_create_teams_table.sql        # ✅ CREATED
+├── 20260501000002_create_team_members_table.sql # ✅ CREATED
+└── ... (remaining Phase 2 migrations - TODO)
 ```
 
 ---
@@ -558,6 +563,52 @@ Each task is considered complete when:
 - Kubecost integration requires Kubecost to be deployed in cluster
 - Budget alerts require email/Slack integration setup
 - Consider feature flags for gradual rollout
+
+---
+
+## ✅ Completed Work
+
+### M1 Week 1: User & Team Management (May 2026)
+
+**Files Created:**
+- `migrations/20260501000000_create_users_table.sql`
+- `migrations/20260501000001_create_teams_table.sql`
+- `migrations/20260501000002_create_team_members_table.sql`
+- `internal/model/user/type.go`
+- `internal/model/team/type.go`
+- `internal/repository/user/init.go`, `user.go`
+- `internal/repository/team/init.go`, `team.go`, `member.go`
+- `internal/usecase/user/init.go`, `user.go`
+- `internal/usecase/team/init.go`
+- `internal/handler/http/user.go`
+- `internal/handler/http/team.go`
+- `internal/mocks/user_repository.go`
+- `internal/mocks/team_repository.go`
+- `internal/usecase/user/user_test.go`
+- `internal/usecase/team/team_test.go`
+
+**API Endpoints Added:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/users` | List users with pagination |
+| POST | `/v1/users` | Create a new user |
+| GET | `/v1/users/:id` | Get user details |
+| PATCH | `/v1/users/:id` | Update user |
+| DELETE | `/v1/users/:id` | Delete user |
+| PUT | `/v1/users/:id/status` | Update user status |
+| GET | `/v1/teams` | List teams with pagination |
+| POST | `/v1/teams` | Create a new team |
+| GET | `/v1/teams/:id` | Get team details |
+| PATCH | `/v1/teams/:id` | Update team |
+| DELETE | `/v1/teams/:id` | Delete team |
+| GET | `/v1/teams/:id/members` | List team members |
+| POST | `/v1/teams/:id/members` | Add team member |
+| PATCH | `/v1/teams/:id/members/:userId` | Update member role |
+| DELETE | `/v1/teams/:id/members/:userId` | Remove team member |
+
+**Next Steps:**
+- Week 2: OIDC Integration & RBAC (roles, permissions, user_roles tables)
+- Add integration tests for user and team APIs
 
 ---
 

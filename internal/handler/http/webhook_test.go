@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -20,8 +22,11 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func TestWebhookHandler_Validate(t *testing.T) {
-	handler := NewWebhookHandler()
+func TestHandler_Validate(t *testing.T) {
+	handler := New(Dependencies{
+		AuthConfig:       &config.AuthConfig{JWTSecret: "test-secret"},
+		WebhookValidator: webhook.NewValidator(),
+	})
 
 	t.Run("valid pod passes validation", func(t *testing.T) {
 		pod := &corev1.Pod{
@@ -175,10 +180,4 @@ func TestWebhookHandler_Validate(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, response.Response.Allowed)
 	})
-}
-
-func TestNewWebhookHandler(t *testing.T) {
-	handler := NewWebhookHandler()
-	assert.NotNil(t, handler)
-	assert.NotNil(t, handler.validator)
 }

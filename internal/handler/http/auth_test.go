@@ -9,6 +9,7 @@ import (
 
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,9 +18,12 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func TestAuthHandler_Login(t *testing.T) {
+func TestHandler_Login(t *testing.T) {
 	cfg := &config.AuthConfig{JWTSecret: "test-secret-key"}
-	handler := NewAuthHandler(cfg)
+	handler := New(Dependencies{
+		AuthConfig:       cfg,
+		WebhookValidator: webhook.NewValidator(),
+	})
 
 	t.Run("successful login", func(t *testing.T) {
 		w := httptest.NewRecorder()
@@ -91,9 +95,12 @@ func TestAuthHandler_Login(t *testing.T) {
 	})
 }
 
-func TestAuthHandler_Integration(t *testing.T) {
+func TestHandler_Login_Integration(t *testing.T) {
 	cfg := &config.AuthConfig{JWTSecret: "test-secret-key"}
-	handler := NewAuthHandler(cfg)
+	handler := New(Dependencies{
+		AuthConfig:       cfg,
+		WebhookValidator: webhook.NewValidator(),
+	})
 
 	t.Run("login returns valid token that can be used", func(t *testing.T) {
 		// Step 1: Login

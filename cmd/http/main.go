@@ -7,6 +7,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
 	"github.com/davidsugianto/go-pkgs/logger"
@@ -92,12 +93,16 @@ func main() {
 		UserRepo: userRepo,
 	})
 
+	// Webhook validator
+	webhookValidator := webhook.NewValidator()
+
 	server := New(Dependencies{
 		EnvironmentUseCase: envUC,
 		UserUseCase:        userUC,
 		TeamUseCase:        teamUC,
 		Config:             cfg,
 		Logger:             logs,
+		WebhookValidator:   webhookValidator,
 	})
 
 	logs.Info().Int("port", cfg.Server.Port).Msg("listening on port")

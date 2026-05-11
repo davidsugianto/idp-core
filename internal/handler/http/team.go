@@ -11,18 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TeamHandler handles team-related HTTP requests
-type TeamHandler struct {
-	teamUseCase teamUsecase.Usecase
-}
-
-// NewTeamHandler creates a new team handler
-func NewTeamHandler(teamUC teamUsecase.Usecase) *TeamHandler {
-	return &TeamHandler{
-		teamUseCase: teamUC,
-	}
-}
-
 // CreateTeam godoc
 // @Summary Create a new team
 // @Description Create a new team
@@ -36,8 +24,8 @@ func NewTeamHandler(teamUC teamUsecase.Usecase) *TeamHandler {
 // @Failure 401 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams [post]
-func (h *TeamHandler) CreateTeam(c *gin.Context) {
+// @Router /v1/teams [post]
+func (h *Handler) CreateTeam(c *gin.Context) {
 	var req team.CreateTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.GinBadRequest(c, err)
@@ -72,8 +60,8 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 // @Success 200 {object} team.TeamListResponse
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams [get]
-func (h *TeamHandler) ListTeams(c *gin.Context) {
+// @Router /v1/teams [get]
+func (h *Handler) ListTeams(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
@@ -97,8 +85,8 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id} [get]
-func (h *TeamHandler) GetTeam(c *gin.Context) {
+// @Router /v1/teams/{id} [get]
+func (h *Handler) GetTeam(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing team id"))
@@ -132,8 +120,8 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id} [patch]
-func (h *TeamHandler) UpdateTeam(c *gin.Context) {
+// @Router /v1/teams/{id} [patch]
+func (h *Handler) UpdateTeam(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing team id"))
@@ -170,8 +158,8 @@ func (h *TeamHandler) UpdateTeam(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id} [delete]
-func (h *TeamHandler) DeleteTeam(c *gin.Context) {
+// @Router /v1/teams/{id} [delete]
+func (h *Handler) DeleteTeam(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing team id"))
@@ -201,8 +189,8 @@ func (h *TeamHandler) DeleteTeam(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id}/members [get]
-func (h *TeamHandler) ListTeamMembers(c *gin.Context) {
+// @Router /v1/teams/{id}/members [get]
+func (h *Handler) ListTeamMembers(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.GinBadRequest(c, errors.New("missing team id"))
@@ -237,8 +225,8 @@ func (h *TeamHandler) ListTeamMembers(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id}/members [post]
-func (h *TeamHandler) AddTeamMember(c *gin.Context) {
+// @Router /v1/teams/{id}/members [post]
+func (h *Handler) AddTeamMember(c *gin.Context) {
 	teamID := c.Param("id")
 	if teamID == "" {
 		response.GinBadRequest(c, errors.New("missing team id"))
@@ -288,8 +276,8 @@ func (h *TeamHandler) AddTeamMember(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id}/members/{userId} [patch]
-func (h *TeamHandler) UpdateTeamMember(c *gin.Context) {
+// @Router /v1/teams/{id}/members/{userId} [patch]
+func (h *Handler) UpdateTeamMember(c *gin.Context) {
 	teamID := c.Param("id")
 	userID := c.Param("userId")
 	if teamID == "" || userID == "" {
@@ -328,8 +316,8 @@ func (h *TeamHandler) UpdateTeamMember(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /teams/{id}/members/{userId} [delete]
-func (h *TeamHandler) RemoveTeamMember(c *gin.Context) {
+// @Router /v1/teams/{id}/members/{userId} [delete]
+func (h *Handler) RemoveTeamMember(c *gin.Context) {
 	teamID := c.Param("id")
 	userID := c.Param("userId")
 	if teamID == "" || userID == "" {

@@ -2,8 +2,8 @@ package http
 
 import (
 	"errors"
-	"net/http"
 
+	"github.com/davidsugianto/go-pkgs/response"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	_ "github.com/davidsugianto/idp-core/internal/model/workload" // for swagger docs
@@ -27,23 +27,23 @@ import (
 func (h *Handler) CreateEnvironment(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	var req environment.CreateEnvironmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.GinBadRequest(c, err)
 		return
 	}
 
 	env, err := h.environmentUseCase.Create(c.Request.Context(), teamID, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, environment.ToEnvironmentResponse(env))
+	response.GinCreated(c, environment.ToEnvironmentResponse(env))
 }
 
 // ListEnvironments godoc
@@ -59,13 +59,13 @@ func (h *Handler) CreateEnvironment(c *gin.Context) {
 func (h *Handler) ListEnvironments(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	envs, err := h.environmentUseCase.List(c.Request.Context(), teamID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 		responses[i] = environment.ToEnvironmentResponse(&env)
 	}
 
-	c.JSON(http.StatusOK, responses)
+	response.GinSuccess(c, responses)
 }
 
 // GetEnvironment godoc
@@ -92,27 +92,27 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 func (h *Handler) GetEnvironment(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	env, err := h.environmentUseCase.Get(c.Request.Context(), teamID, id)
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, environment.ToEnvironmentResponse(env))
+	response.GinSuccess(c, environment.ToEnvironmentResponse(env))
 }
 
 // DeleteEnvironment godoc
@@ -130,26 +130,26 @@ func (h *Handler) GetEnvironment(c *gin.Context) {
 func (h *Handler) DeleteEnvironment(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	if err := h.environmentUseCase.Delete(c.Request.Context(), teamID, id); err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "environment deleted"})
+	response.GinSuccess(c, gin.H{"message": "environment deleted"})
 }
 
 // GetEnvironmentStatus godoc
@@ -167,27 +167,27 @@ func (h *Handler) DeleteEnvironment(c *gin.Context) {
 func (h *Handler) GetEnvironmentStatus(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	status, err := h.environmentUseCase.GetStatus(c.Request.Context(), teamID, id)
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, status)
+	response.GinSuccess(c, status)
 }
 
 // SyncEnvironment godoc
@@ -205,26 +205,26 @@ func (h *Handler) GetEnvironmentStatus(c *gin.Context) {
 func (h *Handler) SyncEnvironment(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	if err := h.environmentUseCase.TriggerSync(c.Request.Context(), teamID, id); err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "sync triggered"})
+	response.GinSuccess(c, gin.H{"message": "sync triggered"})
 }
 
 // GetGitOpsStatus godoc
@@ -242,27 +242,27 @@ func (h *Handler) SyncEnvironment(c *gin.Context) {
 func (h *Handler) GetGitOpsStatus(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	status, err := h.environmentUseCase.GetGitOpsStatus(c.Request.Context(), teamID, id)
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, status)
+	response.GinSuccess(c, status)
 }
 
 // GetWorkloads godoc
@@ -280,27 +280,27 @@ func (h *Handler) GetGitOpsStatus(c *gin.Context) {
 func (h *Handler) GetWorkloads(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	status, err := h.environmentUseCase.GetWorkloads(c.Request.Context(), teamID, id)
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "environment not found"})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, status)
+	response.GinSuccess(c, status)
 }
 
 // GetWorkloadDetails godoc
@@ -319,31 +319,31 @@ func (h *Handler) GetWorkloads(c *gin.Context) {
 func (h *Handler) GetWorkloadDetails(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.GinUnauthorized(c, errors.New("unauthorized"))
 		return
 	}
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing environment id"})
+		response.GinBadRequest(c, errors.New("missing environment id"))
 		return
 	}
 
 	name := c.Param("name")
 	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing workload name"})
+		response.GinBadRequest(c, errors.New("missing workload name"))
 		return
 	}
 
 	details, err := h.environmentUseCase.GetWorkloadDetails(c.Request.Context(), teamID, id, name)
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) || errors.Is(err, envUsecase.ErrWorkloadNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			response.GinNotFound(c, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.GinInternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, details)
+	response.GinSuccess(c, details)
 }

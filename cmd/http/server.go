@@ -8,6 +8,7 @@ import (
 	httpHandler "github.com/davidsugianto/idp-core/internal/handler/http"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -22,13 +23,9 @@ import (
 
 type Server struct {
 	*http.Server
-	handler        *httpHandler.Handler
-	authHandler    *httpHandler.AuthHandler
-	webhookHandler *httpHandler.WebhookHandler
-	userHandler    *httpHandler.UserHandler
-	teamHandler    *httpHandler.TeamHandler
-	config         *config.Config
-	logger         *extlogger.Logger
+	handler *httpHandler.Handler
+	config  *config.Config
+	logger  *extlogger.Logger
 }
 
 type Dependencies struct {
@@ -37,6 +34,7 @@ type Dependencies struct {
 	TeamUseCase        teamUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
+	WebhookValidator   *webhook.Validator
 }
 
 func New(deps Dependencies) *Server {
@@ -44,13 +42,13 @@ func New(deps Dependencies) *Server {
 		Server: &http.Server{},
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
+			UserUseCase:        deps.UserUseCase,
+			TeamUseCase:        deps.TeamUseCase,
+			AuthConfig:         &deps.Config.Auth,
+			WebhookValidator:   deps.WebhookValidator,
 		}),
-		authHandler:    httpHandler.NewAuthHandler(&deps.Config.Auth),
-		webhookHandler: httpHandler.NewWebhookHandler(),
-		userHandler:    httpHandler.NewUserHandler(deps.UserUseCase),
-		teamHandler:    httpHandler.NewTeamHandler(deps.TeamUseCase),
-		config:         deps.Config,
-		logger:         deps.Logger,
+		config: deps.Config,
+		logger: deps.Logger,
 	}
 }
 
@@ -68,11 +66,11 @@ func (s *Server) setupPublicRoutes(r *gin.Engine) {
 
 	// Auth routes (public)
 	auth := r.Group("/auth")
-	auth.POST("/login", s.authHandler.Login)
+	auth.POST("/login", s.handler.Login)
 
 	// Admission webhook endpoint (public)
 	admission := r.Group("/admission")
-	admission.POST("/validate", s.webhookHandler.Validate)
+	admission.POST("/validate", s.handler.Validate)
 }
 
 func (s *Server) setupAPIRoutes(r *gin.Engine) {
@@ -96,25 +94,25 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	// User routes (protected with JWT)
 	users := v1.Group("/users")
 	users.Use(middleware.JWT(&s.config.Auth))
-	users.GET("", s.userHandler.ListUsers)
-	users.POST("", s.userHandler.CreateUser)
-	users.GET("/:id", s.userHandler.GetUser)
-	users.PATCH("/:id", s.userHandler.UpdateUser)
-	users.DELETE("/:id", s.userHandler.DeleteUser)
-	users.PUT("/:id/status", s.userHandler.UpdateUserStatus)
+	users.GET("", s.handler.ListUsers)
+	users.POST("", s.handler.CreateUser)
+	users.GET("/:id", s.handler.GetUser)
+	users.PATCH("/:id", s.handler.UpdateUser)
+	users.DELETE("/:id", s.handler.DeleteUser)
+	users.PUT("/:id/status", s.handler.UpdateUserStatus)
 
 	// Team routes (protected with JWT)
 	teams := v1.Group("/teams")
 	teams.Use(middleware.JWT(&s.config.Auth))
-	teams.GET("", s.teamHandler.ListTeams)
-	teams.POST("", s.teamHandler.CreateTeam)
-	teams.GET("/:id", s.teamHandler.GetTeam)
-	teams.PATCH("/:id", s.teamHandler.UpdateTeam)
-	teams.DELETE("/:id", s.teamHandler.DeleteTeam)
-	teams.GET("/:id/members", s.teamHandler.ListTeamMembers)
-	teams.POST("/:id/members", s.teamHandler.AddTeamMember)
-	teams.PATCH("/:id/members/:userId", s.teamHandler.UpdateTeamMember)
-	teams.DELETE("/:id/members/:userId", s.teamHandler.RemoveTeamMember)
+	teams.GET("", s.handler.ListTeams)
+	teams.POST("", s.handler.CreateTeam)
+	teams.GET("/:id", s.handler.GetTeam)
+	teams.PATCH("/:id", s.handler.UpdateTeam)
+	teams.DELETE("/:id", s.handler.DeleteTeam)
+	teams.GET("/:id/members", s.handler.ListTeamMembers)
+	teams.POST("/:id/members", s.handler.AddTeamMember)
+	teams.PATCH("/:id/members/:userId", s.handler.UpdateTeamMember)
+	teams.DELETE("/:id/members/:userId", s.handler.RemoveTeamMember)
 }
 
 func (s *Server) Run(port string) error {
