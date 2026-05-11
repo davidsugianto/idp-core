@@ -1,29 +1,30 @@
 # 📋 idp-core — Development TODO List (Phase 2)
 
-> **Phase**: 2 - Enhancement  
-> **Timeline**: Q3 2026 (~10 weeks)  
-> **Status**: 🔄 In Development  
+> **Phase**: 2 - Enhancement\
+> **Timeline**: Q3 2026 (\~10 weeks)\
+> **Status**: 🔄 In Development\
 > **Last Updated**: May 2026
 
----
+***
 
 ## 📊 Progress Overview
 
-| Milestone | Status | Progress |
-|-----------|--------|----------|
-| M1: Auth & RBAC | 🔄 In Progress | 33% |
-| M2: FinOps | 🔲 Not Started | 0% |
-| M3: Rightsizing | 🔲 Not Started | 0% |
-| M4: Service Catalog | 🔲 Not Started | 0% |
-| M5: Testing & Polish | 🔲 Not Started | 0% |
+| Milestone            | Status         | Progress |
+| -------------------- | -------------- | -------- |
+| M1: Auth & RBAC      | 🔄 In Progress | 66%      |
+| M2: FinOps           | 🔲 Not Started | 0%       |
+| M3: Rightsizing      | 🔲 Not Started | 0%       |
+| M4: Service Catalog  | 🔲 Not Started | 0%       |
+| M5: Testing & Polish | 🔲 Not Started | 0%       |
 
----
+***
 
 ## 🗓️ M1: Auth & RBAC (Week 1-3)
 
 ### Week 1: User & Team Management ✅ COMPLETED
 
 #### Database & Models
+
 - [x] Create migration: `users` table
 - [x] Create migration: `teams` table
 - [x] Create migration: `team_members` table
@@ -32,6 +33,7 @@
 - [x] Create model: `internal/model/team_member/type.go` (included in team/type.go)
 
 #### Repository Layer
+
 - [x] Create `internal/repository/user/init.go` (interface + struct)
 - [x] Create `internal/repository/user/user.go` (CRUD methods)
 - [x] Create `internal/repository/team/init.go`
@@ -39,17 +41,20 @@
 - [x] Create `internal/repository/team/member.go`
 
 #### Usecase Layer
+
 - [x] Create `internal/usecase/user/init.go`
 - [x] Create `internal/usecase/user/user.go`
 - [x] Create `internal/usecase/team/init.go`
 - [x] Create `internal/usecase/team/team.go`
 
 #### Handler Layer
+
 - [x] Create `internal/handler/http/user.go`
 - [x] Create `internal/handler/http/team.go`
 - [x] Add routes in `cmd/http/server.go`
 
 #### Tests
+
 - [x] Unit tests: user repository (mock created)
 - [x] Unit tests: team repository (mock created)
 - [x] Unit tests: user usecase
@@ -57,76 +62,89 @@
 - [ ] Integration tests: user API
 - [ ] Integration tests: team API
 
----
+***
 
-### Week 2: OIDC Integration & RBAC
+### Week 2: OIDC Integration & RBAC ✅ COMPLETED
 
 #### OIDC Integration
-- [ ] Add dependency: `github.com/coreos/go-oidc`
-- [ ] Create `internal/pkg/oidc/client.go`
-- [ ] Create `internal/pkg/oidc/verifier.go`
-- [ ] Update config: OIDC settings in `config.go`
-- [ ] Create auth middleware: `internal/handler/http/middleware/oidc.go`
+
+- [x] Add dependency: `github.com/coreos/go-oidc`
+- [x] Create `internal/pkg/oidc/client.go`
+- [x] Create `internal/pkg/oidc/verifier.go`
+- [x] Update config: OIDC settings in `config.go`
+- [x] Create auth middleware: `internal/handler/http/middleware/oidc.go`
 
 #### Role & Permission Models
-- [ ] Create migration: `roles` table
-- [ ] Create migration: `permissions` table
-- [ ] Create migration: `role_permissions` table
-- [ ] Create migration: `user_roles` table
-- [ ] Create model: `internal/model/role/type.go`
-- [ ] Create model: `internal/model/permission/type.go`
+
+- [x] Create migration: `roles` table
+- [x] Create migration: `permissions` table
+- [x] Create migration: `role_permissions` table
+- [x] Create migration: `user_roles` table
+- [x] Create model: `internal/model/role/type.go`
+- [x] Create model: `internal/model/permission/type.go`
 
 #### RBAC Repository
-- [ ] Create `internal/repository/role/init.go`
-- [ ] Create `internal/repository/role/role.go`
-- [ ] Create `internal/repository/permission/init.go`
-- [ ] Create `internal/repository/permission/permission.go`
+
+- [x] Create `internal/repository/role/init.go`
+- [x] Create `internal/repository/role/role.go`
+- [x] Create `internal/repository/role/member.go`
+- [x] Create `internal/repository/permission/init.go`
+- [x] Create `internal/repository/permission/permission.go`
 
 #### RBAC Usecase
-- [ ] Create `internal/usecase/role/init.go`
-- [ ] Create `internal/usecase/role/role.go`
-- [ ] Create RBAC engine: `internal/usecase/auth/rbac.go`
+
+- [x] Create `internal/usecase/role/init.go`
+- [x] Create `internal/usecase/role/role.go`
+- [x] Create RBAC engine: `internal/usecase/auth/rbac.go`
 
 #### RBAC Handler
-- [ ] Create `internal/handler/http/role.go`
-- [ ] Update auth middleware with RBAC check
-- [ ] Add role routes in `cmd/http/server.go`
+
+- [x] Create `internal/handler/http/role.go`
+- [x] Update auth middleware with RBAC check
+- [x] Add role routes in `cmd/http/server.go`
 
 #### Seed Default Data
-- [ ] Create seed script for default roles
-- [ ] Create seed script for default permissions
+
+- [x] Create seed script for default roles
+- [x] Create seed script for default permissions
 - [ ] Create seed script for platform admin user
 
 #### Tests
-- [ ] Unit tests: OIDC client
-- [ ] Unit tests: role repository
-- [ ] Unit tests: RBAC engine
+
+- [x] Unit tests: OIDC client
+- [x] Unit tests: role repository (mock created)
+- [x] Unit tests: RBAC engine
 - [ ] Integration tests: OIDC flow
 - [ ] Integration tests: RBAC enforcement
 
----
+***
 
 ### Week 3: API Keys & Audit Logging
 
 #### API Key Models
+
 - [ ] Create migration: `api_keys` table
-- [ ] Create model: `internal/model/api_key/type.go`
+- [ ] Create model: `internal/model/apikey/type.go`
 
 #### API Key Repository
+
 - [ ] Create `internal/repository/apikey/init.go`
 - [ ] Create `internal/repository/apikey/apikey.go`
 
 #### API Key Usecase
+
 - [ ] Create `internal/usecase/apikey/init.go`
 - [ ] Create `internal/usecase/apikey/apikey.go`
 - [ ] Implement key generation & hashing
 
 #### API Key Handler
+
 - [ ] Create `internal/handler/http/apikey.go`
 - [ ] Add API key authentication middleware
 - [ ] Add API key routes
 
 #### Audit Logging
+
 - [ ] Create migration: `audit_logs` table
 - [ ] Create model: `internal/model/audit_log/type.go`
 - [ ] Create `internal/repository/auditlog/init.go`
@@ -137,105 +155,124 @@
 - [ ] Create `internal/handler/http/auditlog.go`
 
 #### Tests
+
 - [ ] Unit tests: API key generation
 - [ ] Unit tests: audit log repository
 - [ ] Integration tests: API key auth
 - [ ] Integration tests: audit log retrieval
 
----
+***
 
 ## 🗓️ M2: FinOps (Week 4-5)
 
 ### Week 4: Kubecost Integration & Cost Tracking
 
 #### Configuration
+
 - [ ] Add Kubecost config to `config.go`
 - [ ] Add Prometheus config to `config.go`
 
 #### Kubecost Client
+
 - [ ] Create `internal/pkg/kubecost/client.go`
 - [ ] Create `internal/pkg/kubecost/cost.go`
 - [ ] Create `internal/pkg/kubecost/allocation.go`
 
 #### Prometheus Client
+
 - [ ] Create `internal/pkg/prometheus/client.go`
 - [ ] Create cost query functions
 
 #### Cost Models
+
 - [ ] Create migration: `cost_records` table
 - [ ] Create model: `internal/model/cost_record/type.go`
 
 #### Cost Repository
+
 - [ ] Create `internal/repository/cost/init.go`
 - [ ] Create `internal/repository/cost/cost.go`
 
 #### Cost Usecase
+
 - [ ] Create `internal/usecase/cost/init.go`
 - [ ] Create `internal/usecase/cost/cost.go`
 - [ ] Implement cost sync job (cron)
 
 #### Cost Handler
+
 - [ ] Create `internal/handler/http/cost.go`
 - [ ] Add cost routes
 
 #### Tests
+
 - [ ] Unit tests: Kubecost client
 - [ ] Unit tests: Prometheus client
 - [ ] Unit tests: cost repository
 - [ ] Integration tests: cost API
 
----
+***
 
 ### Week 5: Budget Management & Alerts
 
 #### Budget Models
+
 - [ ] Create migration: `budgets` table
 - [ ] Create migration: `budget_alerts` table
 - [ ] Create model: `internal/model/budget/type.go`
 - [ ] Create model: `internal/model/budget_alert/type.go`
 
 #### Budget Repository
+
 - [ ] Create `internal/repository/budget/init.go`
 - [ ] Create `internal/repository/budget/budget.go`
 
 #### Budget Usecase
+
 - [ ] Create `internal/usecase/budget/init.go`
 - [ ] Create `internal/usecase/budget/budget.go`
 - [ ] Implement budget alert checker (cron)
 - [ ] Implement notification sender (email/Slack)
 
 #### Budget Handler
+
 - [ ] Create `internal/handler/http/budget.go`
 - [ ] Add budget routes
 
 #### Cost Export
+
 - [ ] Implement CSV export functionality
 - [ ] Add export endpoint
 
 #### Tests
+
 - [ ] Unit tests: budget repository
 - [ ] Unit tests: budget alert logic
 - [ ] Integration tests: budget API
 - [ ] Integration tests: alert triggering
 
----
+***
 
 ## 🗓️ M3: Rightsizing (Week 6-7)
 
 ### Week 6: Rightsizing Recommendations
 
 #### Configuration
+
 - [ ] Add rightsizing config to `config.go`
 
 #### Rightsizing Models
+
 - [ ] Create migration: `rightsizing_recommendations` table
 - [ ] Create model: `internal/model/rightsizing/type.go`
 
 #### Rightsizing Repository
+
 - [ ] Create `internal/repository/rightsizing/init.go`
 - [ ] Create `internal/repository/rightsizing/rightsizing.go`
 
 #### Rightsizing Usecase
+
 - [ ] Create `internal/usecase/rightsizing/init.go`
 - [ ] Create `internal/usecase/rightsizing/rightsizing.go`
 - [ ] Implement usage analyzer (query Prometheus)
@@ -243,58 +280,68 @@
 - [ ] Implement recommendation scheduler (cron)
 
 #### Rightsizing Handler
+
 - [ ] Create `internal/handler/http/rightsizing.go`
 - [ ] Add rightsizing routes
 
 #### K8s Integration
+
 - [ ] Implement apply recommendation (update workload)
 - [ ] Handle rollback on failure
 
 #### Tests
+
 - [ ] Unit tests: usage analyzer
 - [ ] Unit tests: recommendation generator
 - [ ] Integration tests: rightsizing API
 - [ ] E2E test: apply recommendation
 
----
+***
 
 ### Week 7: Resource Quotas
 
 #### Resource Quota Models
+
 - [ ] Create migration: `resource_quotas` table
 - [ ] Create model: `internal/model/resource_quota/type.go`
 
 #### Resource Quota Repository
+
 - [ ] Create `internal/repository/quota/init.go`
 - [ ] Create `internal/repository/quota/quota.go`
 
 #### Resource Quota Usecase
+
 - [ ] Create `internal/usecase/quota/init.go`
 - [ ] Create `internal/usecase/quota/quota.go`
 - [ ] Implement usage calculator
 - [ ] Implement quota enforcement (admission webhook)
 
 #### Resource Quota Handler
+
 - [ ] Create `internal/handler/http/quota.go`
 - [ ] Add quota routes
 
 #### Admission Webhook Update
+
 - [ ] Update webhook to check quotas
 - [ ] Return quota exceeded error
 
 #### Tests
+
 - [ ] Unit tests: quota repository
 - [ ] Unit tests: quota enforcement
 - [ ] Integration tests: quota API
 - [ ] E2E test: quota enforcement
 
----
+***
 
 ## 🗓️ M4: Service Catalog (Week 8-9)
 
 ### Week 8: Service Registration & Discovery
 
 #### Service Models
+
 - [ ] Create migration: `services` table
 - [ ] Create migration: `service_versions` table
 - [ ] Create migration: `service_endpoints` table
@@ -303,61 +350,73 @@
 - [ ] Create model: `internal/model/service_endpoint/type.go`
 
 #### Service Repository
+
 - [ ] Create `internal/repository/service/init.go`
 - [ ] Create `internal/repository/service/service.go`
 - [ ] Create `internal/repository/service/version.go`
 
 #### Service Usecase
+
 - [ ] Create `internal/usecase/service/init.go`
 - [ ] Create `internal/usecase/service/service.go`
 
 #### Service Handler
+
 - [ ] Create `internal/handler/http/service.go`
 - [ ] Add service routes
 
 #### Tests
+
 - [ ] Unit tests: service repository
 - [ ] Unit tests: service usecase
 - [ ] Integration tests: service API
 
----
+***
 
 ### Week 9: Dependencies & Environments
 
 #### Dependency Model
+
 - [ ] Create migration: `service_dependencies` table
 - [ ] Create model: `internal/model/service_dependency/type.go`
 
 #### Service Environment Model
+
 - [ ] Create migration: `service_environments` table
 - [ ] Create model: `internal/model/service_environment/type.go`
 
 #### Repository Extensions
+
 - [ ] Add dependency methods to service repository
 - [ ] Add environment methods to service repository
 
 #### Usecase Extensions
+
 - [ ] Add dependency management methods
 - [ ] Add environment deployment tracking
 
 #### Handler Extensions
+
 - [ ] Add dependency routes
 - [ ] Add service environment routes
 
 #### Dependency Visualization
+
 - [ ] Create endpoint for dependency graph
 - [ ] Format for frontend consumption
 
 #### Tests
+
 - [ ] Unit tests: dependency logic
 - [ ] Integration tests: dependency API
 - [ ] Integration tests: environment tracking
 
----
+***
 
 ## 🗓️ M5: Testing & Polish (Week 10)
 
 ### Integration Testing
+
 - [ ] Create comprehensive integration test suite
 - [ ] Test all Phase 2 API endpoints
 - [ ] Test OIDC flow end-to-end
@@ -366,16 +425,19 @@
 - [ ] Test rightsizing recommendations
 
 ### E2E Testing
+
 - [ ] Create E2E test scenarios for Phase 2
 - [ ] Test full user journey: login → create env → view costs
 - [ ] Test admin journey: manage roles → set budgets → view audit logs
 
 ### Performance Testing
+
 - [ ] Load test auth endpoints
 - [ ] Load test cost queries
 - [ ] Identify and fix bottlenecks
 
 ### Documentation
+
 - [ ] Update Swagger/OpenAPI specs
 - [ ] Update `README.md` with Phase 2 features
 - [ ] Update `DEV_GUIDELINE.md` with new patterns
@@ -383,19 +445,21 @@
 - [ ] Update `TEST.md` with new test scenarios
 
 ### Security Review
+
 - [ ] Review OIDC implementation for vulnerabilities
 - [ ] Review RBAC for privilege escalation risks
 - [ ] Review API key handling
 - [ ] Review audit log for sensitive data
 
 ### Final Checks
+
 - [ ] Run all tests: `go test ./...`
 - [ ] Run linter: `golangci-lint run`
 - [ ] Check test coverage: `go test -cover ./...`
 - [ ] Verify Swagger docs render correctly
 - [ ] Test Docker build: `docker build -t idp-core:v2 .`
 
----
+***
 
 ## 📦 Dependencies to Add
 
@@ -424,7 +488,7 @@ require (
 )
 ```
 
----
+***
 
 ## 🔧 Configuration Updates
 
@@ -468,7 +532,7 @@ service_catalog:
   default_visibility: "team"
 ```
 
----
+***
 
 ## 📁 File Structure (Phase 2)
 
@@ -477,7 +541,7 @@ internal/
 ├── handler/http/
 │   ├── user.go              # ✅ CREATED
 │   ├── team.go              # ✅ CREATED
-│   ├── role.go              # TODO
+│   ├── role.go              # ✅ CREATED
 │   ├── apikey.go            # TODO
 │   ├── auditlog.go          # TODO
 │   ├── cost.go              # TODO
@@ -489,10 +553,10 @@ internal/
 ├── usecase/
 │   ├── user/                # ✅ CREATED
 │   ├── team/                # ✅ CREATED
-│   ├── role/                # TODO
+│   ├── role/                # ✅ CREATED
 │   ├── apikey/              # TODO
 │   ├── auditlog/            # TODO
-│   ├── auth/                # TODO (RBAC engine)
+│   ├── auth/                # ✅ CREATED (RBAC engine)
 │   ├── cost/                # TODO
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
@@ -502,8 +566,8 @@ internal/
 ├── repository/
 │   ├── user/                # ✅ CREATED
 │   ├── team/                # ✅ CREATED
-│   ├── role/                # TODO
-│   ├── permission/          # TODO
+│   ├── role/                # ✅ CREATED
+│   ├── permission/          # ✅ CREATED
 │   ├── apikey/              # TODO
 │   ├── auditlog/            # TODO
 │   ├── cost/                # TODO
@@ -515,8 +579,8 @@ internal/
 ├── model/
 │   ├── user/                # ✅ CREATED
 │   ├── team/                # ✅ CREATED
-│   ├── role/                # TODO
-│   ├── permission/          # TODO
+│   ├── role/                # ✅ CREATED
+│   ├── permission/          # ✅ CREATED
 │   ├── api_key/             # TODO
 │   ├── audit_log/           # TODO
 │   ├── cost_record/         # TODO
@@ -526,22 +590,28 @@ internal/
 │   └── service/             # TODO
 │
 ├── pkg/
-│   ├── oidc/                # TODO
+│   ├── oidc/                # ✅ CREATED
 │   ├── kubecost/            # TODO
 │   └── prometheus/          # TODO
 │
 └── mocks/
     ├── user_repository.go   # ✅ CREATED
     ├── team_repository.go   # ✅ CREATED
+    ├── role_repository.go   # ✅ CREATED
+    └── permission_repository.go # ✅ CREATED
 
 migrations/
 ├── 20260501000000_create_users_table.sql        # ✅ CREATED
 ├── 20260501000001_create_teams_table.sql        # ✅ CREATED
 ├── 20260501000002_create_team_members_table.sql # ✅ CREATED
+├── 20260502000000_create_roles_table.sql        # ✅ CREATED
+├── 20260502000001_create_permissions_table.sql  # ✅ CREATED
+├── 20260502000002_create_role_permissions_table.sql # ✅ CREATED
+├── 20260502000003_create_user_roles_table.sql   # ✅ CREATED
 └── ... (remaining Phase 2 migrations - TODO)
 ```
 
----
+***
 
 ## ✅ Definition of Done
 
@@ -554,7 +624,7 @@ Each task is considered complete when:
 5. ✅ Code passes `golangci-lint`
 6. ✅ Code is reviewed and merged
 
----
+***
 
 ## 📝 Notes
 
@@ -564,13 +634,14 @@ Each task is considered complete when:
 - Budget alerts require email/Slack integration setup
 - Consider feature flags for gradual rollout
 
----
+***
 
 ## ✅ Completed Work
 
 ### M1 Week 1: User & Team Management (May 2026)
 
 **Files Created:**
+
 - `migrations/20260501000000_create_users_table.sql`
 - `migrations/20260501000001_create_teams_table.sql`
 - `migrations/20260501000002_create_team_members_table.sql`
@@ -588,29 +659,68 @@ Each task is considered complete when:
 - `internal/usecase/team/team_test.go`
 
 **API Endpoints Added:**
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/users` | List users with pagination |
-| POST | `/v1/users` | Create a new user |
-| GET | `/v1/users/:id` | Get user details |
-| PATCH | `/v1/users/:id` | Update user |
-| DELETE | `/v1/users/:id` | Delete user |
-| PUT | `/v1/users/:id/status` | Update user status |
-| GET | `/v1/teams` | List teams with pagination |
-| POST | `/v1/teams` | Create a new team |
-| GET | `/v1/teams/:id` | Get team details |
-| PATCH | `/v1/teams/:id` | Update team |
-| DELETE | `/v1/teams/:id` | Delete team |
-| GET | `/v1/teams/:id/members` | List team members |
-| POST | `/v1/teams/:id/members` | Add team member |
-| PATCH | `/v1/teams/:id/members/:userId` | Update member role |
-| DELETE | `/v1/teams/:id/members/:userId` | Remove team member |
+
+| Method | Endpoint                        | Description                |
+| ------ | ------------------------------- | -------------------------- |
+| GET    | `/v1/users`                     | List users with pagination |
+| POST   | `/v1/users`                     | Create a new user          |
+| GET    | `/v1/users/:id`                 | Get user details           |
+| PATCH  | `/v1/users/:id`                 | Update user                |
+| DELETE | `/v1/users/:id`                 | Delete user                |
+| PUT    | `/v1/users/:id/status`          | Update user status         |
+| GET    | `/v1/teams`                     | List teams with pagination |
+| POST   | `/v1/teams`                     | Create a new team          |
+| GET    | `/v1/teams/:id`                 | Get team details           |
+| PATCH  | `/v1/teams/:id`                 | Update team                |
+| DELETE | `/v1/teams/:id`                 | Delete team                |
+| GET    | `/v1/teams/:id/members`         | List team members          |
+| POST   | `/v1/teams/:id/members`         | Add team member            |
+| PATCH  | `/v1/teams/:id/members/:userId` | Update member role         |
+| DELETE | `/v1/teams/:id/members/:userId` | Remove team member         |
+
+### M1 Week 2: OIDC Integration & RBAC (May 2026)
+
+**Files Created:**
+
+- `migrations/20260502000000_create_roles_table.sql`
+- `migrations/20260502000001_create_permissions_table.sql`
+- `migrations/20260502000002_create_role_permissions_table.sql`
+- `migrations/20260502000003_create_user_roles_table.sql`
+- `internal/model/role/type.go`, `user_role.go`
+- `internal/model/permission/type.go`
+- `internal/repository/role/init.go`, `role.go`, `member.go`
+- `internal/repository/permission/init.go`, `permission.go`
+- `internal/usecase/role/init.go`, `role.go`, `role_test.go`
+- `internal/usecase/auth/init.go`, `rbac.go`
+- `internal/handler/http/role.go`
+- `internal/handler/http/middleware/oidc.go`
+- `internal/pkg/oidc/client.go`, `verifier.go`
+- `internal/pkg/config/config.go` (updated with OIDC settings)
+- `internal/mocks/role_repository.go`
+- `internal/mocks/permission_repository.go`
+- `internal/seed/permission.go`, `role.go`
+
+**API Endpoints Added:**
+
+| Method | Endpoint                                    | Description                |
+| ------ | ------------------------------------------- | -------------------------- |
+| GET    | `/v1/roles`                                 | List roles with pagination |
+| POST   | `/v1/roles`                                 | Create a new role          |
+| GET    | `/v1/roles/:id`                             | Get role details           |
+| PATCH  | `/v1/roles/:id`                             | Update role                |
+| DELETE | `/v1/roles/:id`                             | Delete role                |
+| POST   | `/v1/roles/assign`                          | Assign role to user        |
+| POST   | `/v1/roles/revoke`                          | Revoke role from user      |
+| GET    | `/v1/users/:user_id/roles`                  | Get user's roles           |
+| GET    | `/v1/teams/:team_id/members/:user_id/roles` | Get user's team roles      |
 
 **Next Steps:**
-- Week 2: OIDC Integration & RBAC (roles, permissions, user_roles tables)
-- Add integration tests for user and team APIs
 
----
+- Week 3: API Keys & Audit Logging
+- Add integration tests for role API
+- Complete seed script for platform admin user
+
+***
 
 ## 📎 References
 
@@ -618,3 +728,4 @@ Each task is considered complete when:
 - [PRD Overview](./prd/PRD.md)
 - [Development Guidelines](./DEV_GUIDELINE.md)
 - [Test Documentation](./TEST.md)
+

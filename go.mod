@@ -3,6 +3,7 @@ module github.com/davidsugianto/idp-core
 go 1.25.7
 
 require (
+	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/davidsugianto/go-pkgs v1.0.1
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
@@ -17,6 +18,7 @@ require (
 	github.com/swaggo/swag v1.16.6
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.42.0
+	golang.org/x/oauth2 v0.36.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 	k8s.io/api v0.31.0
@@ -62,6 +64,7 @@ require (
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -151,7 +154,6 @@ require (
 	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/term v0.42.0 // indirect

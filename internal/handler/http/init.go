@@ -5,6 +5,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ type Handler struct {
 	environmentUseCase envUsecase.Usecase
 	userUseCase        userUsecase.Usecase
 	teamUseCase        teamUsecase.Usecase
+	roleUseCase        roleUsecase.Usecase
 	authConfig         *config.AuthConfig
 	webhookValidator   *webhook.Validator
 }
@@ -22,6 +24,7 @@ type Dependencies struct {
 	EnvironmentUseCase envUsecase.Usecase
 	UserUseCase        userUsecase.Usecase
 	TeamUseCase        teamUsecase.Usecase
+	RoleUseCase        roleUsecase.Usecase
 	AuthConfig         *config.AuthConfig
 	WebhookValidator   *webhook.Validator
 }
@@ -31,6 +34,7 @@ func New(deps Dependencies) *Handler {
 		environmentUseCase: deps.EnvironmentUseCase,
 		userUseCase:        deps.UserUseCase,
 		teamUseCase:        deps.TeamUseCase,
+		roleUseCase:        deps.RoleUseCase,
 		authConfig:         deps.AuthConfig,
 		webhookValidator:   deps.WebhookValidator,
 	}

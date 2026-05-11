@@ -13,9 +13,12 @@ import (
 	"github.com/davidsugianto/go-pkgs/logger"
 
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
+	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
+	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 )
@@ -80,6 +83,12 @@ func main() {
 	teamRepo := teamRepository.New(teamRepository.Dependencies{
 		Database: dbClient,
 	})
+	roleRepo := roleRepo.New(roleRepo.Dependencies{
+		Database: dbClient,
+	})
+	permRepo := permissionRepo.New(permissionRepo.Dependencies{
+		Database: dbClient,
+	})
 
 	// UseCases
 	envUC := envUsecase.New(envUsecase.Dependencies{
@@ -92,6 +101,10 @@ func main() {
 		TeamRepo: teamRepo,
 		UserRepo: userRepo,
 	})
+	roleUC := roleUsecase.New(roleUsecase.Dependencies{
+		RoleRepo:       roleRepo,
+		PermissionRepo: permRepo,
+	})
 
 	// Webhook validator
 	webhookValidator := webhook.NewValidator()
@@ -100,6 +113,7 @@ func main() {
 		EnvironmentUseCase: envUC,
 		UserUseCase:        userUC,
 		TeamUseCase:        teamUC,
+		RoleUseCase:        roleUC,
 		Config:             cfg,
 		Logger:             logs,
 		WebhookValidator:   webhookValidator,

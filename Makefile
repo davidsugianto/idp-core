@@ -414,8 +414,8 @@ docker-run:
 ## swagger-gen: Generate Swagger documentation
 swagger-gen:
 	@echo "==> Generating Swagger docs..."
-	swag init -g cmd/http/main.go -o docs/swagger --parseInternal
-	@echo "✅ Swagger docs generated!"
+	swag init -g cmd/http/main.go -o docs/swagger --parseDependency --parseInternal
+	@echo "✅ Swagger docs generated at docs/swagger/"
 
 # =============================================================================
 # Mocks
