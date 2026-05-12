@@ -6,7 +6,8 @@ This document provides comprehensive information about testing in idp-core.
 
 | Category | Location | Purpose | Dependencies |
 |----------|----------|---------|--------------|
-| Unit Tests | `internal/**/` | Test individual functions and methods | None |
+| Unit Tests | `internal/**/` | Test individual functions and methods | gomock, testify |
+| Mock Objects | `internal/mocks/` | Generated mock implementations | gomock |
 | Integration Tests | `internal/**/` | Test components against real dependencies | Docker, Kind |
 | E2E Tests | `tests/e2e/` | Test complete workflows | Kind, ArgoCD |
 | Contract Tests | `tests/contract/` | Validate API specifications | None |
@@ -86,6 +87,77 @@ make test-all-integration
 
 ---
 
+## Unit Tests
+
+### Test Files
+
+| File | Package | Description |
+|------|---------|-------------|
+| `internal/usecase/user/user_test.go` | user | User CRUD, status management |
+| `internal/usecase/team/team_test.go` | team | Team CRUD, member management |
+| `internal/usecase/role/role_test.go` | role | Role CRUD, permission assignment |
+| `internal/usecase/apikey/apikey_test.go` | apikey | Key generation, hashing, CRUD, validation |
+| `internal/usecase/auditlog/auditlog_test.go` | auditlog | Audit log create, get, list, filtering |
+| `internal/pkg/oidc/verifier_test.go` | oidc | Token verification, group extraction |
+| `internal/handler/http/*_test.go` | http | HTTP handler request/response |
+
+### Mock Objects
+
+Mocks follow the gomock manual pattern. Each repository interface has a corresponding mock in `internal/mocks/`:
+
+| Mock File | Mocked Interface |
+|-----------|-----------------|
+| `internal/mocks/user_repository.go` | `user.Repository` |
+| `internal/mocks/team_repository.go` | `team.Repository` |
+| `internal/mocks/role_repository.go` | `role.Repository` |
+| `internal/mocks/permission_repository.go` | `permission.Repository` |
+| `internal/mocks/apikey_repository.go` | `apikey.Repository` |
+| `internal/mocks/auditlog_repository.go` | `auditlog.Repository` |
+
+Usage pattern:
+
+```go
+ctrl := gomock.NewController(t)
+defer ctrl.Finish()
+
+mockRepo := mocks.NewMockApiKeyRepository(ctrl)
+mockRepo.EXPECT().
+    GetByKey(gomock.Any(), "hashed-key").
+    Return(&apikey.APIKey{ID: "key-1", IsActive: true}, nil)
+
+uc := apikey.New(apikey.Dependencies{Repo: mockRepo})
+result, err := uc.Validate(ctx, "hashed-key")
+```
+
+### API Key Unit Tests
+
+Located in `internal/usecase/apikey/apikey_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestGenerateKey` | Key format (`idp_` prefix), length |
+| `TestGenerateKey_Uniqueness` | No collisions across 100 keys |
+| `TestHashKey` | SHA-256 produces consistent 64-char hex |
+| `TestHashKey_Deterministic` | Same input → same hash |
+| `TestCreate` | Success with defaults, empty name error, whitespace name error, team/expiry, repo error |
+| `TestGet` | Found, not found |
+| `TestList` | By team, all active |
+| `TestUpdate` | Update name, not found |
+| `TestDelete` | Success, not found |
+| `TestValidate` | Valid key, empty key, not found, inactive key, expired key, update-last-used failure is non-blocking |
+
+### Audit Log Unit Tests
+
+Located in `internal/usecase/auditlog/auditlog_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestCreate` | Defaults (status→success), failure status, changes tracking (old/new values), repo error |
+| `TestGet` | Found, not found returns nil response |
+| `TestList` | With filters, enforces default limit (50), caps max limit (200), empty result |
+
+---
+
 ## E2E Tests
 
 ### Overview
@@ -141,6 +213,28 @@ Tests API authentication middleware:
 | Missing token | 401 Unauthorized |
 | Invalid token | 401 Unauthorized |
 | Valid token | 200 OK |
+
+#### TestE2E_APIKeyAuth
+
+Tests API key authentication flow:
+
+| Scenario | Expected Status |
+|----------|-----------------|
+| Create API key (JWT auth) | 201 Created |
+| Authenticate with valid API key | 200 OK |
+| Authenticate with invalid API key | 401 Unauthorized |
+| Revoked API key access | 401 Unauthorized |
+
+#### TestE2E_AuditLogRetrieval
+
+Tests audit log generation and retrieval:
+
+| Scenario | Expected Status |
+|----------|-----------------|
+| List audit logs (JWT auth) | 200 OK |
+| Filter by user/team/action | 200 OK |
+| Get audit log by ID | 200 OK |
+| Access without auth | 401 Unauthorized |
 
 #### TestE2E_NamespaceNaming
 
@@ -271,10 +365,30 @@ make test-contract
 
 === RUN   TestOpenAPIPaths
     Available API paths:
+      /v1/users
+      /v1/users/{id}
+      /v1/users/{id}/roles
+      /v1/users/{id}/status
+      /v1/teams
+      /v1/teams/{id}
+      /v1/teams/{id}/members
+      /v1/teams/{id}/members/{userId}
+      /v1/teams/{id}/members/{userId}/roles
+      /v1/roles
+      /v1/roles/{id}
+      /v1/roles/assign
+      /v1/roles/revoke
+      /v1/api-keys
+      /v1/api-keys/{id}
+      /v1/audit-logs
+      /v1/audit-logs/{id}
       /v1/environments
       /v1/environments/{id}
+      /v1/environments/{id}/status
+      /v1/environments/{id}/gitops/status
+      /v1/environments/{id}/workloads
+      /v1/environments/{id}/workloads/{name}
       /v1/environments/{id}/sync
-      ...
 --- PASS: TestOpenAPIPaths
 ```
 
@@ -399,7 +513,9 @@ TIMEOUT=900 make dev-k8s-setup
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Unit | `Test<Function>_<Scenario>` | `TestCreate_Success` |
+| Unit (func) | `Test<Function>` | `TestGenerateKey` |
+| Unit (method) | `Test<Method>` with subtests | `TestCreate` with `t.Run("success_with_defaults")` |
+| Unit (table) | `Test<Function>_<Scenario>` | `TestCreate_Success` |
 | Integration | `TestRepository_<Method>_<Scenario>` | `TestRepository_Create_Success` |
 | E2E | `TestE2E_<Feature>_<Scenario>` | `TestE2E_AuthFlow_ValidToken` |
 | Contract | `TestOpenAPI<Component>_<Check>` | `TestOpenAPIPaths_ValidMethods` |

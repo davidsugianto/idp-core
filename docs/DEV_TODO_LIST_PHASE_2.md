@@ -11,7 +11,7 @@
 
 | Milestone            | Status         | Progress |
 | -------------------- | -------------- | -------- |
-| M1: Auth & RBAC      | 🔄 In Progress | 66%      |
+| M1: Auth & RBAC      | 🔄 In Progress | 85%      |
 | M2: FinOps           | 🔲 Not Started | 0%       |
 | M3: Rightsizing      | 🔲 Not Started | 0%       |
 | M4: Service Catalog  | 🔲 Not Started | 0%       |
@@ -20,6 +20,9 @@
 ***
 
 ## 🗓️ M1: Auth & RBAC (Week 1-3)
+
+> **Implementation**: ✅ Complete (all models, repositories, usecases, handlers, middleware, unit tests)
+> **Remaining**: Integration tests (6 suites), platform admin seed script
 
 ### Week 1: User & Team Management ✅ COMPLETED
 
@@ -119,45 +122,45 @@
 
 ***
 
-### Week 3: API Keys & Audit Logging
+### Week 3: API Keys & Audit Logging ✅ COMPLETED
 
 #### API Key Models
 
-- [ ] Create migration: `api_keys` table
-- [ ] Create model: `internal/model/apikey/type.go`
+- [x] Create migration: `api_keys` table
+- [x] Create model: `internal/model/apikey/type.go`
 
 #### API Key Repository
 
-- [ ] Create `internal/repository/apikey/init.go`
-- [ ] Create `internal/repository/apikey/apikey.go`
+- [x] Create `internal/repository/apikey/init.go`
+- [x] Create `internal/repository/apikey/apikey.go`
 
 #### API Key Usecase
 
-- [ ] Create `internal/usecase/apikey/init.go`
-- [ ] Create `internal/usecase/apikey/apikey.go`
-- [ ] Implement key generation & hashing
+- [x] Create `internal/usecase/apikey/init.go`
+- [x] Create `internal/usecase/apikey/apikey.go`
+- [x] Implement key generation & hashing
 
 #### API Key Handler
 
-- [ ] Create `internal/handler/http/apikey.go`
-- [ ] Add API key authentication middleware
-- [ ] Add API key routes
+- [x] Create `internal/handler/http/apikey.go`
+- [x] Add API key authentication middleware
+- [x] Add API key routes
 
 #### Audit Logging
 
-- [ ] Create migration: `audit_logs` table
-- [ ] Create model: `internal/model/audit_log/type.go`
-- [ ] Create `internal/repository/auditlog/init.go`
-- [ ] Create `internal/repository/auditlog/auditlog.go`
-- [ ] Create `internal/usecase/auditlog/init.go`
-- [ ] Create `internal/usecase/auditlog/auditlog.go`
-- [ ] Create audit middleware for automatic logging
-- [ ] Create `internal/handler/http/auditlog.go`
+- [x] Create migration: `audit_logs` table
+- [x] Create model: `internal/model/audit_log/type.go`
+- [x] Create `internal/repository/auditlog/init.go`
+- [x] Create `internal/repository/auditlog/auditlog.go`
+- [x] Create `internal/usecase/auditlog/init.go`
+- [x] Create `internal/usecase/auditlog/auditlog.go`
+- [x] Create audit middleware for automatic logging
+- [x] Create `internal/handler/http/auditlog.go`
 
 #### Tests
 
-- [ ] Unit tests: API key generation
-- [ ] Unit tests: audit log repository
+- [x] Unit tests: API key generation
+- [x] Unit tests: audit log repository
 - [ ] Integration tests: API key auth
 - [ ] Integration tests: audit log retrieval
 
@@ -542,8 +545,8 @@ internal/
 │   ├── user.go              # ✅ CREATED
 │   ├── team.go              # ✅ CREATED
 │   ├── role.go              # ✅ CREATED
-│   ├── apikey.go            # TODO
-│   ├── auditlog.go          # TODO
+│   ├── apikey.go            # ✅ CREATED
+│   ├── auditlog.go          # ✅ CREATED
 │   ├── cost.go              # TODO
 │   ├── budget.go            # TODO
 │   ├── rightsizing.go       # TODO
@@ -554,8 +557,8 @@ internal/
 │   ├── user/                # ✅ CREATED
 │   ├── team/                # ✅ CREATED
 │   ├── role/                # ✅ CREATED
-│   ├── apikey/              # TODO
-│   ├── auditlog/            # TODO
+│   ├── apikey/              # ✅ CREATED
+│   ├── auditlog/            # ✅ CREATED
 │   ├── auth/                # ✅ CREATED (RBAC engine)
 │   ├── cost/                # TODO
 │   ├── budget/              # TODO
@@ -568,8 +571,8 @@ internal/
 │   ├── team/                # ✅ CREATED
 │   ├── role/                # ✅ CREATED
 │   ├── permission/          # ✅ CREATED
-│   ├── apikey/              # TODO
-│   ├── auditlog/            # TODO
+│   ├── apikey/              # ✅ CREATED
+│   ├── auditlog/            # ✅ CREATED
 │   ├── cost/                # TODO
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
@@ -581,8 +584,8 @@ internal/
 │   ├── team/                # ✅ CREATED
 │   ├── role/                # ✅ CREATED
 │   ├── permission/          # ✅ CREATED
-│   ├── api_key/             # TODO
-│   ├── audit_log/           # TODO
+│   ├── apikey/              # ✅ CREATED
+│   ├── auditlog/            # ✅ CREATED
 │   ├── cost_record/         # TODO
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
@@ -595,10 +598,12 @@ internal/
 │   └── prometheus/          # TODO
 │
 └── mocks/
-    ├── user_repository.go   # ✅ CREATED
-    ├── team_repository.go   # ✅ CREATED
-    ├── role_repository.go   # ✅ CREATED
-    └── permission_repository.go # ✅ CREATED
+    ├── user_repository.go       # ✅ CREATED
+    ├── team_repository.go       # ✅ CREATED
+    ├── role_repository.go       # ✅ CREATED
+    ├── permission_repository.go # ✅ CREATED
+    ├── apikey_repository.go     # ✅ CREATED
+    └── auditlog_repository.go   # ✅ CREATED
 
 migrations/
 ├── 20260501000000_create_users_table.sql        # ✅ CREATED
@@ -608,6 +613,8 @@ migrations/
 ├── 20260502000001_create_permissions_table.sql  # ✅ CREATED
 ├── 20260502000002_create_role_permissions_table.sql # ✅ CREATED
 ├── 20260502000003_create_user_roles_table.sql   # ✅ CREATED
+├── 20260512000000_create_api_keys_table.sql     # ✅ CREATED
+├── 20260512000001_create_audit_logs_table.sql   # ✅ CREATED
 └── ... (remaining Phase 2 migrations - TODO)
 ```
 
@@ -714,11 +721,52 @@ Each task is considered complete when:
 | GET    | `/v1/users/:user_id/roles`                  | Get user's roles           |
 | GET    | `/v1/teams/:team_id/members/:user_id/roles` | Get user's team roles      |
 
+### M1 Week 3: API Keys & Audit Logging (May 2026)
+
+**Files Created:**
+
+- `migrations/20260512000000_create_api_keys_table.sql`
+- `migrations/20260512000001_create_audit_logs_table.sql`
+- `internal/model/auditlog/type.go` (AuditLog, Map, constants, request/response types, converters)
+- `internal/repository/auditlog/init.go`, `auditlog.go`
+- `internal/usecase/apikey/init.go`, `apikey.go`, `apikey_test.go`
+- `internal/usecase/auditlog/init.go`, `auditlog_test.go`
+- `internal/handler/http/apikey.go`
+- `internal/handler/http/auditlog.go`
+- `internal/handler/http/middleware/apikey.go` (API key auth middleware)
+- `internal/handler/http/middleware/audit.go` (automatic audit logging middleware)
+- `internal/mocks/apikey_repository.go`
+- `internal/mocks/auditlog_repository.go`
+
+**Existing Files (already from Phase 1):**
+
+- `internal/model/apikey/type.go`
+- `internal/repository/apikey/init.go`
+
+**API Endpoints Added:**
+
+| Method | Endpoint               | Description                |
+| ------ | ---------------------- | -------------------------- |
+| GET    | `/v1/api-keys`         | List API keys              |
+| POST   | `/v1/api-keys`         | Create a new API key       |
+| GET    | `/v1/api-keys/:id`     | Get API key details        |
+| PATCH  | `/v1/api-keys/:id`     | Update API key             |
+| DELETE | `/v1/api-keys/:id`     | Delete (revoke) API key    |
+| GET    | `/v1/audit-logs`       | List audit logs (filtered) |
+| GET    | `/v1/audit-logs/:id`   | Get audit log entry        |
+
+**Key Features:**
+- API key generation with `idp_` prefix and hex-encoded random suffix
+- SHA-256 hashing for storage; plain key returned only on creation
+- API key auth middleware supporting both `Authorization: Bearer` and `X-API-Key` headers
+- Automatic audit logging middleware on all `/v1` routes (fire-and-forget)
+- Audit log filtering by user, team, action, resource type, status, and date range
+
 **Next Steps:**
 
-- Week 3: API Keys & Audit Logging
-- Add integration tests for role API
+- Add integration tests for role API, API key auth, and audit log retrieval
 - Complete seed script for platform admin user
+- Begin M2: FinOps (Week 4)
 
 ***
 

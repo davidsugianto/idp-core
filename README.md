@@ -11,7 +11,8 @@
 - 🎯 **GitOps Native** — ArgoCD integration for declarative, version-controlled deployments
 - 📊 **Real-Time Visibility** — Live workload status, health, and resource metrics
 - 👥 **Multi-Tenant** — Team-scoped resources with RBAC for secure access control
-- 🔐 **Secure by Default** — JWT authentication, team isolation, policy enforcement
+- 🔐 **Secure by Default** — JWT + API Key authentication, team isolation, policy enforcement
+- 📋 **Audit Logging** — Automatic request logging with filterable audit trails
 
 **Use Cases:**
 | Who | What |
@@ -28,9 +29,11 @@
 | 🚀 **Environment Management** | Create, list, get, delete isolated K8s namespaces |
 | 🎯 **GitOps Integration** | Automatic ArgoCD Application creation and sync |
 | 📊 **Live Status** | Real-time workload status via Kubernetes informers |
-| 🔐 **Authentication** | JWT-based auth with team context |
+| 🔐 **Authentication** | JWT + API Key auth with team context |
 | 👥 **User & Team Management** | Multi-tenant with team-scoped resources |
 | 🔑 **RBAC** | Role-based access control with permissions |
+| 🔑 **API Keys** | Service-to-service auth with scoped permissions and rate limiting |
+| 📋 **Audit Logging** | Automatic request logging with filterable, paginated audit trails |
 | 🛡️ **Policy Enforcement** | Admission webhook for resource validation |
 
 ## Tech Stack
@@ -93,6 +96,23 @@ make test
 | POST | `/v1/teams` | Create team |
 | GET | `/v1/teams/:id/members` | List team members |
 
+### API Keys
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/api-keys` | List API keys |
+| POST | `/v1/api-keys` | Create API key |
+| GET | `/v1/api-keys/:id` | Get API key details |
+| PATCH | `/v1/api-keys/:id` | Update API key |
+| DELETE | `/v1/api-keys/:id` | Revoke API key |
+
+### Audit Logs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/audit-logs` | List audit logs (filterable) |
+| GET | `/v1/audit-logs/:id` | Get audit log entry |
+
 ### RBAC
 
 | Method | Endpoint | Description |
@@ -106,18 +126,18 @@ make test
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    Handler Layer                     │
+│                    Handler Layer                    │
 │         (HTTP handlers, validation, auth)           │
 └─────────────────────┬───────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────┐
-│                    UseCase Layer                     │
-│            (Business logic, orchestration)           │
+│                    UseCase Layer                    │
+│            (Business logic, orchestration)          │
 └─────────────────────┬───────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────┐
-│                  Repository Layer                    │
-│       (Data access, K8s, ArgoCD, PostgreSQL)         │
+│                  Repository Layer                   │
+│       (Data access, K8s, ArgoCD, PostgreSQL)        │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -164,10 +184,11 @@ JWT_SECRET=your-secret
 idp-core/
 ├── cmd/http/           # Entry point
 ├── internal/
-│   ├── handler/http/   # HTTP handlers
+│   ├── handler/http/   # HTTP handlers + middleware
 │   ├── usecase/        # Business logic
 │   ├── repository/     # Data access
 │   ├── model/          # Domain models
+│   ├── mocks/          # Test mock objects
 │   └── pkg/            # Internal packages
 ├── docs/               # Documentation
 ├── configs/            # Configuration

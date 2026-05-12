@@ -1,5 +1,102 @@
 basePath: /
 definitions:
+  github_com_davidsugianto_idp-core_internal_model_apikey.APIKeyResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_admin:
+        type: boolean
+      is_read_only:
+        type: boolean
+      key:
+        description: Only returned on creation
+        type: string
+      last_used_at:
+        type: string
+      name:
+        type: string
+      rate_limit:
+        type: integer
+      scopes:
+        items:
+          type: string
+        type: array
+      team_id:
+        type: string
+      usage_count:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_apikey.CreateAPIKeyRequest:
+    properties:
+      description:
+        type: string
+      expires_at:
+        type: string
+      is_admin:
+        type: boolean
+      is_read_only:
+        type: boolean
+      name:
+        type: string
+      rate_limit:
+        type: integer
+      scopes:
+        items:
+          type: string
+        type: array
+      team_id:
+        type: string
+    required:
+    - name
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_auditlog.AuditLogListResponse:
+    properties:
+      audit_logs:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_auditlog.AuditLogResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_auditlog.AuditLogResponse:
+    properties:
+      action:
+        type: string
+      actor_type:
+        type: string
+      created_at:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      ip_address:
+        type: string
+      request_method:
+        type: string
+      request_path:
+        type: string
+      resource_id:
+        type: string
+      resource_type:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      user_email:
+        type: string
+      user_id:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus:
     properties:
       health_status:
@@ -597,6 +694,281 @@ paths:
       summary: Health check
       tags:
       - health
+  /v1/api-keys:
+    get:
+      description: List all API keys, optionally filtered by team
+      parameters:
+      - description: Team ID
+        in: query
+        name: team_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.APIKeyResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List API keys
+      tags:
+      - api-keys
+    post:
+      consumes:
+      - application/json
+      description: Create a new API key. The full key value is only returned once
+        in this response.
+      parameters:
+      - description: API key creation request
+        in: body
+        name: api_key
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.CreateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.APIKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new API key
+      tags:
+      - api-keys
+  /v1/api-keys/{id}:
+    delete:
+      description: Delete (revoke) an API key
+      parameters:
+      - description: API Key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an API key
+      tags:
+      - api-keys
+    get:
+      description: Get a specific API key by ID
+      parameters:
+      - description: API Key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.APIKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get API key by ID
+      tags:
+      - api-keys
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing API key's metadata
+      parameters:
+      - description: API Key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: API key update request
+        in: body
+        name: api_key
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.CreateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_apikey.APIKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an API key
+      tags:
+      - api-keys
+  /v1/audit-logs:
+    get:
+      description: List audit logs with filtering and pagination
+      parameters:
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: string
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      - description: Filter by resource type
+        in: query
+        name: resource_type
+        type: string
+      - description: Filter by resource ID
+        in: query
+        name: resource_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Filter by start date (RFC3339)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339)
+        in: query
+        name: end_date
+        type: string
+      - default: 50
+        description: Page limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_auditlog.AuditLogListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List audit logs
+      tags:
+      - audit-logs
+  /v1/audit-logs/{id}:
+    get:
+      description: Get a specific audit log entry
+      parameters:
+      - description: Audit Log ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_auditlog.AuditLogResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get audit log by ID
+      tags:
+      - audit-logs
   /v1/environments:
     get:
       description: List all environments for the caller's team

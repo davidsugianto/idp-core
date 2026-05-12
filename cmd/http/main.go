@@ -12,11 +12,15 @@ import (
 	"github.com/davidsugianto/go-pkgs/db"
 	"github.com/davidsugianto/go-pkgs/logger"
 
+	apikeyRepo "github.com/davidsugianto/idp-core/internal/repository/apikey"
+	auditlogRepo "github.com/davidsugianto/idp-core/internal/repository/auditlog"
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
 	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
 	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
+	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
+	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
@@ -89,6 +93,12 @@ func main() {
 	permRepo := permissionRepo.New(permissionRepo.Dependencies{
 		Database: dbClient,
 	})
+	apiKeyRepo := apikeyRepo.New(apikeyRepo.Dependencies{
+		Database: dbClient,
+	})
+	auditLogRepo := auditlogRepo.New(auditlogRepo.Dependencies{
+		Database: dbClient,
+	})
 
 	// UseCases
 	envUC := envUsecase.New(envUsecase.Dependencies{
@@ -105,6 +115,12 @@ func main() {
 		RoleRepo:       roleRepo,
 		PermissionRepo: permRepo,
 	})
+	apiKeyUC := apikeyUsecase.New(apikeyUsecase.Dependencies{
+		APIKeyRepo: apiKeyRepo,
+	})
+	auditLogUC := auditlogUsecase.New(auditlogUsecase.Dependencies{
+		AuditLogRepo: auditLogRepo,
+	})
 
 	// Webhook validator
 	webhookValidator := webhook.NewValidator()
@@ -114,6 +130,8 @@ func main() {
 		UserUseCase:        userUC,
 		TeamUseCase:        teamUC,
 		RoleUseCase:        roleUC,
+		ApiKeyUseCase:      apiKeyUC,
+		AuditLogUseCase:    auditLogUC,
 		Config:             cfg,
 		Logger:             logs,
 		WebhookValidator:   webhookValidator,

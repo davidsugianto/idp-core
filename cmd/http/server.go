@@ -9,6 +9,8 @@ import (
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
+	apikeyUC "github.com/davidsugianto/idp-core/internal/usecase/apikey"
+	auditlogUC "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
@@ -24,9 +26,11 @@ import (
 
 type Server struct {
 	*http.Server
-	handler *httpHandler.Handler
-	config  *config.Config
-	logger  *extlogger.Logger
+	handler         *httpHandler.Handler
+	config          *config.Config
+	logger          *extlogger.Logger
+	apiKeyUseCase   apikeyUC.Usecase
+	auditLogUseCase auditlogUC.Usecase
 }
 
 type Dependencies struct {
@@ -34,6 +38,8 @@ type Dependencies struct {
 	UserUseCase        userUC.Usecase
 	TeamUseCase        teamUC.Usecase
 	RoleUseCase        roleUC.Usecase
+	ApiKeyUseCase      apikeyUC.Usecase
+	AuditLogUseCase    auditlogUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
 	WebhookValidator   *webhook.Validator
@@ -41,12 +47,16 @@ type Dependencies struct {
 
 func New(deps Dependencies) *Server {
 	return &Server{
-		Server: &http.Server{},
+		Server:          &http.Server{},
+		apiKeyUseCase:   deps.ApiKeyUseCase,
+		auditLogUseCase: deps.AuditLogUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
 			TeamUseCase:        deps.TeamUseCase,
 			RoleUseCase:        deps.RoleUseCase,
+			ApiKeyUseCase:      deps.ApiKeyUseCase,
+			AuditLogUseCase:    deps.AuditLogUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),
@@ -79,7 +89,7 @@ func (s *Server) setupPublicRoutes(r *gin.Engine) {
 func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	// API v1 routes (protected)
 	v1 := r.Group("/v1")
-	v1.Use(gin.Recovery(), middleware.RequestID(), middleware.Logger(s.logger))
+	v1.Use(gin.Recovery(), middleware.RequestID(), middleware.Logger(s.logger), middleware.AuditLog(s.auditLogUseCase))
 
 	// Environment routes (protected with JWT)
 	envs := v1.Group("/environments")
@@ -133,6 +143,21 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 
 	// Team member roles routes (add to existing teams group)
 	teams.GET("/:id/members/:userId/roles", s.handler.GetUserTeamRoles)
+
+	// API key routes (protected with JWT)
+	apiKeys := v1.Group("/api-keys")
+	apiKeys.Use(middleware.JWT(&s.config.Auth))
+	apiKeys.GET("", s.handler.ListAPIKeys)
+	apiKeys.POST("", s.handler.CreateAPIKey)
+	apiKeys.GET("/:id", s.handler.GetAPIKey)
+	apiKeys.PATCH("/:id", s.handler.UpdateAPIKey)
+	apiKeys.DELETE("/:id", s.handler.DeleteAPIKey)
+
+	// Audit log routes (protected with JWT)
+	auditLogs := v1.Group("/audit-logs")
+	auditLogs.Use(middleware.JWT(&s.config.Auth))
+	auditLogs.GET("", s.handler.ListAuditLogs)
+	auditLogs.GET("/:id", s.handler.GetAuditLog)
 }
 
 func (s *Server) Run(port string) error {
