@@ -77,6 +77,31 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("ARGOCD_TOKEN"); v != "" {
 		c.ArgoCD.Token = v
 	}
+
+	// OIDC
+	if v := os.Getenv("OIDC_ENABLED"); v != "" {
+		if enabled, err := strconv.ParseBool(v); err == nil {
+			c.OIDC.Enabled = enabled
+		}
+	}
+	if v := os.Getenv("OIDC_ISSUER_URL"); v != "" {
+		c.OIDC.IssuerURL = v
+	}
+	if v := os.Getenv("OIDC_CLIENT_ID"); v != "" {
+		c.OIDC.ClientID = v
+	}
+	if v := os.Getenv("OIDC_CLIENT_SECRET"); v != "" {
+		c.OIDC.ClientSecret = v
+	}
+	if v := os.Getenv("OIDC_REDIRECT_URL"); v != "" {
+		c.OIDC.RedirectURL = v
+	}
+	if v := os.Getenv("OIDC_GROUPS_CLAIM"); v != "" {
+		c.OIDC.GroupsClaim = v
+	}
+	if v := os.Getenv("OIDC_ADMIN_GROUP"); v != "" {
+		c.OIDC.AdminGroup = v
+	}
 }
 
 type Config struct {
@@ -86,6 +111,7 @@ type Config struct {
 	CORS       CORSConfig       `json:"cors" yaml:"cors"`
 	Kubernetes KubernetesConfig `json:"kubernetes" yaml:"kubernetes"`
 	ArgoCD     ArgoCDConfig     `json:"argocd" yaml:"argocd"`
+	OIDC       OIDCConfig       `json:"oidc" yaml:"oidc"`
 }
 
 type ServerConfig struct {
@@ -122,4 +148,15 @@ type ArgoCDConfig struct {
 	BaseURL   string `json:"base_url" yaml:"base_url"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Token     string `json:"token" yaml:"token"`
+}
+
+type OIDCConfig struct {
+	Enabled      bool     `json:"enabled" yaml:"enabled"`
+	IssuerURL    string   `json:"issuer_url" yaml:"issuer_url"`
+	ClientID     string   `json:"client_id" yaml:"client_id"`
+	ClientSecret string   `json:"client_secret" yaml:"client_secret"`
+	RedirectURL  string   `json:"redirect_url" yaml:"redirect_url"`
+	Scopes       []string `json:"scopes" yaml:"scopes"`
+	GroupsClaim  string   `json:"groups_claim" yaml:"groups_claim"`
+	AdminGroup   string   `json:"admin_group" yaml:"admin_group"`
 }

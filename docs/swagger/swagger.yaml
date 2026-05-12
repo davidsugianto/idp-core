@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  environment.ArgoStatus:
+  github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus:
     properties:
       health_status:
         type: string
@@ -11,7 +11,7 @@ definitions:
       sync_status:
         type: string
     type: object
-  environment.CreateEnvironmentRequest:
+  github_com_davidsugianto_idp-core_internal_model_environment.CreateEnvironmentRequest:
     properties:
       cluster_name:
         description: Optional cluster override
@@ -45,7 +45,7 @@ definitions:
     - manifest_path
     - name
     type: object
-  environment.DeploymentSummary:
+  github_com_davidsugianto_idp-core_internal_model_environment.DeploymentSummary:
     properties:
       available:
         type: integer
@@ -56,7 +56,7 @@ definitions:
       updated:
         type: integer
     type: object
-  environment.EnvironmentResponse:
+  github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentResponse:
     properties:
       argo_app_name:
         type: string
@@ -110,12 +110,12 @@ definitions:
       updated_at:
         type: string
     type: object
-  environment.EnvironmentStatusResponse:
+  github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentStatusResponse:
     properties:
       argo_app_name:
         type: string
       argo_status:
-        $ref: '#/definitions/environment.ArgoStatus'
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus'
       cluster_name:
         description: Cluster info
         type: string
@@ -124,7 +124,7 @@ definitions:
       created_at:
         type: string
       deployment_summary:
-        $ref: '#/definitions/environment.DeploymentSummary'
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.DeploymentSummary'
       description:
         type: string
       error_count:
@@ -157,7 +157,7 @@ definitions:
         description: Lifecycle
         type: string
       pod_summary:
-        $ref: '#/definitions/environment.PodSummary'
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.PodSummary'
       resource_quota_cpu:
         description: Resource quotas
         type: string
@@ -170,7 +170,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  environment.PodSummary:
+  github_com_davidsugianto_idp-core_internal_model_environment.PodSummary:
     properties:
       failed:
         type: integer
@@ -181,17 +181,135 @@ definitions:
       total:
         type: integer
     type: object
-  http.LoginRequest:
+  github_com_davidsugianto_idp-core_internal_model_role.AssignRoleRequest:
     properties:
+      role_id:
+        type: string
       team_id:
+        description: Optional for team-scoped roles
         type: string
       user_id:
         type: string
     required:
-    - team_id
+    - role_id
     - user_id
     type: object
-  team.AddTeamMemberRequest:
+  github_com_davidsugianto_idp-core_internal_model_role.CreateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      permissions:
+        description: permission IDs
+        items:
+          type: string
+        type: array
+      scope:
+        enum:
+        - platform
+        - team
+        - environment
+        type: string
+    required:
+    - name
+    - scope
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.PermissionSummary:
+    properties:
+      action:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.RevokeRoleRequest:
+    properties:
+      role_id:
+        type: string
+      team_id:
+        description: Optional for team-scoped roles
+        type: string
+      user_id:
+        type: string
+    required:
+    - role_id
+    - user_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.RoleListResponse:
+    properties:
+      roles:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RoleResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.RoleResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.PermissionSummary'
+        type: array
+      scope:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.UpdateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      permissions:
+        description: permission IDs to replace
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.UserRoleListResponse:
+    properties:
+      total:
+        type: integer
+      user_roles:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.UserRoleResponse'
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_role.UserRoleResponse:
+    properties:
+      granted_at:
+        type: string
+      granted_by:
+        type: string
+      id:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      team_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_team.AddTeamMemberRequest:
     properties:
       role:
         enum:
@@ -205,7 +323,7 @@ definitions:
     - role
     - user_id
     type: object
-  team.CreateTeamRequest:
+  github_com_davidsugianto_idp-core_internal_model_team.CreateTeamRequest:
     properties:
       description:
         type: string
@@ -217,16 +335,16 @@ definitions:
     - name
     - slug
     type: object
-  team.TeamListResponse:
+  github_com_davidsugianto_idp-core_internal_model_team.TeamListResponse:
     properties:
       teams:
         items:
-          $ref: '#/definitions/team.TeamResponse'
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamResponse'
         type: array
       total:
         type: integer
     type: object
-  team.TeamMemberResponse:
+  github_com_davidsugianto_idp-core_internal_model_team.TeamMemberResponse:
     properties:
       created_at:
         type: string
@@ -235,9 +353,9 @@ definitions:
       role:
         type: string
       user:
-        $ref: '#/definitions/team.UserBasicInfo'
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.UserBasicInfo'
     type: object
-  team.TeamResponse:
+  github_com_davidsugianto_idp-core_internal_model_team.TeamResponse:
     properties:
       created_at:
         type: string
@@ -254,7 +372,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  team.TeamWithMembersResponse:
+  github_com_davidsugianto_idp-core_internal_model_team.TeamWithMembersResponse:
     properties:
       created_at:
         type: string
@@ -264,7 +382,7 @@ definitions:
         type: string
       members:
         items:
-          $ref: '#/definitions/team.TeamMemberResponse'
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamMemberResponse'
         type: array
       name:
         type: string
@@ -275,7 +393,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  team.UpdateTeamMemberRequest:
+  github_com_davidsugianto_idp-core_internal_model_team.UpdateTeamMemberRequest:
     properties:
       role:
         enum:
@@ -286,7 +404,7 @@ definitions:
     required:
     - role
     type: object
-  team.UpdateTeamRequest:
+  github_com_davidsugianto_idp-core_internal_model_team.UpdateTeamRequest:
     properties:
       description:
         type: string
@@ -296,7 +414,7 @@ definitions:
         description: active, disabled
         type: string
     type: object
-  team.UserBasicInfo:
+  github_com_davidsugianto_idp-core_internal_model_team.UserBasicInfo:
     properties:
       email:
         type: string
@@ -305,7 +423,7 @@ definitions:
       name:
         type: string
     type: object
-  user.CreateUserRequest:
+  github_com_davidsugianto_idp-core_internal_model_user.CreateUserRequest:
     properties:
       avatar_url:
         type: string
@@ -320,7 +438,7 @@ definitions:
     - email
     - name
     type: object
-  user.UpdateUserRequest:
+  github_com_davidsugianto_idp-core_internal_model_user.UpdateUserRequest:
     properties:
       avatar_url:
         type: string
@@ -330,16 +448,16 @@ definitions:
         description: active, disabled
         type: string
     type: object
-  user.UserListResponse:
+  github_com_davidsugianto_idp-core_internal_model_user.UserListResponse:
     properties:
       total:
         type: integer
       users:
         items:
-          $ref: '#/definitions/user.UserResponse'
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UserResponse'
         type: array
     type: object
-  user.UserResponse:
+  github_com_davidsugianto_idp-core_internal_model_user.UserResponse:
     properties:
       avatar_url:
         type: string
@@ -360,7 +478,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  workload.WorkloadInfo:
+  github_com_davidsugianto_idp-core_internal_model_workload.WorkloadInfo:
     properties:
       desired_replicas:
         type: integer
@@ -375,20 +493,20 @@ definitions:
       status:
         type: string
     type: object
-  workload.WorkloadStatusResponse:
+  github_com_davidsugianto_idp-core_internal_model_workload.WorkloadStatusResponse:
     properties:
       environment_id:
         type: string
       namespace:
         type: string
       summary:
-        $ref: '#/definitions/workload.WorkloadSummary'
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_workload.WorkloadSummary'
       workloads:
         items:
-          $ref: '#/definitions/workload.WorkloadInfo'
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_workload.WorkloadInfo'
         type: array
     type: object
-  workload.WorkloadSummary:
+  github_com_davidsugianto_idp-core_internal_model_workload.WorkloadSummary:
     properties:
       degraded_workloads:
         type: integer
@@ -404,6 +522,16 @@ definitions:
         type: integer
       total_workloads:
         type: integer
+    type: object
+  internal_handler_http.LoginRequest:
+    properties:
+      team_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - team_id
+    - user_id
     type: object
 host: localhost:8989
 info:
@@ -429,7 +557,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/http.LoginRequest'
+          $ref: '#/definitions/internal_handler_http.LoginRequest'
       produces:
       - application/json
       responses:
@@ -454,100 +582,9 @@ paths:
       summary: User login
       tags:
       - auth
-  /teams:
+  /ping:
     get:
-      description: List all teams with pagination
-      parameters:
-      - default: 20
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/team.TeamListResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: List teams
-      tags:
-      - teams
-    post:
-      consumes:
-      - application/json
-      description: Create a new team
-      parameters:
-      - description: Team request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/team.CreateTeamRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/team.TeamResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Conflict
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Create a new team
-      tags:
-      - teams
-  /teams/{id}:
-    delete:
-      description: Soft delete a team
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
+      description: Check if the API is running
       produces:
       - application/json
       responses:
@@ -557,597 +594,9 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Delete team
+      summary: Health check
       tags:
-      - teams
-    get:
-      description: Get details of a specific team
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/team.TeamResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get team details
-      tags:
-      - teams
-    patch:
-      consumes:
-      - application/json
-      description: Update a team's details
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Team update request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/team.UpdateTeamRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/team.TeamResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update team
-      tags:
-      - teams
-  /teams/{id}/members:
-    get:
-      description: List all members of a team
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/team.TeamWithMembersResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: List team members
-      tags:
-      - teams
-    post:
-      consumes:
-      - application/json
-      description: Add a member to a team
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Add member request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/team.AddTeamMemberRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Conflict
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Add team member
-      tags:
-      - teams
-  /teams/{id}/members/{userId}:
-    delete:
-      description: Remove a member from a team
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: User ID
-        in: path
-        name: userId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Remove team member
-      tags:
-      - teams
-    patch:
-      consumes:
-      - application/json
-      description: Update a team member's role
-      parameters:
-      - description: Team ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: User ID
-        in: path
-        name: userId
-        required: true
-        type: string
-      - description: Update member request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/team.UpdateTeamMemberRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update team member role
-      tags:
-      - teams
-  /users:
-    get:
-      description: List all users with pagination
-      parameters:
-      - default: 20
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserListResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: List users
-      tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Create a new user
-      parameters:
-      - description: User request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/user.CreateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "409":
-          description: Conflict
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Create a new user
-      tags:
-      - users
-  /users/{id}:
-    delete:
-      description: Soft delete a user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Delete user
-      tags:
-      - users
-    get:
-      description: Get details of a specific user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get user details
-      tags:
-      - users
-    patch:
-      consumes:
-      - application/json
-      description: Update a user's details
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: User update request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/user.UpdateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update user
-      tags:
-      - users
-  /users/{id}/status:
-    put:
-      description: Update a user's status (active/disabled)
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Status (active/disabled)
-        in: query
-        name: status
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update user status
-      tags:
-      - users
+      - health
   /v1/environments:
     get:
       description: List all environments for the caller's team
@@ -1158,7 +607,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/environment.EnvironmentResponse'
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentResponse'
             type: array
         "401":
           description: Unauthorized
@@ -1187,14 +636,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/environment.CreateEnvironmentRequest'
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.CreateEnvironmentRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/environment.EnvironmentResponse'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentResponse'
         "400":
           description: Bad Request
           schema:
@@ -1273,7 +722,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/environment.EnvironmentResponse'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1312,7 +761,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/environment.ArgoStatus'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus'
         "401":
           description: Unauthorized
           schema:
@@ -1352,7 +801,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/environment.EnvironmentStatusResponse'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.EnvironmentStatusResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1432,7 +881,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/workload.WorkloadStatusResponse'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_workload.WorkloadStatusResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1476,7 +925,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/workload.WorkloadInfo'
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_workload.WorkloadInfo'
         "401":
           description: Unauthorized
           schema:
@@ -1500,9 +949,350 @@ paths:
       summary: Get workload details
       tags:
       - environments
-  /v1/ping:
+  /v1/roles:
     get:
-      description: Check if the API is running
+      description: Get a paginated list of roles
+      parameters:
+      - default: 20
+        description: Page limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RoleListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role with permissions
+      parameters:
+      - description: Role creation request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new role
+      tags:
+      - roles
+  /v1/roles/{id}:
+    delete:
+      description: Soft delete a role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a role
+      tags:
+      - roles
+    get:
+      description: Get a specific role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get role by ID
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Update role details and permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a role
+      tags:
+      - roles
+  /v1/roles/assign:
+    post:
+      consumes:
+      - application/json
+      description: Assign a role to a user with optional team context
+      parameters:
+      - description: Role assignment request
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.AssignRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.UserRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign a role to a user
+      tags:
+      - roles
+  /v1/roles/revoke:
+    post:
+      consumes:
+      - application/json
+      description: Revoke a role from a user
+      parameters:
+      - description: Role revocation request
+        in: body
+        name: revocation
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.RevokeRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Revoke a role from a user
+      tags:
+      - roles
+  /v1/teams:
+    get:
+      description: List all teams with pagination
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List teams
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      description: Create a new team
+      parameters:
+      - description: Team request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.CreateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new team
+      tags:
+      - teams
+  /v1/teams/{id}:
+    delete:
+      description: Soft delete a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -1512,9 +1302,654 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Health check
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete team
       tags:
-      - health
+      - teams
+    get:
+      description: Get details of a specific team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get team details
+      tags:
+      - teams
+    patch:
+      consumes:
+      - application/json
+      description: Update a team's details
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Team update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.UpdateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update team
+      tags:
+      - teams
+  /v1/teams/{id}/members:
+    get:
+      description: List all members of a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.TeamWithMembersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List team members
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      description: Add a member to a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Add member request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.AddTeamMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Add team member
+      tags:
+      - teams
+  /v1/teams/{id}/members/{userId}:
+    delete:
+      description: Remove a member from a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove team member
+      tags:
+      - teams
+    patch:
+      consumes:
+      - application/json
+      description: Update a team member's role
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Update member request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_team.UpdateTeamMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update team member role
+      tags:
+      - teams
+  /v1/teams/{id}/members/{userId}/roles:
+    get:
+      description: Get all roles assigned to a user for a specific team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.UserRoleListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user's roles in a team
+      tags:
+      - roles
+  /v1/users:
+    get:
+      description: List all users with pagination
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UserListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - users
+  /v1/users/{id}:
+    delete:
+      description: Soft delete a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Get details of a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user details
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update a user's details
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_user.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
+  /v1/users/{id}/roles:
+    get:
+      description: Get all roles assigned to a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_role.UserRoleListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user's roles
+      tags:
+      - roles
+  /v1/users/{id}/status:
+    put:
+      description: Update a user's status (active/disabled)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status (active/disabled)
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user status
+      tags:
+      - users
 securityDefinitions:
   ApiKeyAuth:
     in: header

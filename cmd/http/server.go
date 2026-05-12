@@ -10,6 +10,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
@@ -32,6 +33,7 @@ type Dependencies struct {
 	EnvironmentUseCase environmentUC.Usecase
 	UserUseCase        userUC.Usecase
 	TeamUseCase        teamUC.Usecase
+	RoleUseCase        roleUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
 	WebhookValidator   *webhook.Validator
@@ -44,6 +46,7 @@ func New(deps Dependencies) *Server {
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
 			TeamUseCase:        deps.TeamUseCase,
+			RoleUseCase:        deps.RoleUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),
@@ -113,6 +116,23 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	teams.POST("/:id/members", s.handler.AddTeamMember)
 	teams.PATCH("/:id/members/:userId", s.handler.UpdateTeamMember)
 	teams.DELETE("/:id/members/:userId", s.handler.RemoveTeamMember)
+
+	// Role routes (protected with JWT)
+	roles := v1.Group("/roles")
+	roles.Use(middleware.JWT(&s.config.Auth))
+	roles.GET("", s.handler.ListRoles)
+	roles.POST("", s.handler.CreateRole)
+	roles.GET("/:id", s.handler.GetRole)
+	roles.PATCH("/:id", s.handler.UpdateRole)
+	roles.DELETE("/:id", s.handler.DeleteRole)
+	roles.POST("/assign", s.handler.AssignRole)
+	roles.POST("/revoke", s.handler.RevokeRole)
+
+	// User roles routes (add to existing users group)
+	users.GET("/:id/roles", s.handler.GetUserRoles)
+
+	// Team member roles routes (add to existing teams group)
+	teams.GET("/:id/members/:userId/roles", s.handler.GetUserTeamRoles)
 }
 
 func (s *Server) Run(port string) error {
