@@ -168,17 +168,17 @@
 
 ## 🗓️ M2: FinOps (Week 4-5)
 
-### Week 4: Kubecost Integration & Cost Tracking ✅ COMPLETED
+### Week 4: OpenCost Integration & Cost Tracking ✅ COMPLETED
 
 #### Configuration
 
-- [x] Add Kubecost config to `config.go`
+- [x] Add OpenCost config to `config.go`
 - [x] Add Prometheus config to `config.go`
 
-#### Kubecost Client
+#### OpenCost Client
 
-- [x] Create `internal/pkg/kubecost/client.go`
-- [x] Create `internal/pkg/kubecost/types.go` (AllocationRequest, AllocationResponse, AllocationData)
+- [x] Create `internal/pkg/opencost/client.go`
+- [x] Create `internal/pkg/opencost/types.go` (AllocationRequest, AllocationResponse, AllocationData)
 
 #### Prometheus Client
 
@@ -207,8 +207,8 @@
 
 #### Tests
 
-- [x] Unit tests: Kubecost client (5 tests with httptest.Server)
-- [x] Unit tests: cost usecase (11 tests with mocked repo + kubecost client)
+- [x] Unit tests: OpenCost client (5 tests with httptest.Server)
+- [x] Unit tests: cost usecase (11 tests with mocked repo + opencost client)
 - [ ] Integration tests: cost API
 
 ***
@@ -514,9 +514,9 @@ auth:
 
 finops:
   enabled: true
-  kubecost:
-    base_url: "${KUBECOST_URL:http://kubecost-cost-analyzer.kubecost.svc.cluster.local:9090}"
-    api_key: "${KUBECOST_API_KEY}"
+  opencost:
+    base_url: "${OPENCOST_URL:http://opencost-cost-analyzer.opencost.svc.cluster.local:9003}"
+    api_key: "${OPENCOST_API_KEY}"
   prometheus:
     url: "${PROMETHEUS_URL:http://prometheus-server.monitoring.svc.cluster.local:80}"
   sync_interval: "5m"
@@ -591,7 +591,7 @@ internal/
 │
 ├── pkg/
 │   ├── oidc/                # ✅ CREATED
-│   ├── kubecost/            # ✅ CREATED
+│   ├── opencost/            # ✅ CREATED
 │   └── prometheus/          # ✅ CREATED (stub)
 │
 └── mocks/
@@ -602,7 +602,7 @@ internal/
     ├── apikey_repository.go     # ✅ CREATED
     ├── auditlog_repository.go   # ✅ CREATED
     ├── cost_repository.go       # ✅ CREATED
-    └── kubecost_client.go       # ✅ CREATED
+    └── opencost_client.go       # ✅ CREATED
 
 migrations/
 ├── 20260501000000_create_users_table.sql        # ✅ CREATED
@@ -637,7 +637,7 @@ Each task is considered complete when:
 
 - Start with M1 (Auth & RBAC) as it's foundational for other features
 - OIDC integration may require external provider setup (Keycloak/Okta)
-- Kubecost integration requires Kubecost to be deployed in cluster
+- OpenCost integration requires OpenCost to be deployed in cluster
 - Budget alerts require email/Slack integration setup
 - Consider feature flags for gradual rollout
 
@@ -745,17 +745,18 @@ Each task is considered complete when:
 
 **API Endpoints Added:**
 
-| Method | Endpoint               | Description                |
-| ------ | ---------------------- | -------------------------- |
-| GET    | `/v1/api-keys`         | List API keys              |
-| POST   | `/v1/api-keys`         | Create a new API key       |
-| GET    | `/v1/api-keys/:id`     | Get API key details        |
-| PATCH  | `/v1/api-keys/:id`     | Update API key             |
-| DELETE | `/v1/api-keys/:id`     | Delete (revoke) API key    |
-| GET    | `/v1/audit-logs`       | List audit logs (filtered) |
-| GET    | `/v1/audit-logs/:id`   | Get audit log entry        |
+| Method | Endpoint             | Description                |
+| ------ | -------------------- | -------------------------- |
+| GET    | `/v1/api-keys`       | List API keys              |
+| POST   | `/v1/api-keys`       | Create a new API key       |
+| GET    | `/v1/api-keys/:id`   | Get API key details        |
+| PATCH  | `/v1/api-keys/:id`   | Update API key             |
+| DELETE | `/v1/api-keys/:id`   | Delete (revoke) API key    |
+| GET    | `/v1/audit-logs`     | List audit logs (filtered) |
+| GET    | `/v1/audit-logs/:id` | Get audit log entry        |
 
 **Key Features:**
+
 - API key generation with `idp_` prefix and hex-encoded random suffix
 - SHA-256 hashing for storage; plain key returned only on creation
 - API key auth middleware supporting both `Authorization: Bearer` and `X-API-Key` headers
@@ -768,7 +769,7 @@ Each task is considered complete when:
 - Complete seed script for platform admin user
 - Begin M2: FinOps (Week 4)
 
-### M2 Week 4: Kubecost Integration & Cost Tracking (May 2026)
+### M2 Week 4: OpenCost Integration & Cost Tracking (May 2026)
 
 **Files Created:**
 
@@ -777,33 +778,34 @@ Each task is considered complete when:
 - `internal/repository/cost/init.go` (interface + implementation: Create, BatchCreate, List, GetByTeamAndPeriod)
 - `internal/usecase/cost/init.go`, `cost.go`, `cost_test.go`
 - `internal/handler/http/cost.go`
-- `internal/pkg/kubecost/client.go`, `types.go`
+- `internal/pkg/opencost/client.go`, `types.go`
 - `internal/pkg/prometheus/client.go` (stub for future queries)
 - `internal/mocks/cost_repository.go`
-- `internal/mocks/kubecost_client.go`
+- `internal/mocks/opencost_client.go`
 
 **Existing Files Modified:**
 
-- `internal/pkg/config/config.go` — added FinOpsConfig, KubecostConfig, PrometheusConfig
+- `internal/pkg/config/config.go` — added FinOpsConfig, OpenCostConfig, PrometheusConfig
 - `configs/config.yaml` — added finops section
 - `internal/handler/http/init.go` — added costUseCase
 - `cmd/http/server.go` — added CostUseCase, cost routes
-- `cmd/http/main.go` — wired kubecost/prometheus clients, cost repo/usecase, sync goroutine
+- `cmd/http/main.go` — wired opencost/prometheus clients, cost repo/usecase, sync goroutine
 
 **API Endpoints Added:**
 
-| Method | Endpoint       | Description                         |
-| ------ | -------------- | ----------------------------------- |
-| GET    | `/v1/costs`    | List cost records with filtering    |
+| Method | Endpoint         | Description                         |
+| ------ | ---------------- | ----------------------------------- |
+| GET    | `/v1/costs`      | List cost records with filtering    |
 | GET    | `/v1/costs/team` | Get team cost records by time range |
 
 **Key Features:**
-- Kubecost Allocation API client with configurable base URL, API key, and timeout
+
+- OpenCost Allocation API client with configurable base URL, API key, and timeout
 - Cost data synced via `time.Ticker` goroutine (gated by `finops.enabled` config)
-- Namespace-to-team mapping via Kubecost allocation labels
+- Namespace-to-team mapping via OpenCost allocation labels
 - Prometheus client stub for future rightsizing queries
 - Cost records stored with NUMERIC(12,4) precision for all cost columns
-- JSONB raw_data column preserving original Kubecost response
+- JSONB raw\_data column preserving original OpenCost response
 - Indexes on `(team_id, period_start)` and `(namespace, period_start)` for query performance
 
 **Next Steps:**

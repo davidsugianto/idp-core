@@ -109,14 +109,11 @@ func (c *Config) applyEnvOverrides() {
 			c.FinOps.Enabled = enabled
 		}
 	}
-	if v := os.Getenv("FINOPS_KUBECOST_BASE_URL"); v != "" {
-		c.FinOps.Kubecost.BaseURL = v
+	if v := os.Getenv("FINOPS_OPENCOST_BASE_URL"); v != "" {
+		c.FinOps.OpenCost.BaseURL = v
 	}
-	if v := os.Getenv("FINOPS_KUBECOST_API_KEY"); v != "" {
-		c.FinOps.Kubecost.APIKey = v
-	}
-	if v := os.Getenv("FINOPS_KUBECOST_POLL_INTERVAL"); v != "" {
-		c.FinOps.Kubecost.PollInterval = v
+	if v := os.Getenv("FINOPS_OPENCOST_POLL_INTERVAL"); v != "" {
+		c.FinOps.OpenCost.PollInterval = v
 	}
 	if v := os.Getenv("FINOPS_PROMETHEUS_URL"); v != "" {
 		c.FinOps.Prometheus.URL = v
@@ -182,14 +179,13 @@ type OIDCConfig struct {
 }
 
 type FinOpsConfig struct {
-	Enabled   bool             `json:"enabled" yaml:"enabled"`
-	Kubecost  KubecostConfig   `json:"kubecost" yaml:"kubecost"`
-	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
+	Enabled    bool              `json:"enabled" yaml:"enabled"`
+	OpenCost   OpenCostConfig    `json:"opencost" yaml:"opencost"`
+	Prometheus PrometheusConfig  `json:"prometheus" yaml:"prometheus"`
 }
 
-type KubecostConfig struct {
+type OpenCostConfig struct {
 	BaseURL      string `json:"base_url" yaml:"base_url"`
-	APIKey       string `json:"api_key" yaml:"api_key"`
 	PollInterval string `json:"poll_interval" yaml:"poll_interval"`
 }
 

@@ -28,6 +28,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=idp_core
+      - APP_ENV=development
     ports:
       - "8989:8989"
     volumes:

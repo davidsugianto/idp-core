@@ -1,13 +1,13 @@
-package kubecost
+package opencost
 
-// AllocationRequest represents parameters for the Kubecost allocation API
+// AllocationRequest represents parameters for the OpenCost allocation API
 type AllocationRequest struct {
 	Window    string `json:"window"`
 	Aggregate string `json:"aggregate,omitempty"`
 	Step      string `json:"step,omitempty"`
 }
 
-// AllocationResponse wraps the Kubecost allocation API response
+// AllocationResponse wraps the OpenCost allocation API response
 type AllocationResponse struct {
 	Code int              `json:"code"`
 	Data []AllocationData `json:"data"`

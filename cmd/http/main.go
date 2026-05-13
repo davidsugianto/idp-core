@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/davidsugianto/idp-core/internal/model/cost"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
-	"github.com/davidsugianto/idp-core/internal/pkg/kubecost"
+	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	"github.com/davidsugianto/idp-core/internal/pkg/prometheus"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
@@ -54,15 +55,16 @@ func main() {
 	// Logger
 	logs := logger.NewWithConfig(logger.Config{
 		ServiceName: "idp-core",
-		Environment: "development",
+		Environment: os.Getenv("APP_ENV"),
 		Format:      logger.FormatJSON,
 	})
-	logs.Info().Msg("Starting IDP API server")
+	logs.Info().Msg("Starting IDP Core API server")
 
 	// Config
-	cfg, err := config.Load("configs/config.yaml")
+	cfgPath := fmt.Sprintf("configs/config.%s.yaml", os.Getenv("APP_ENV"))
+	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		logs.Fatal().Err(err).Msg("cannot load config")
+		logs.Fatal().Err(err).Msg(fmt.Sprintf("cannot load config from %s", cfgPath))
 		panic(err)
 	}
 
@@ -82,6 +84,14 @@ func main() {
 	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}); err != nil {
 		logs.Fatal().Err(err).Msg("cannot migrate database")
 	}
+
+	// FinOps clients
+	opencostClient := opencost.NewClient(opencost.Config{
+		BaseURL: cfg.FinOps.OpenCost.BaseURL,
+	})
+	_ = prometheus.NewClient(prometheus.Config{
+		URL: cfg.FinOps.Prometheus.URL,
+	})
 
 	// Repositories
 	envRepo := envRepository.New(envRepository.Dependencies{
@@ -131,18 +141,9 @@ func main() {
 		AuditLogRepo: auditLogRepo,
 	})
 
-	// FinOps clients
-	kubecostClient := kubecost.NewClient(kubecost.Config{
-		BaseURL: cfg.FinOps.Kubecost.BaseURL,
-		APIKey:  cfg.FinOps.Kubecost.APIKey,
-	})
-	_ = prometheus.NewClient(prometheus.Config{
-		URL: cfg.FinOps.Prometheus.URL,
-	})
-
 	costUC := costUsecase.New(costUsecase.Dependencies{
 		Repo:           costRepo,
-		KubecostClient: kubecostClient,
+		OpenCostClient: opencostClient,
 	})
 
 	// Webhook validator
@@ -163,7 +164,7 @@ func main() {
 
 	// Start cost sync goroutine (fire-and-forget)
 	if cfg.FinOps.Enabled {
-		pollInterval, err := time.ParseDuration(cfg.FinOps.Kubecost.PollInterval)
+		pollInterval, err := time.ParseDuration(cfg.FinOps.OpenCost.PollInterval)
 		if err != nil {
 			pollInterval = 1 * time.Hour
 		}

@@ -2,6 +2,7 @@
 
 # Variables
 APP_NAME := idp-core
+APP_ENV := development
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GO_VERSION := $(shell go version | awk '{print $$3}')
@@ -238,6 +239,36 @@ dev-k8s-argocd-ui:
 	@echo ""
 	kubectl port-forward svc/argocd-server -n argocd 8090:443
 
+## dev-prometheus-setup: Install Prometheus in Kind cluster
+dev-prometheus-setup:
+	@echo "==> Installing Prometheus..."
+	./dev/setup-prometheus.sh
+	@echo "✅ Prometheus ready!"
+
+## dev-opencost-setup: Install OpenCost in Kind cluster
+dev-opencost-setup:
+	@echo "==> Installing OpenCost..."
+	./dev/setup-opencost.sh
+	@echo "✅ OpenCost ready!"
+
+## dev-finops-setup: Full FinOps setup (Prometheus + OpenCost)
+dev-finops-setup: dev-prometheus-setup dev-opencost-setup
+	@echo ""
+	@echo "✅ Full FinOps environment ready!"
+	@echo "OpenCost URL: http://opencost.opencost.svc.cluster.local:9003"
+	@echo "Prometheus URL: http://prometheus-server.monitoring.svc.cluster.local:80"
+
+## dev-finops-status: Check FinOps component status
+dev-finops-status:
+	@echo "=== FinOps Environment Status ==="
+	@echo ""
+	@echo "OpenCost pods:"
+	@kubectl get pods -n opencost 2>/dev/null || echo "  OpenCost not installed"
+	@echo ""
+	@echo "Prometheus pods:"
+	@kubectl get pods -n monitoring 2>/dev/null || echo "  Prometheus not installed"
+	@echo ""
+
 # =============================================================================
 # Development Environment (Full Setup)
 # =============================================================================
@@ -376,13 +407,13 @@ vet:
 ## db-migrate: Run database migrations
 db-migrate:
 	@echo "==> Running database migrations..."
-	$(GOCMD) run ./cmd/migrate -direction up
+	export APP_ENV=$(APP_ENV) && $(GOCMD) run ./cmd/migrate -direction up
 	@echo "✅ Migrations complete!"
 
 ## db-rollback: Rollback last database migration
 db-rollback:
 	@echo "==> Rolling back last migration..."
-	$(GOCMD) run ./cmd/migrate -direction down
+	export APP_ENV=$(APP_ENV) && $(GOCMD) run ./cmd/migrate -direction down
 	@echo "✅ Rollback complete!"
 
 # =============================================================================

@@ -1,4 +1,4 @@
-package kubecost
+package opencost
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 func TestGetAllocation(t *testing.T) {
 	t.Run("successful allocation response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, "/model/allocation", r.URL.Path)
+			assert.Equal(t, "/allocation", r.URL.Path)
 			assert.Equal(t, "1h", r.URL.Query().Get("window"))
 			assert.Equal(t, "namespace", r.URL.Query().Get("aggregate"))
 
@@ -58,27 +58,10 @@ func TestGetAllocation(t *testing.T) {
 		assert.NotNil(t, resp.Data[0].Raw)
 	})
 
-	t.Run("API key is sent as Bearer token", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, "Bearer test-api-key", r.Header.Get("Authorization"))
-
-			resp := AllocationResponse{Code: 200, Data: []AllocationData{}}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(resp)
-		}))
-		defer server.Close()
-
-		client := NewClient(Config{BaseURL: server.URL, APIKey: "test-api-key"})
-		req := AllocationRequest{Window: "1h"}
-
-		_, err := client.GetAllocation(context.Background(), req)
-		assert.NoError(t, err)
-	})
-
 	t.Run("non-200 status returns error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("unauthorized"))
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("internal error"))
 		}))
 		defer server.Close()
 
@@ -88,7 +71,7 @@ func TestGetAllocation(t *testing.T) {
 		resp, err := client.GetAllocation(context.Background(), req)
 		assert.Error(t, err)
 		assert.Nil(t, resp)
-		assert.Contains(t, err.Error(), "401")
+		assert.Contains(t, err.Error(), "500")
 	})
 
 	t.Run("invalid base URL returns error", func(t *testing.T) {

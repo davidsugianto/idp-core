@@ -41,11 +41,24 @@ argocd:
   namespace: "argocd"
   token: ""
 
+oidc:
+  enabled: false
+  issuer_url: "https://your-idp.example.com"
+  client_id: ""
+  client_secret: ""
+  redirect_url: "http://localhost:8989/auth/callback"
+  scopes:
+    - openid
+    - profile
+    - email
+    - groups
+  groups_claim: "groups"
+  admin_group: "platform-admins"
+
 finops:
   enabled: false
-  kubecost:
-    base_url: "http://kubecost-cost-analyzer.kubecost.svc.cluster.local:9090"
-    api_key: ""
+  opencost:
+    base_url: "http://opencost.opencost.svc.cluster.local:9003"
     poll_interval: "1h"
   prometheus:
     url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/davidsugianto/idp-core/internal/mocks"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
-	"github.com/davidsugianto/idp-core/internal/pkg/kubecost"
+	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,19 +17,19 @@ func TestSyncCosts(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockRepo := mocks.NewMockCostRepository(ctrl)
-	mockKubecost := mocks.NewMockKubecostClient(ctrl)
+	mockOpenCost := mocks.NewMockOpenCostClient(ctrl)
 
 	uc := New(Dependencies{
 		Repo:           mockRepo,
-		KubecostClient: mockKubecost,
+		OpenCostClient: mockOpenCost,
 	})
 
 	t.Run("successful sync with data", func(t *testing.T) {
-		mockKubecost.EXPECT().
+		mockOpenCost.EXPECT().
 			GetAllocation(gomock.Any(), gomock.Any()).
-			Return(&kubecost.AllocationResponse{
+			Return(&opencost.AllocationResponse{
 				Code: 200,
-				Data: []kubecost.AllocationData{
+				Data: []opencost.AllocationData{
 					{
 						Name:        "team-a-dev",
 						CPUCost:     10.5,
@@ -39,7 +39,7 @@ func TestSyncCosts(t *testing.T) {
 						TotalCost:   17.0,
 						Start:       "2026-05-13T00:00:00Z",
 						End:         "2026-05-13T01:00:00Z",
-						Properties: &kubecost.AllocationProperties{
+						Properties: &opencost.AllocationProperties{
 							Namespace: "team-a-dev",
 							Labels: map[string]string{
 								"team":        "team-a",
@@ -59,19 +59,19 @@ func TestSyncCosts(t *testing.T) {
 	})
 
 	t.Run("successful sync with empty data", func(t *testing.T) {
-		mockKubecost.EXPECT().
+		mockOpenCost.EXPECT().
 			GetAllocation(gomock.Any(), gomock.Any()).
-			Return(&kubecost.AllocationResponse{
+			Return(&opencost.AllocationResponse{
 				Code: 200,
-				Data: []kubecost.AllocationData{},
+				Data: []opencost.AllocationData{},
 			}, nil)
 
 		err := uc.SyncCosts(context.Background())
 		assert.NoError(t, err)
 	})
 
-	t.Run("kubecost API error propagates", func(t *testing.T) {
-		mockKubecost.EXPECT().
+	t.Run("opencost API error propagates", func(t *testing.T) {
+		mockOpenCost.EXPECT().
 			GetAllocation(gomock.Any(), gomock.Any()).
 			Return(nil, errors.New("connection refused"))
 
@@ -81,11 +81,11 @@ func TestSyncCosts(t *testing.T) {
 	})
 
 	t.Run("batch create error propagates", func(t *testing.T) {
-		mockKubecost.EXPECT().
+		mockOpenCost.EXPECT().
 			GetAllocation(gomock.Any(), gomock.Any()).
-			Return(&kubecost.AllocationResponse{
+			Return(&opencost.AllocationResponse{
 				Code: 200,
-				Data: []kubecost.AllocationData{
+				Data: []opencost.AllocationData{
 					{
 						Name:      "ns-1",
 						TotalCost: 10.0,

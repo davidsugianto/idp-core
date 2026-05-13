@@ -5,16 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/davidsugianto/go-pkgs/db"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/migration"
-	"github.com/davidsugianto/go-pkgs/db"
 	"gorm.io/gorm"
 )
 
 var (
-	direction = flag.String("direction", "up", "Migration direction: up or down")
-	configPath = flag.String("config", "configs/config.yaml", "Path to config file")
+	direction  = flag.String("direction", "up", "Migration direction: up or down")
+	configPath = flag.String("config", fmt.Sprintf("configs/config.%s.yaml", os.Getenv("APP_ENV")), "Path to config file")
 )
 
 func main() {

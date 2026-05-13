@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/davidsugianto/idp-core/internal/model/cost"
-	"github.com/davidsugianto/idp-core/internal/pkg/kubecost"
+	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	"github.com/google/uuid"
 )
 
@@ -16,17 +16,17 @@ const (
 	maxLimit     = 200
 )
 
-// SyncCosts fetches cost data from Kubecost and persists it
+// SyncCosts fetches cost data from OpenCost and persists it
 func (u *usecase) SyncCosts(ctx context.Context) error {
 	window := "1h"
-	req := kubecost.AllocationRequest{
+	req := opencost.AllocationRequest{
 		Window:    window,
 		Aggregate: "namespace",
 	}
 
-	resp, err := u.kubecostClient.GetAllocation(ctx, req)
+	resp, err := u.opencostClient.GetAllocation(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to fetch kubecost allocation: %w", err)
+		return fmt.Errorf("failed to fetch opencost allocation: %w", err)
 	}
 
 	var records []cost.CostRecord

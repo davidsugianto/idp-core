@@ -13,6 +13,7 @@
 - 👥 **Multi-Tenant** — Team-scoped resources with RBAC for secure access control
 - 🔐 **Secure by Default** — JWT + API Key authentication, team isolation, policy enforcement
 - 📋 **Audit Logging** — Automatic request logging with filterable audit trails
+- 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
 
 **Use Cases:**
 | Who | What |
@@ -34,6 +35,7 @@
 | 🔑 **RBAC** | Role-based access control with permissions |
 | 🔑 **API Keys** | Service-to-service auth with scoped permissions and rate limiting |
 | 📋 **Audit Logging** | Automatic request logging with filterable, paginated audit trails |
+| 💰 **Cost Tracking** | Real-time K8s cost visibility via OpenCost (open source) |
 | 🛡️ **Policy Enforcement** | Admission webhook for resource validation |
 
 ## Tech Stack
@@ -46,6 +48,8 @@
 | Database | PostgreSQL 15+ |
 | Kubernetes | client-go |
 | GitOps | ArgoCD |
+| Cost Analysis | OpenCost |
+| Monitoring | Prometheus |
 | API Docs | Swagger/OpenAPI |
 
 ## Quick Start
@@ -122,6 +126,13 @@ make test
 | POST | `/v1/roles/assign` | Assign role to user |
 | POST | `/v1/roles/revoke` | Revoke role from user |
 
+### Cost Tracking
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/costs` | List cost records (filterable by team, namespace, date) |
+| GET | `/v1/costs/team` | Get team cost records by time range |
+
 ## Architecture
 
 ```
@@ -160,15 +171,20 @@ make lint             # Run linter
 make dev-k8s-setup    # Setup Kind + ArgoCD
 make test-k8s         # Run K8s tests
 
+# FinOps (Cost Tracking)
+make dev-finops-setup # Setup Prometheus + OpenCost
+make dev-finops-status # Check FinOps components
+
 # Code Generation
 make swagger-gen      # Generate API docs
 ```
 
 ## Configuration
 
-Configuration via `configs/config.yaml` or environment variables:
+Configuration via `configs/config.<env>.yaml` (set `APP_ENV` to select) or environment variables:
 
 ```bash
+APP_ENV=development
 SERVER_PORT=8989
 DB_HOST=localhost
 DB_PORT=5432
@@ -176,6 +192,10 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=idp_core
 JWT_SECRET=your-secret
+FINOPS_ENABLED=true
+FINOPS_OPENCOST_BASE_URL=http://opencost.opencost.svc.cluster.local:9003
+FINOPS_OPENCOST_POLL_INTERVAL=1h
+FINOPS_PROMETHEUS_URL=http://prometheus-server.monitoring.svc.cluster.local:80
 ```
 
 ## Project Structure
@@ -189,7 +209,7 @@ idp-core/
 │   ├── repository/     # Data access
 │   ├── model/          # Domain models
 │   ├── mocks/          # Test mock objects
-│   └── pkg/            # Internal packages
+│   └── pkg/            # Internal packages (opencost, prometheus, oidc, etc.)
 ├── docs/               # Documentation
 ├── configs/            # Configuration
 └── migrations/         # Database migrations

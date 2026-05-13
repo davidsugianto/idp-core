@@ -46,7 +46,7 @@ flowchart TB
 
     subgraph External ["External Integrations"]
         OIDC["OIDC Provider<br/>(Keycloak/Okta)"]
-        Kubecost["Kubecost API"]
+        OpenCost["OpenCost API"]
         Prometheus["Prometheus"]
     end
 
@@ -55,7 +55,7 @@ flowchart TB
     RBAC --> API1
     API1 --> Audit
     API1 --> Cost
-    Cost --> Kubecost
+    Cost --> OpenCost
     Cost --> Prometheus
     API1 --> Rightsizing
     Rightsizing --> Prometheus
@@ -260,7 +260,7 @@ auth:
 
 ### Overview
 
-Integrate with Kubecost and Prometheus to provide real-time cost visibility, cost allocation by team/environment, budget alerts, and resource utilization reports.
+Integrate with OpenCost and Prometheus to provide real-time cost visibility, cost allocation by team/environment, budget alerts, and resource utilization reports.
 
 ### User Stories
 
@@ -355,14 +355,14 @@ type CostReport struct {
 | GET | `/budgets/:id/alerts` | Get budget alert history | Team Admin |
 | POST | `/costs/export` | Export costs (CSV) | Admin |
 
-### Kubecost Integration
+### OpenCost Integration
 
 ```yaml
 finops:
-  kubecost:
+  opencost:
     enabled: true
-    base_url: "http://kubecost-cost-analyzer.kubecost.svc.cluster.local:9090"
-    api_key: "${KUBECOST_API_KEY}"
+    base_url: "http://opencost-cost-analyzer.opencost.svc.cluster.local:9003"
+    api_key: "${OPENCOST_API_KEY}"
     sync_interval: "5m"
   
   prometheus:
@@ -650,9 +650,9 @@ auth:
 
 finops:
   enabled: true
-  kubecost:
-    base_url: "${KUBECOST_URL}"
-    api_key: "${KUBECOST_API_KEY}"
+  opencost:
+    base_url: "${OPENCOST_URL}"
+    api_key: "${OPENCOST_API_KEY}"
   prometheus:
     url: "${PROMETHEUS_URL}"
   sync_interval: "5m"
@@ -673,7 +673,7 @@ service_catalog:
 
 | Dependency | Purpose | Version |
 |------------|---------|---------|
-| Kubecost | Cost analysis | 2.0+ |
+| OpenCost | Cost analysis | 2.0+ |
 | Prometheus | Metrics collection | 2.45+ |
 | Keycloak/Okta | OIDC Provider | Latest |
 
@@ -697,7 +697,7 @@ service_catalog:
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | OIDC provider downtime | High | Fallback to local auth; cache tokens |
-| Kubecost API changes | Medium | Abstract behind interface; contract tests |
+| OpenCost API changes | Medium | Abstract behind interface; contract tests |
 | Cost sync latency | Low | Asynchronous processing; stale data warnings |
 | Permission explosion | Medium | Predefined roles; limit custom roles |
 | Service catalog stale data | Low | Health checks; auto-deprecation |
@@ -709,7 +709,7 @@ service_catalog:
 | Milestone | Duration | Deliverables |
 |-----------|----------|--------------|
 | M1: Auth & RBAC | 3 weeks | OIDC, roles, permissions, audit logs |
-| M2: FinOps | 2 weeks | Kubecost integration, budgets, alerts |
+| M2: FinOps | 2 weeks | OpenCost integration, budgets, alerts |
 | M3: Rightsizing | 2 weeks | Recommendations, quota management |
 | M4: Service Catalog | 2 weeks | Service registration, discovery, dependencies |
 | M5: Testing & Polish | 1 week | Integration tests, documentation |
@@ -722,7 +722,7 @@ service_catalog:
 
 - [PRD Overview](./PRD.md)
 - [PRD Phase 1](./PRD_PHASE_1.md)
-- [Kubecost API Documentation](https://guide.kubecost.com/hc/en-us/articles/4407601907991-API-Reference)
+- [OpenCost API Documentation](https://guide.opencost.com/hc/en-us/articles/4407601907991-API-Reference)
 - [OIDC Specification](https://openid.net/connect/)
 - [Prometheus Query API](https://prometheus.io/docs/prometheus/latest/querying/api/)
 
