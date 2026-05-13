@@ -11,6 +11,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	apikeyUC "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUC "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
+	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
@@ -31,6 +32,7 @@ type Server struct {
 	logger          *extlogger.Logger
 	apiKeyUseCase   apikeyUC.Usecase
 	auditLogUseCase auditlogUC.Usecase
+	costUseCase     costUC.Usecase
 }
 
 type Dependencies struct {
@@ -40,6 +42,7 @@ type Dependencies struct {
 	RoleUseCase        roleUC.Usecase
 	ApiKeyUseCase      apikeyUC.Usecase
 	AuditLogUseCase    auditlogUC.Usecase
+	CostUseCase        costUC.Usecase
 	Config             *config.Config
 	Logger             *extlogger.Logger
 	WebhookValidator   *webhook.Validator
@@ -50,6 +53,7 @@ func New(deps Dependencies) *Server {
 		Server:          &http.Server{},
 		apiKeyUseCase:   deps.ApiKeyUseCase,
 		auditLogUseCase: deps.AuditLogUseCase,
+		costUseCase:     deps.CostUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
@@ -57,6 +61,7 @@ func New(deps Dependencies) *Server {
 			RoleUseCase:        deps.RoleUseCase,
 			ApiKeyUseCase:      deps.ApiKeyUseCase,
 			AuditLogUseCase:    deps.AuditLogUseCase,
+			CostUseCase:        deps.CostUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),
@@ -158,6 +163,12 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	auditLogs.Use(middleware.JWT(&s.config.Auth))
 	auditLogs.GET("", s.handler.ListAuditLogs)
 	auditLogs.GET("/:id", s.handler.GetAuditLog)
+
+	// Cost routes (protected with JWT)
+	costs := v1.Group("/costs")
+	costs.Use(middleware.JWT(&s.config.Auth))
+	costs.GET("", s.handler.ListCosts)
+	costs.GET("/team", s.handler.GetTeamCosts)
 }
 
 func (s *Server) Run(port string) error {

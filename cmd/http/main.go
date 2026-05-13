@@ -3,10 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
+	"github.com/davidsugianto/idp-core/internal/model/cost"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
+	"github.com/davidsugianto/idp-core/internal/pkg/prometheus"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
@@ -14,6 +19,7 @@ import (
 
 	apikeyRepo "github.com/davidsugianto/idp-core/internal/repository/apikey"
 	auditlogRepo "github.com/davidsugianto/idp-core/internal/repository/auditlog"
+	costRepo "github.com/davidsugianto/idp-core/internal/repository/cost"
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
 	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
 	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
@@ -21,6 +27,7 @@ import (
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
+	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
@@ -48,15 +55,16 @@ func main() {
 	// Logger
 	logs := logger.NewWithConfig(logger.Config{
 		ServiceName: "idp-core",
-		Environment: "development",
+		Environment: os.Getenv("APP_ENV"),
 		Format:      logger.FormatJSON,
 	})
-	logs.Info().Msg("Starting IDP API server")
+	logs.Info().Msg("Starting IDP Core API server")
 
 	// Config
-	cfg, err := config.Load("configs/config.yaml")
+	cfgPath := fmt.Sprintf("configs/config.%s.yaml", os.Getenv("APP_ENV"))
+	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		logs.Fatal().Err(err).Msg("cannot load config")
+		logs.Fatal().Err(err).Msg(fmt.Sprintf("cannot load config from %s", cfgPath))
 		panic(err)
 	}
 
@@ -73,9 +81,17 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}); err != nil {
 		logs.Fatal().Err(err).Msg("cannot migrate database")
 	}
+
+	// FinOps clients
+	opencostClient := opencost.NewClient(opencost.Config{
+		BaseURL: cfg.FinOps.OpenCost.BaseURL,
+	})
+	_ = prometheus.NewClient(prometheus.Config{
+		URL: cfg.FinOps.Prometheus.URL,
+	})
 
 	// Repositories
 	envRepo := envRepository.New(envRepository.Dependencies{
@@ -97,6 +113,9 @@ func main() {
 		Database: dbClient,
 	})
 	auditLogRepo := auditlogRepo.New(auditlogRepo.Dependencies{
+		Database: dbClient,
+	})
+	costRepo := costRepo.New(costRepo.Dependencies{
 		Database: dbClient,
 	})
 
@@ -122,6 +141,11 @@ func main() {
 		AuditLogRepo: auditLogRepo,
 	})
 
+	costUC := costUsecase.New(costUsecase.Dependencies{
+		Repo:           costRepo,
+		OpenCostClient: opencostClient,
+	})
+
 	// Webhook validator
 	webhookValidator := webhook.NewValidator()
 
@@ -132,10 +156,33 @@ func main() {
 		RoleUseCase:        roleUC,
 		ApiKeyUseCase:      apiKeyUC,
 		AuditLogUseCase:    auditLogUC,
+		CostUseCase:        costUC,
 		Config:             cfg,
 		Logger:             logs,
 		WebhookValidator:   webhookValidator,
 	})
+
+	// Start cost sync goroutine (fire-and-forget)
+	if cfg.FinOps.Enabled {
+		pollInterval, err := time.ParseDuration(cfg.FinOps.OpenCost.PollInterval)
+		if err != nil {
+			pollInterval = 1 * time.Hour
+		}
+		go func() {
+			ticker := time.NewTicker(pollInterval)
+			defer ticker.Stop()
+			// Initial sync after startup
+			if err := costUC.SyncCosts(context.Background()); err != nil {
+				logs.Error().Err(err).Msg("initial cost sync failed")
+			}
+			for range ticker.C {
+				if err := costUC.SyncCosts(context.Background()); err != nil {
+					logs.Error().Err(err).Msg("cost sync failed")
+				}
+			}
+		}()
+		logs.Info().Str("poll_interval", pollInterval.String()).Msg("cost sync started")
+	}
 
 	logs.Info().Int("port", cfg.Server.Port).Msg("listening on port")
 	if err := server.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {

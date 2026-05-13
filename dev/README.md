@@ -44,6 +44,24 @@ make dev-k8s-status
 make dev-k8s-teardown
 ```
 
+## FinOps Integration Testing
+
+For testing cost tracking with OpenCost and Prometheus:
+
+```bash
+# After K8s setup, install Prometheus + OpenCost
+make dev-finops-setup
+
+# Check FinOps component status
+make dev-finops-status
+
+# Sync costs manually from the app
+curl http://localhost:8989/v1/costs
+
+# View cost data
+curl http://localhost:8989/v1/costs?namespace=default
+```
+
 ## Quick Reference
 
 | Command | Description |
@@ -53,6 +71,10 @@ make dev-k8s-teardown
 | `make dev-k8s-setup` | Full K8s setup (Kind + ArgoCD) |
 | `make dev-k8s-setup-quick` | Minimal K8s setup |
 | `make dev-k8s-teardown` | Delete Kind cluster |
+| `make dev-prometheus-setup` | Install Prometheus in Kind |
+| `make dev-opencost-setup` | Install OpenCost in Kind |
+| `make dev-finops-setup` | Full FinOps setup (Prometheus + OpenCost) |
+| `make dev-finops-status` | Check FinOps component status |
 
 ## Files
 
@@ -61,6 +83,8 @@ dev/
 ├── kind-config.yaml           # Kind cluster configuration
 ├── setup-kind.sh              # Full K8s setup script
 ├── setup-argocd-minimal.sh    # Minimal ArgoCD setup (faster)
+├── setup-prometheus.sh        # Prometheus setup for OpenCost
+├── setup-opencost.sh          # OpenCost setup for cost tracking
 ├── teardown-kind.sh           # K8s teardown script
 └── README.md                  # This file
 ```
@@ -71,6 +95,10 @@ dev/
 |----------|---------|-------------|
 | `CLUSTER_NAME` | `idp-test` | Name of the kind cluster |
 | `ARGOCD_VERSION` | `v2.11.0` | ArgoCD version to install |
+| `PROMETHEUS_NAMESPACE` | `monitoring` | Namespace for Prometheus |
+| `PROMETHEUS_CHART_VERSION` | `25.30.0` | Prometheus Helm chart version |
+| `OPENCOST_NAMESPACE` | `opencost` | Namespace for OpenCost |
+| `OPENCOST_CHART_VERSION` | `1.43.0` | OpenCost Helm chart version |
 | `TIMEOUT` | `600` | Setup timeout in seconds |
 
 ## Accessing ArgoCD UI (Optional)
@@ -118,4 +146,27 @@ kubectl get pods -n argocd
 
 # Check ArgoCD logs
 kubectl logs -n argocd deployment/argocd-server
+```
+
+### OpenCost verification
+
+```bash
+# Port-forward OpenCost API
+kubectl port-forward svc/opencost -n opencost 9003:9003 &
+
+# Check allocation data
+curl -s "http://localhost:9003/allocation?window=1h" | jq .
+
+# Check OpenCost logs
+kubectl logs -n opencost deployment/opencost
+```
+
+### Prometheus verification
+
+```bash
+# Port-forward Prometheus UI
+kubectl port-forward svc/prometheus-server -n monitoring 9090:80 &
+
+# Verify targets are healthy
+curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | select(.health=="up") | .labels.job'
 ```

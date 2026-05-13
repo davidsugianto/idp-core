@@ -98,7 +98,9 @@ make test-all-integration
 | `internal/usecase/role/role_test.go` | role | Role CRUD, permission assignment |
 | `internal/usecase/apikey/apikey_test.go` | apikey | Key generation, hashing, CRUD, validation |
 | `internal/usecase/auditlog/auditlog_test.go` | auditlog | Audit log create, get, list, filtering |
+| `internal/usecase/cost/cost_test.go` | cost | Cost sync, list with filters, team costs |
 | `internal/pkg/oidc/verifier_test.go` | oidc | Token verification, group extraction |
+| `internal/pkg/opencost/client_test.go` | opencost | Allocation API client with httptest.Server |
 | `internal/handler/http/*_test.go` | http | HTTP handler request/response |
 
 ### Mock Objects
@@ -113,6 +115,8 @@ Mocks follow the gomock manual pattern. Each repository interface has a correspo
 | `internal/mocks/permission_repository.go` | `permission.Repository` |
 | `internal/mocks/apikey_repository.go` | `apikey.Repository` |
 | `internal/mocks/auditlog_repository.go` | `auditlog.Repository` |
+| `internal/mocks/cost_repository.go` | `cost.Repository` |
+| `internal/mocks/opencost_client.go` | `cost.OpenCostClient` |
 
 Usage pattern:
 
@@ -155,6 +159,26 @@ Located in `internal/usecase/auditlog/auditlog_test.go`. Covers:
 | `TestCreate` | Defaults (status→success), failure status, changes tracking (old/new values), repo error |
 | `TestGet` | Found, not found returns nil response |
 | `TestList` | With filters, enforces default limit (50), caps max limit (200), empty result |
+
+### Cost Usecase Unit Tests
+
+Located in `internal/usecase/cost/cost_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestSyncCosts` | Successful sync with data, empty data, OpenCost API error, batch create error |
+| `TestList` | With filters, enforces default limit (50), caps max limit (200), empty result, repo error |
+| `TestGetTeamCosts` | Returns team costs with time range, empty result for unknown team |
+
+### OpenCost Client Unit Tests
+
+Located in `internal/pkg/opencost/client_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestGetAllocation` | Successful response parsing, non-200 status error, invalid base URL, connection refused |
+
+Uses `httptest.Server` to mock the OpenCost API. Validates query parameters (`window`, `aggregate`) and response deserialization including raw data preservation.
 
 ---
 
@@ -234,6 +258,17 @@ Tests audit log generation and retrieval:
 | List audit logs (JWT auth) | 200 OK |
 | Filter by user/team/action | 200 OK |
 | Get audit log by ID | 200 OK |
+| Access without auth | 401 Unauthorized |
+
+#### TestE2E_CostTracking
+
+Tests cost tracking API with OpenCost:
+
+| Scenario | Expected Status |
+|----------|-----------------|
+| List cost records (JWT auth) | 200 OK |
+| Filter by team/namespace/date | 200 OK |
+| Get team costs by time range | 200 OK |
 | Access without auth | 401 Unauthorized |
 
 #### TestE2E_NamespaceNaming
@@ -382,6 +417,8 @@ make test-contract
       /v1/api-keys/{id}
       /v1/audit-logs
       /v1/audit-logs/{id}
+      /v1/costs
+      /v1/costs/team
       /v1/environments
       /v1/environments/{id}
       /v1/environments/{id}/status
@@ -427,6 +464,22 @@ Tests ArgoCD Application CRUD operations.
 ```bash
 make dev-k8s-setup
 make test-argocd
+```
+
+### FinOps Integration Tests
+
+Tests cost tracking with OpenCost and Prometheus:
+
+```bash
+# Setup FinOps environment
+make dev-finops-setup
+
+# Verify OpenCost is working
+make dev-finops-status
+
+# Run cost-related tests
+go test ./internal/usecase/cost/... -v
+go test ./internal/pkg/opencost/... -v
 ```
 
 ---
