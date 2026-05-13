@@ -41,3 +41,12 @@ argocd:
   namespace: "argocd"
   token: ""
 
+finops:
+  enabled: false
+  kubecost:
+    base_url: "http://kubecost-cost-analyzer.kubecost.svc.cluster.local:9090"
+    api_key: ""
+    poll_interval: "1h"
+  prometheus:
+    url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+

@@ -12,7 +12,7 @@
 | Milestone            | Status         | Progress |
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
-| M2: FinOps           | 🔲 Not Started | 0%       |
+| M2: FinOps           | 🔄 In Progress | 25%      |
 | M3: Rightsizing      | 🔲 Not Started | 0%       |
 | M4: Service Catalog  | 🔲 Not Started | 0%       |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
@@ -168,50 +168,47 @@
 
 ## 🗓️ M2: FinOps (Week 4-5)
 
-### Week 4: Kubecost Integration & Cost Tracking
+### Week 4: Kubecost Integration & Cost Tracking ✅ COMPLETED
 
 #### Configuration
 
-- [ ] Add Kubecost config to `config.go`
-- [ ] Add Prometheus config to `config.go`
+- [x] Add Kubecost config to `config.go`
+- [x] Add Prometheus config to `config.go`
 
 #### Kubecost Client
 
-- [ ] Create `internal/pkg/kubecost/client.go`
-- [ ] Create `internal/pkg/kubecost/cost.go`
-- [ ] Create `internal/pkg/kubecost/allocation.go`
+- [x] Create `internal/pkg/kubecost/client.go`
+- [x] Create `internal/pkg/kubecost/types.go` (AllocationRequest, AllocationResponse, AllocationData)
 
 #### Prometheus Client
 
-- [ ] Create `internal/pkg/prometheus/client.go`
-- [ ] Create cost query functions
+- [x] Create `internal/pkg/prometheus/client.go` (stub for future queries)
 
 #### Cost Models
 
-- [ ] Create migration: `cost_records` table
-- [ ] Create model: `internal/model/cost_record/type.go`
+- [x] Create migration: `cost_records` table
+- [x] Create model: `internal/model/cost/type.go`
 
 #### Cost Repository
 
-- [ ] Create `internal/repository/cost/init.go`
-- [ ] Create `internal/repository/cost/cost.go`
+- [x] Create `internal/repository/cost/init.go` (interface + implementation)
+- [x] Implement Create, BatchCreate, List, GetByTeamAndPeriod
 
 #### Cost Usecase
 
-- [ ] Create `internal/usecase/cost/init.go`
-- [ ] Create `internal/usecase/cost/cost.go`
-- [ ] Implement cost sync job (cron)
+- [x] Create `internal/usecase/cost/init.go`
+- [x] Create `internal/usecase/cost/cost.go`
+- [x] Implement cost sync job (time.Ticker goroutine in main.go)
 
 #### Cost Handler
 
-- [ ] Create `internal/handler/http/cost.go`
-- [ ] Add cost routes
+- [x] Create `internal/handler/http/cost.go`
+- [x] Add cost routes (`GET /v1/costs`, `GET /v1/costs/team`)
 
 #### Tests
 
-- [ ] Unit tests: Kubecost client
-- [ ] Unit tests: Prometheus client
-- [ ] Unit tests: cost repository
+- [x] Unit tests: Kubecost client (5 tests with httptest.Server)
+- [x] Unit tests: cost usecase (11 tests with mocked repo + kubecost client)
 - [ ] Integration tests: cost API
 
 ***
@@ -547,7 +544,7 @@ internal/
 │   ├── role.go              # ✅ CREATED
 │   ├── apikey.go            # ✅ CREATED
 │   ├── auditlog.go          # ✅ CREATED
-│   ├── cost.go              # TODO
+│   ├── cost.go              # ✅ CREATED
 │   ├── budget.go            # TODO
 │   ├── rightsizing.go       # TODO
 │   ├── quota.go             # TODO
@@ -560,7 +557,7 @@ internal/
 │   ├── apikey/              # ✅ CREATED
 │   ├── auditlog/            # ✅ CREATED
 │   ├── auth/                # ✅ CREATED (RBAC engine)
-│   ├── cost/                # TODO
+│   ├── cost/                # ✅ CREATED
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
 │   ├── quota/               # TODO
@@ -573,7 +570,7 @@ internal/
 │   ├── permission/          # ✅ CREATED
 │   ├── apikey/              # ✅ CREATED
 │   ├── auditlog/            # ✅ CREATED
-│   ├── cost/                # TODO
+│   ├── cost/                # ✅ CREATED
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
 │   ├── quota/               # TODO
@@ -586,7 +583,7 @@ internal/
 │   ├── permission/          # ✅ CREATED
 │   ├── apikey/              # ✅ CREATED
 │   ├── auditlog/            # ✅ CREATED
-│   ├── cost_record/         # TODO
+│   ├── cost/                # ✅ CREATED
 │   ├── budget/              # TODO
 │   ├── rightsizing/         # TODO
 │   ├── resource_quota/      # TODO
@@ -594,8 +591,8 @@ internal/
 │
 ├── pkg/
 │   ├── oidc/                # ✅ CREATED
-│   ├── kubecost/            # TODO
-│   └── prometheus/          # TODO
+│   ├── kubecost/            # ✅ CREATED
+│   └── prometheus/          # ✅ CREATED (stub)
 │
 └── mocks/
     ├── user_repository.go       # ✅ CREATED
@@ -603,7 +600,9 @@ internal/
     ├── role_repository.go       # ✅ CREATED
     ├── permission_repository.go # ✅ CREATED
     ├── apikey_repository.go     # ✅ CREATED
-    └── auditlog_repository.go   # ✅ CREATED
+    ├── auditlog_repository.go   # ✅ CREATED
+    ├── cost_repository.go       # ✅ CREATED
+    └── kubecost_client.go       # ✅ CREATED
 
 migrations/
 ├── 20260501000000_create_users_table.sql        # ✅ CREATED
@@ -615,6 +614,7 @@ migrations/
 ├── 20260502000003_create_user_roles_table.sql   # ✅ CREATED
 ├── 20260512000000_create_api_keys_table.sql     # ✅ CREATED
 ├── 20260512000001_create_audit_logs_table.sql   # ✅ CREATED
+├── 20260513000000_create_cost_records_table.sql # ✅ CREATED
 └── ... (remaining Phase 2 migrations - TODO)
 ```
 
@@ -767,6 +767,49 @@ Each task is considered complete when:
 - Add integration tests for role API, API key auth, and audit log retrieval
 - Complete seed script for platform admin user
 - Begin M2: FinOps (Week 4)
+
+### M2 Week 4: Kubecost Integration & Cost Tracking (May 2026)
+
+**Files Created:**
+
+- `migrations/20260513000000_create_cost_records_table.sql`
+- `internal/model/cost/type.go` (CostRecord, CostRecordResponse, CostListResponse, CostFilter, converters)
+- `internal/repository/cost/init.go` (interface + implementation: Create, BatchCreate, List, GetByTeamAndPeriod)
+- `internal/usecase/cost/init.go`, `cost.go`, `cost_test.go`
+- `internal/handler/http/cost.go`
+- `internal/pkg/kubecost/client.go`, `types.go`
+- `internal/pkg/prometheus/client.go` (stub for future queries)
+- `internal/mocks/cost_repository.go`
+- `internal/mocks/kubecost_client.go`
+
+**Existing Files Modified:**
+
+- `internal/pkg/config/config.go` — added FinOpsConfig, KubecostConfig, PrometheusConfig
+- `configs/config.yaml` — added finops section
+- `internal/handler/http/init.go` — added costUseCase
+- `cmd/http/server.go` — added CostUseCase, cost routes
+- `cmd/http/main.go` — wired kubecost/prometheus clients, cost repo/usecase, sync goroutine
+
+**API Endpoints Added:**
+
+| Method | Endpoint       | Description                         |
+| ------ | -------------- | ----------------------------------- |
+| GET    | `/v1/costs`    | List cost records with filtering    |
+| GET    | `/v1/costs/team` | Get team cost records by time range |
+
+**Key Features:**
+- Kubecost Allocation API client with configurable base URL, API key, and timeout
+- Cost data synced via `time.Ticker` goroutine (gated by `finops.enabled` config)
+- Namespace-to-team mapping via Kubecost allocation labels
+- Prometheus client stub for future rightsizing queries
+- Cost records stored with NUMERIC(12,4) precision for all cost columns
+- JSONB raw_data column preserving original Kubecost response
+- Indexes on `(team_id, period_start)` and `(namespace, period_start)` for query performance
+
+**Next Steps:**
+
+- Begin M2: FinOps (Week 5) — Budget Management & Alerts
+- Integration tests: cost API
 
 ***
 

@@ -102,6 +102,25 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("OIDC_ADMIN_GROUP"); v != "" {
 		c.OIDC.AdminGroup = v
 	}
+
+	// FinOps
+	if v := os.Getenv("FINOPS_ENABLED"); v != "" {
+		if enabled, err := strconv.ParseBool(v); err == nil {
+			c.FinOps.Enabled = enabled
+		}
+	}
+	if v := os.Getenv("FINOPS_KUBECOST_BASE_URL"); v != "" {
+		c.FinOps.Kubecost.BaseURL = v
+	}
+	if v := os.Getenv("FINOPS_KUBECOST_API_KEY"); v != "" {
+		c.FinOps.Kubecost.APIKey = v
+	}
+	if v := os.Getenv("FINOPS_KUBECOST_POLL_INTERVAL"); v != "" {
+		c.FinOps.Kubecost.PollInterval = v
+	}
+	if v := os.Getenv("FINOPS_PROMETHEUS_URL"); v != "" {
+		c.FinOps.Prometheus.URL = v
+	}
 }
 
 type Config struct {
@@ -112,6 +131,7 @@ type Config struct {
 	Kubernetes KubernetesConfig `json:"kubernetes" yaml:"kubernetes"`
 	ArgoCD     ArgoCDConfig     `json:"argocd" yaml:"argocd"`
 	OIDC       OIDCConfig       `json:"oidc" yaml:"oidc"`
+	FinOps     FinOpsConfig     `json:"finops" yaml:"finops"`
 }
 
 type ServerConfig struct {
@@ -159,4 +179,20 @@ type OIDCConfig struct {
 	Scopes       []string `json:"scopes" yaml:"scopes"`
 	GroupsClaim  string   `json:"groups_claim" yaml:"groups_claim"`
 	AdminGroup   string   `json:"admin_group" yaml:"admin_group"`
+}
+
+type FinOpsConfig struct {
+	Enabled   bool             `json:"enabled" yaml:"enabled"`
+	Kubecost  KubecostConfig   `json:"kubecost" yaml:"kubecost"`
+	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
+}
+
+type KubecostConfig struct {
+	BaseURL      string `json:"base_url" yaml:"base_url"`
+	APIKey       string `json:"api_key" yaml:"api_key"`
+	PollInterval string `json:"poll_interval" yaml:"poll_interval"`
+}
+
+type PrometheusConfig struct {
+	URL string `json:"url" yaml:"url"`
 }

@@ -97,6 +97,42 @@ definitions:
       user_id:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_cost.CostListResponse:
+    properties:
+      cost_records:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_cost.CostRecordResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_cost.CostRecordResponse:
+    properties:
+      cpu_cost:
+        type: number
+      created_at:
+        type: string
+      environment_id:
+        type: string
+      id:
+        type: string
+      namespace:
+        type: string
+      network_cost:
+        type: number
+      period_end:
+        type: string
+      period_start:
+        type: string
+      pv_cost:
+        type: number
+      ram_cost:
+        type: number
+      team_id:
+        type: string
+      total_cost:
+        type: number
+    type: object
   github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus:
     properties:
       health_status:
@@ -969,6 +1005,100 @@ paths:
       summary: Get audit log by ID
       tags:
       - audit-logs
+  /v1/costs:
+    get:
+      description: List cost records with filtering and pagination
+      parameters:
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by environment ID
+        in: query
+        name: environment_id
+        type: string
+      - description: Filter by namespace
+        in: query
+        name: namespace
+        type: string
+      - description: Filter by start date (RFC3339)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339)
+        in: query
+        name: end_date
+        type: string
+      - default: 50
+        description: Page limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_cost.CostListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List cost records
+      tags:
+      - costs
+  /v1/costs/team:
+    get:
+      description: Get cost records for a specific team within a time range
+      parameters:
+      - description: Team ID
+        in: query
+        name: team_id
+        required: true
+        type: string
+      - description: Filter by namespace
+        in: query
+        name: namespace
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_cost.CostListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get team cost records
+      tags:
+      - costs
   /v1/environments:
     get:
       description: List all environments for the caller's team
