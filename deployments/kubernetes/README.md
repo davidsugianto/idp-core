@@ -8,22 +8,33 @@ This directory contains Kubernetes manifests for deploying idp-core.
 kubernetes/
 ├── base/                          # Base manifests
 │   ├── namespace.yaml             # Namespace definition
-│   ├── rbac.yaml                  # ServiceAccount, ClusterRole, ClusterRoleBinding
+│   ├── rbac.yaml                  # ServiceAccount, ClusterRole, ClusterRoleBinding (API)
+│   ├── cron-rbac.yaml             # ServiceAccount (cron server)
 │   ├── configmap.yaml             # Application configuration
 │   ├── secret.yaml                # Sensitive data (template)
-│   ├── deployment.yaml            # Deployment with probes
-│   ├── service.yaml               # ClusterIP services
+│   ├── deployment.yaml            # API server deployment
+│   ├── service.yaml               # API server services
+│   ├── cron-deployment.yaml       # Cron server deployment
+│   ├── cron-service.yaml          # Cron server service
 │   └── kustomization.yaml         # Kustomize base
 └── overlays/
     └── production/                # Production overrides
         └── kustomization.yaml
 ```
 
+## Components
+
+| Component | Port | Replicas | Image |
+|-----------|------|----------|-------|
+| API server | 8989 | 2 (base) / 3 (prod) | `idp-core` |
+| Cron server | 8983 | 1 | `idp-core-cron` |
+
 ## Prerequisites
 
 1. Kubernetes cluster (v1.28+)
 2. ArgoCD installed in `argocd` namespace
 3. PostgreSQL database (or use the provided StatefulSet)
+4. Redis Sentinel for cron distributed locking
 
 ## Quick Start
 
@@ -79,18 +90,36 @@ kubectl create configmap idp-core-config \
 
 ## Resource Requirements
 
+### API Server
+
 | Environment | CPU Request | CPU Limit | Memory Request | Memory Limit | Replicas |
 |-------------|-------------|-----------|----------------|--------------|----------|
 | Development | 100m | 500m | 128Mi | 512Mi | 1 |
 | Production | 200m | 1000m | 256Mi | 1Gi | 3 |
 
+### Cron Server
+
+| Environment | CPU Request | CPU Limit | Memory Request | Memory Limit | Replicas |
+|-------------|-------------|-----------|----------------|--------------|----------|
+| Development | 100m | 300m | 64Mi | 256Mi | 1 |
+| Production | 100m | 500m | 128Mi | 512Mi | 1 |
+
 ## Health Checks
+
+### API Server
 
 | Probe | Endpoint | Initial Delay | Period |
 |-------|----------|---------------|--------|
 | Liveness | `/health` | 10s | 10s |
 | Readiness | `/ready` | 5s | 5s |
 | Startup | `/health` | 5s | 5s |
+
+### Cron Server
+
+| Probe | Endpoint | Initial Delay | Period |
+|-------|----------|---------------|--------|
+| Liveness | `/health` | 10s | 30s |
+| Readiness | `/health` | 5s | 10s |
 
 ## RBAC Permissions
 

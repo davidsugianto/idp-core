@@ -16,6 +16,39 @@ services:
       timeout: 5s
       retries: 5
 
+  redis-master:
+    image: 'bitnami/redis:6.2.13'
+    container_name: idp-core-redis_master
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=redispassword
+    restart: always
+  redis-slave:
+    image: 'bitnami/redis:6.2.13'
+    container_name: idp-core-redis_slave
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=idp-core-redis_master
+      - REDIS_MASTER_PASSWORD=redispassword
+      - REDIS_PASSWORD=redispassword
+    depends_on:
+      - redis-master
+  redis-sentinel:
+    platform: linux/amd64
+    image: docker.io/bitnami/redis-sentinel:6.2.13
+    restart: always
+    container_name: idp-core-redis_sentinel
+    environment:
+      - REDIS_MASTER_HOST=idp-core-redis_master
+      - REDIS_MASTER_PASSWORD=redispassword
+      - REDIS_SENTINEL_PASSWORD=redispassword
+      - REDIS_MASTER_SET=idp-core-redis_sentinel
+    ports:
+      - '26379:26379'
+    depends_on:
+      - redis-master
+      - redis-slave
+
   app:
     build:
       context: .
@@ -37,6 +70,33 @@ services:
       postgres:
         condition: service_healthy
     command: air -c .air.toml
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+      target: development
+    container_name: idp-core-cron
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=idp_core
+      - APP_ENV=development
+      - REDIS_MASTER_NAME=idp-core-redis_sentinel
+      - REDIS_ADDRESS=idp-core-redis_sentinel:26379
+      - REDIS_PASSWORD=redispassword
+    ports:
+      - "8983:8983"
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-sentinel:
+        condition: service_started
+    command: air -c .air.cron.toml
 
 volumes:
   postgres_data:

@@ -184,7 +184,28 @@ make dev-k8s-status
 make dev-k8s-teardown
 ```
 
-#### 3. Full Setup (Both)
+#### 3. Cron Server Development (Redis + PostgreSQL)
+
+For running and testing the cron job server:
+
+```bash
+# Start dependencies
+make dev-db-up         # PostgreSQL
+make dev-redis-up      # Redis (master + slave + sentinel)
+
+# Run the cron server (choose one)
+make dev-cron-run      # Locally with Air
+make dev-cron-up       # In Docker
+
+# View logs
+make dev-cron-logs
+
+# Stop when done
+make dev-cron-down
+make dev-redis-down
+```
+
+#### 4. Full Setup (Both)
 
 ```bash
 # Setup everything (PostgreSQL + Kind + ArgoCD)
@@ -208,7 +229,13 @@ make dev-teardown
 | `make dev-app-logs`        | View app logs                  | -               |
 | `make dev-all-up`          | Start PostgreSQL + App         | Docker          |
 | `make dev-all-down`        | Stop all services              | -               |
-| `make dev-run`             | Run locally with Air           | Air installed   |
+| `make dev-run`             | Run API server with Air        | Air installed   |
+| `make dev-cron-run`        | Run cron server with Air       | Air installed   |
+| `make dev-redis-up`        | Start Redis in Docker          | Docker          |
+| `make dev-redis-down`      | Stop Redis containers          | -               |
+| `make dev-cron-up`         | Start cron server in Docker    | Docker          |
+| `make dev-cron-down`       | Stop cron server container     | -               |
+| `make dev-cron-logs`       | View cron server logs          | -               |
 | `make dev-k8s-setup`       | Full K8s setup (Kind + ArgoCD) | kubectl, kind   |
 | `make dev-k8s-setup-quick` | Minimal K8s setup              | kubectl, kind   |
 | `make dev-k8s-teardown`    | Delete Kind cluster            | -               |
@@ -222,6 +249,8 @@ dev/
 ├── kind-config.yaml           # Kind cluster configuration
 ├── setup-kind.sh              # Full K8s setup script
 ├── setup-argocd-minimal.sh    # Minimal ArgoCD setup (faster)
+├── setup-prometheus.sh        # Prometheus setup in Kind
+├── setup-opencost.sh          # OpenCost setup in Kind
 ├── teardown-kind.sh           # K8s teardown script
 └── README.md                  # Dev environment docs
 ```
@@ -633,16 +662,27 @@ make swagger-gen
 
 ```bash
 # Run Application
-make dev-app-up            # Run app in Docker (recommended)
-make dev-app-down          # Stop app container
-make dev-app-logs          # View app logs
-make dev-run               # Run locally with Air (requires: go install github.com/air-verse/air@latest)
+make dev-app-up            # Run API server in Docker (recommended)
+make dev-app-down          # Stop API server container
+make dev-app-logs          # View API server logs
+make dev-run               # Run API server locally with Air
+
+# Cron Server
+make dev-cron-up           # Run cron server in Docker
+make dev-cron-down         # Stop cron server container
+make dev-cron-logs         # View cron server logs
+make dev-cron-run          # Run cron server locally with Air
 
 # Local Development (PostgreSQL only)
 make dev-db-up             # Start PostgreSQL in Docker
 make dev-db-down           # Stop PostgreSQL
 make dev-db-reset          # Reset PostgreSQL database
 make dev-db-logs           # Show PostgreSQL logs
+
+# Redis
+make dev-redis-up          # Start Redis in Docker
+make dev-redis-down        # Stop Redis containers
+make dev-redis-logs        # View Redis logs
 
 # Run Everything (PostgreSQL + App)
 make dev-all-up            # Start PostgreSQL + App in Docker
@@ -679,7 +719,8 @@ make vet                   # Run go vet
 
 # Build
 make build                 # Build binary
-make docker-build          # Build Docker image
+make docker-build          # Build API server Docker image
+make docker-build-cron     # Build cron server Docker image
 
 # Database
 make db-migrate            # Run migrations

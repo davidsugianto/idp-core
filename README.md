@@ -7,6 +7,7 @@
 `idp-core` is a self-service platform API that abstracts Kubernetes complexity from developers. Teams can request isolated environments (namespaces), deploy applications via GitOps, and monitor resources in real-time — without needing `kubectl` access or Kubernetes expertise.
 
 **Key Capabilities:**
+
 - 🚀 **Self-Service Provisioning** — Request K8s environments in minutes, not days
 - 🎯 **GitOps Native** — ArgoCD integration for declarative, version-controlled deployments
 - 📊 **Real-Time Visibility** — Live workload status, health, and resource metrics
@@ -16,41 +17,43 @@
 - 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
 
 **Use Cases:**
-| Who | What |
-|-----|------|
-| Developers | Spin up dev/test environments for feature testing |
-| SREs | Automate environment lifecycle with audit trails |
-| Tech Leads | Monitor team deployments without cluster access |
+
+| Who            | What                                                |
+| -------------- | --------------------------------------------------- |
+| Developers     | Spin up dev/test environments for feature testing   |
+| SREs           | Automate environment lifecycle with audit trails    |
+| Tech Leads     | Monitor team deployments without cluster access     |
 | Platform Teams | Enforce policies and governance across environments |
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| 🚀 **Environment Management** | Create, list, get, delete isolated K8s namespaces |
-| 🎯 **GitOps Integration** | Automatic ArgoCD Application creation and sync |
-| 📊 **Live Status** | Real-time workload status via Kubernetes informers |
-| 🔐 **Authentication** | JWT + API Key auth with team context |
-| 👥 **User & Team Management** | Multi-tenant with team-scoped resources |
-| 🔑 **RBAC** | Role-based access control with permissions |
-| 🔑 **API Keys** | Service-to-service auth with scoped permissions and rate limiting |
-| 📋 **Audit Logging** | Automatic request logging with filterable, paginated audit trails |
-| 💰 **Cost Tracking** | Real-time K8s cost visibility via OpenCost (open source) |
-| 🛡️ **Policy Enforcement** | Admission webhook for resource validation |
+| Feature                       | Description                                                       |
+| ----------------------------- | ----------------------------------------------------------------- |
+| 🚀 **Environment Management** | Create, list, get, delete isolated K8s namespaces                 |
+| 🎯 **GitOps Integration**     | Automatic ArgoCD Application creation and sync                    |
+| 📊 **Live Status**            | Real-time workload status via Kubernetes informers                |
+| 🔐 **Authentication**         | JWT + API Key auth with team context                              |
+| 👥 **User & Team Management** | Multi-tenant with team-scoped resources                           |
+| 🔑 **RBAC**                   | Role-based access control with permissions                        |
+| 🔑 **API Keys**               | Service-to-service auth with scoped permissions and rate limiting |
+| 📋 **Audit Logging**          | Automatic request logging with filterable, paginated audit trails |
+| 💰 **Cost Tracking**          | Real-time K8s cost visibility via OpenCost (open source)          |
+| 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Language | Go 1.25+ |
-| Web Framework | Gin |
-| ORM | GORM |
-| Database | PostgreSQL 15+ |
-| Kubernetes | client-go |
-| GitOps | ArgoCD |
-| Cost Analysis | OpenCost |
-| Monitoring | Prometheus |
-| API Docs | Swagger/OpenAPI |
+| Component     | Technology      |
+| ------------- | --------------- |
+| Language      | Go 1.25+        |
+| Web Framework | Gin             |
+| ORM           | GORM            |
+| Database      | PostgreSQL 15+  |
+| Kubernetes    | client-go       |
+| GitOps        | ArgoCD          |
+| Cost Analysis | OpenCost        |
+| Monitoring    | Prometheus      |
+| Caching/Lock  | Redis Sentinel  |
+| API Docs      | Swagger/OpenAPI |
 
 ## Quick Start
 
@@ -61,8 +64,14 @@ make bootstrap
 # Start PostgreSQL
 make dev-db-up
 
-# Run with hot-reload
+# Start Redis (for cron server)
+make dev-redis-up
+
+# Run API server with hot-reload
 make dev-run
+
+# Run cron server with hot-reload
+make dev-cron-run
 
 # Run tests
 make test
@@ -72,66 +81,66 @@ make test
 
 ### Core
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/ping` | Health check |
-| POST | `/auth/login` | Authenticate user |
-| GET | `/swagger/*any` | API documentation |
+| Method | Endpoint        | Description       |
+| ------ | --------------- | ----------------- |
+| GET    | `/ping`         | Health check      |
+| POST   | `/auth/login`   | Authenticate user |
+| GET    | `/swagger/*any` | API documentation |
 
 ### Environments
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/environments` | List environments |
-| POST | `/v1/environments` | Create environment |
-| GET | `/v1/environments/:id` | Get environment |
-| DELETE | `/v1/environments/:id` | Delete environment |
-| POST | `/v1/environments/:id/sync` | Trigger GitOps sync |
-| GET | `/v1/environments/:id/status` | Get environment status |
+| Method | Endpoint                      | Description            |
+| ------ | ----------------------------- | ---------------------- |
+| GET    | `/v1/environments`            | List environments      |
+| POST   | `/v1/environments`            | Create environment     |
+| GET    | `/v1/environments/:id`        | Get environment        |
+| DELETE | `/v1/environments/:id`        | Delete environment     |
+| POST   | `/v1/environments/:id/sync`   | Trigger GitOps sync    |
+| GET    | `/v1/environments/:id/status` | Get environment status |
 
 ### Users & Teams
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/users` | List users |
-| POST | `/v1/users` | Create user |
-| GET | `/v1/users/:id` | Get user |
-| GET | `/v1/teams` | List teams |
-| POST | `/v1/teams` | Create team |
-| GET | `/v1/teams/:id/members` | List team members |
+| Method | Endpoint                | Description       |
+| ------ | ----------------------- | ----------------- |
+| GET    | `/v1/users`             | List users        |
+| POST   | `/v1/users`             | Create user       |
+| GET    | `/v1/users/:id`         | Get user          |
+| GET    | `/v1/teams`             | List teams        |
+| POST   | `/v1/teams`             | Create team       |
+| GET    | `/v1/teams/:id/members` | List team members |
 
 ### API Keys
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/api-keys` | List API keys |
-| POST | `/v1/api-keys` | Create API key |
-| GET | `/v1/api-keys/:id` | Get API key details |
-| PATCH | `/v1/api-keys/:id` | Update API key |
-| DELETE | `/v1/api-keys/:id` | Revoke API key |
+| Method | Endpoint           | Description         |
+| ------ | ------------------ | ------------------- |
+| GET    | `/v1/api-keys`     | List API keys       |
+| POST   | `/v1/api-keys`     | Create API key      |
+| GET    | `/v1/api-keys/:id` | Get API key details |
+| PATCH  | `/v1/api-keys/:id` | Update API key      |
+| DELETE | `/v1/api-keys/:id` | Revoke API key      |
 
 ### Audit Logs
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/audit-logs` | List audit logs (filterable) |
-| GET | `/v1/audit-logs/:id` | Get audit log entry |
+| Method | Endpoint             | Description                  |
+| ------ | -------------------- | ---------------------------- |
+| GET    | `/v1/audit-logs`     | List audit logs (filterable) |
+| GET    | `/v1/audit-logs/:id` | Get audit log entry          |
 
 ### RBAC
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/roles` | List roles |
-| POST | `/v1/roles` | Create role |
-| POST | `/v1/roles/assign` | Assign role to user |
-| POST | `/v1/roles/revoke` | Revoke role from user |
+| Method | Endpoint           | Description           |
+| ------ | ------------------ | --------------------- |
+| GET    | `/v1/roles`        | List roles            |
+| POST   | `/v1/roles`        | Create role           |
+| POST   | `/v1/roles/assign` | Assign role to user   |
+| POST   | `/v1/roles/revoke` | Revoke role from user |
 
 ### Cost Tracking
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/costs` | List cost records (filterable by team, namespace, date) |
-| GET | `/v1/costs/team` | Get team cost records by time range |
+| Method | Endpoint         | Description                                             |
+| ------ | ---------------- | ------------------------------------------------------- |
+| GET    | `/v1/costs`      | List cost records (filterable by team, namespace, date) |
+| GET    | `/v1/costs/team` | Get team cost records by time range                     |
 
 ## Architecture
 
@@ -159,8 +168,16 @@ make test
 ```bash
 # Development
 make dev-db-up        # Start PostgreSQL
-make dev-run          # Run with hot-reload
+make dev-redis-up     # Start Redis (master + slave + sentinel)
+make dev-run          # Run API server with hot-reload
+make dev-cron-run     # Run cron server with hot-reload
 make dev-db-down      # Stop PostgreSQL
+
+# Docker (no local tools needed)
+make dev-app-up       # Start API server in Docker
+make dev-cron-up      # Start cron server in Docker
+make dev-app-logs     # View API server logs
+make dev-cron-logs    # View cron server logs
 
 # Testing
 make test             # Run all tests
@@ -174,6 +191,10 @@ make test-k8s         # Run K8s tests
 # FinOps (Cost Tracking)
 make dev-finops-setup # Setup Prometheus + OpenCost
 make dev-finops-status # Check FinOps components
+
+# Docker Builds
+make docker-build      # Build API server image
+make docker-build-cron # Build cron server image
 
 # Code Generation
 make swagger-gen      # Generate API docs
@@ -196,20 +217,30 @@ FINOPS_ENABLED=true
 FINOPS_OPENCOST_BASE_URL=http://opencost.opencost.svc.cluster.local:9003
 FINOPS_OPENCOST_POLL_INTERVAL=1h
 FINOPS_PROMETHEUS_URL=http://prometheus-server.monitoring.svc.cluster.local:80
+CRON_PORT=8983
+REDIS_MASTER_NAME=idp-core-redis_sentinel
+REDIS_ADDRESS=localhost:26379
+REDIS_PASSWORD=redispassword
 ```
 
 ## Project Structure
 
 ```
 idp-core/
-├── cmd/http/           # Entry point
+├── cmd/
+│   ├── http/           # API server entry point
+│   └── cron/           # Cron job server entry point
 ├── internal/
-│   ├── handler/http/   # HTTP handlers + middleware
+│   ├── handler/
+│   │   ├── http/       # HTTP handlers + middleware
+│   │   └── cron/       # Cron job handlers
 │   ├── usecase/        # Business logic
 │   ├── repository/     # Data access
 │   ├── model/          # Domain models
 │   ├── mocks/          # Test mock objects
-│   └── pkg/            # Internal packages (opencost, prometheus, oidc, etc.)
+│   └── pkg/            # Internal packages (opencost, prometheus, redislock, oidc, etc.)
+├── deployments/        # Kubernetes manifests
+│   └── kubernetes/
 ├── docs/               # Documentation
 ├── configs/            # Configuration
 └── migrations/         # Database migrations
@@ -217,12 +248,12 @@ idp-core/
 
 ## Roadmap
 
-| Phase | Timeline | Status | Focus |
-|-------|----------|--------|-------|
-| Phase 1 - MVP | Q2 2026 | ✅ Complete | Core API, K8s/ArgoCD |
-| Phase 2 - Enhancement | Q3 2026 | 🔄 In Progress | RBAC, FinOps, Rightsizing |
-| Phase 3 - Platform | Q4 2026 | 📋 Planned | UI, Templates |
-| Phase 4 - Advanced | Q1 2027+ | 🔮 Roadmap | AI/ML, Analytics |
+| Phase                 | Timeline | Status         | Focus                     |
+| --------------------- | -------- | -------------- | ------------------------- |
+| Phase 1 - MVP         | Q2 2026  | ✅ Complete     | Core API, K8s/ArgoCD      |
+| Phase 2 - Enhancement | Q3 2026  | 🔄 In Progress | RBAC, FinOps, Rightsizing |
+| Phase 3 - Platform    | Q4 2026  | 📋 Planned     | UI, Templates             |
+| Phase 4 - Advanced    | Q1 2027+ | 🔮 Roadmap     | AI/ML, Analytics          |
 
 ## Documentation
 

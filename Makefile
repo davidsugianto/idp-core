@@ -11,6 +11,7 @@ LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 # Docker
 DOCKER_REGISTRY ?= ghcr.io
 DOCKER_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)
+DOCKER_CRON_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)-cron
 
 # Go
 GOCMD := go
@@ -182,6 +183,68 @@ dev-db-logs:
 dev-db-ps:
 	@echo "==> PostgreSQL container status..."
 	docker-compose ps postgres
+
+# =============================================================================
+# Development Environment (Redis)
+# =============================================================================
+
+## dev-redis-up: Start Redis (master + slave + sentinel) in Docker
+dev-redis-up:
+	@echo "==> Starting Redis in Docker..."
+	docker-compose up -d redis-master redis-slave redis-sentinel
+	@echo "==> Waiting for Redis to be ready..."
+	sleep 3
+	@echo "✅ Redis ready at localhost:26379 (sentinel)"
+	@echo ""
+	@echo "Connection details:"
+	@echo "  Sentinel: localhost:26379"
+	@echo "  Master Name: idp-core-redis_sentinel"
+	@echo "  Password: redispassword"
+
+## dev-redis-down: Stop Redis containers
+dev-redis-down:
+	@echo "==> Stopping Redis..."
+	docker-compose stop redis-master redis-slave redis-sentinel
+	@echo "✅ Redis stopped!"
+
+## dev-redis-logs: Show Redis logs
+dev-redis-logs:
+	docker-compose logs -f redis-master redis-slave redis-sentinel
+
+# =============================================================================
+# Development Environment (Cron Server)
+# =============================================================================
+
+## dev-cron-up: Start the cron server in Docker (with hot-reload)
+dev-cron-up:
+	@echo "==> Starting cron server in Docker..."
+	docker-compose up -d cron
+	@echo "==> Waiting for cron server to be ready..."
+	sleep 3
+	@echo "✅ Cron server running at http://localhost:8983"
+	@echo ""
+	@echo "View logs: make dev-cron-logs"
+	@echo "Stop cron: make dev-cron-down"
+
+## dev-cron-run: Run cron server locally with hot-reload (requires: go install github.com/air-verse/air@latest)
+dev-cron-run:
+	@echo "==> Starting cron server with hot-reload..."
+	@if ! command -v air >/dev/null 2>&1; then \
+		echo "❌ air not found. Install with: go install github.com/air-verse/air@latest"; \
+		echo "   Or use 'make dev-cron-up' to run in Docker instead."; \
+		exit 1; \
+	fi
+	air -c .air.cron.toml
+
+## dev-cron-down: Stop the cron server container
+dev-cron-down:
+	@echo "==> Stopping cron server..."
+	docker-compose stop cron
+	@echo "✅ Cron server stopped!"
+
+## dev-cron-logs: View cron server logs
+dev-cron-logs:
+	docker-compose logs -f cron
 
 # =============================================================================
 # Development Environment (Kubernetes - Kind + ArgoCD)
@@ -420,11 +483,17 @@ db-rollback:
 # Docker
 # =============================================================================
 
-## docker-build: Build Docker image
+## docker-build: Build Docker image (API server)
 docker-build: build-linux
-	@echo "==> Building Docker image..."
+	@echo "==> Building API server Docker image..."
 	docker build -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
 	@echo "✅ Docker image built: $(DOCKER_IMAGE):$(VERSION)"
+
+## docker-build-cron: Build Docker image (cron server)
+docker-build-cron:
+	@echo "==> Building cron server Docker image..."
+	docker build -f Dockerfile.cron -t $(DOCKER_CRON_IMAGE):$(VERSION) -t $(DOCKER_CRON_IMAGE):latest .
+	@echo "✅ Cron Docker image built: $(DOCKER_CRON_IMAGE):$(VERSION)"
 
 ## docker-push: Push Docker image to registry
 docker-push: docker-build

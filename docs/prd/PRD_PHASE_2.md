@@ -30,9 +30,11 @@ Phase 2 enhances the idp-core platform with enterprise-grade security, cost visi
 flowchart TB
     subgraph Phase1 ["Phase 1 - MVP (Existing)"]
         API1["API Server"]
+        Cron1["Cron Server"]
         K8s1["Kubernetes"]
         ArgoCD1["ArgoCD"]
         DB1["PostgreSQL"]
+        Redis1["Redis Sentinel"]
     end
 
     subgraph Phase2 ["Phase 2 - Enhancement (New)"]
@@ -54,13 +56,15 @@ flowchart TB
     Auth --> RBAC
     RBAC --> API1
     API1 --> Audit
-    API1 --> Cost
+    Cron1 --> Cost
     Cost --> OpenCost
     Cost --> Prometheus
+    API1 --> Cost
     API1 --> Rightsizing
     Rightsizing --> Prometheus
     API1 --> Catalog
     Auth --> OIDC
+    Cron1 --> Redis1
 
     style Phase1 fill:#e8f5e9,stroke:#4caf50
     style Phase2 fill:#e3f2fd,stroke:#2196f3
@@ -357,25 +361,28 @@ type CostReport struct {
 
 ### OpenCost Integration
 
+Cost data is synchronized by the **idp-core-cron** server on a configurable schedule using Redis distributed locking to ensure exactly-once execution across replicas.
+
 ```yaml
 finops:
+  enabled: true
   opencost:
-    enabled: true
-    base_url: "http://opencost-cost-analyzer.opencost.svc.cluster.local:9003"
-    api_key: "${OPENCOST_API_KEY}"
-    sync_interval: "5m"
-  
+    base_url: "http://opencost.opencost.svc.cluster.local:9003"
+    poll_interval: "1h"
   prometheus:
-    enabled: true
     url: "http://prometheus-server.monitoring.svc.cluster.local:80"
-    queries:
-      cpu_cost: 'sum(container_cpu_allocation) by (namespace, pod)'
-      memory_cost: 'sum(container_memory_allocation_bytes) by (namespace, pod)'
-  
-  pricing:
-    cpu_hourly: 0.031    # $/CPU-core/hour
-    memory_hourly: 0.004 # $/GB/hour
-    storage_hourly: 0.0001 # $/GB/hour
+
+cron:
+  grace_timeout: "900s"
+  schedules:
+    ping: "*/5 * * * *"
+    cost-sync: "0 * * * *"
+  port: 8983
+
+redis:
+  master_name: "idp-core-redis_sentinel"
+  address: "redis-sentinel.idp-core.svc.cluster.local:26379"
+  password: "${REDIS_PASSWORD}"
 ```
 
 ---
@@ -675,6 +682,7 @@ service_catalog:
 |------------|---------|---------|
 | OpenCost | Cost analysis | 2.0+ |
 | Prometheus | Metrics collection | 2.45+ |
+| Redis Sentinel | Distributed locking for cron jobs | 6.2+ |
 | Keycloak/Okta | OIDC Provider | Latest |
 
 ---

@@ -4,7 +4,7 @@ server:
 cron:
   grace_timeout: "900s"
   schedules:
-    ping: "5 * * * *"
+    ping: "*/5 * * * *"
     cost-sync: "0 * * * *"
   port: 8983
 
@@ -18,7 +18,7 @@ database:
 
 redis:
   master_name: "localhost"
-  address: "localhost:6379"
+  address: "localhost:26379"
   password: "redispassword"
 
 auth:
@@ -55,10 +55,10 @@ argocd:
 
 oidc:
   enabled: false
-  issuer_url: "https://your-idp.example.com"
+  issuer_url: ""
   client_id: ""
   client_secret: ""
-  redirect_url: "http://localhost:8989/auth/callback"
+  redirect_url: ""
   scopes:
     - openid
     - profile

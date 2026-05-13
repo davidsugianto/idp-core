@@ -6,10 +6,13 @@ namespace: idp-core
 resources:
   - namespace.yaml
   - rbac.yaml
+  - cron-rbac.yaml
   - configmap.yaml
   - secret.yaml
   - deployment.yaml
   - service.yaml
+  - cron-deployment.yaml
+  - cron-service.yaml
 
 # Common labels
 commonLabels:
@@ -19,4 +22,6 @@ commonLabels:
 # Images (override with kustomize edit set image)
 images:
   - name: ghcr.io/davidsugianto/idp-core
+    newTag: latest
+  - name: ghcr.io/davidsugianto/idp-core-cron
     newTag: latest
