@@ -26,6 +26,23 @@ patches:
                   limits:
                     cpu: "1000m"
                     memory: "1Gi"
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: idp-core-cron
+      spec:
+        template:
+          spec:
+            containers:
+              - name: idp-core-cron
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
 
 # Production-specific ConfigMap overrides
 configMapGenerator:
@@ -37,4 +54,6 @@ configMapGenerator:
 # Image tags for production
 images:
   - name: ghcr.io/davidsugianto/idp-core
+    newTag: v1.0.0
+  - name: ghcr.io/davidsugianto/idp-core-cron
     newTag: v1.0.0

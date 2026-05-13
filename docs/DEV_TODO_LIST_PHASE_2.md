@@ -198,7 +198,7 @@
 
 - [x] Create `internal/usecase/cost/init.go`
 - [x] Create `internal/usecase/cost/cost.go`
-- [x] Implement cost sync job (time.Ticker goroutine in main.go)
+- [x] Implement cost sync job via separate cron server (`cmd/cron/`) with Redis distributed locking
 
 #### Cost Handler
 
@@ -515,11 +515,22 @@ auth:
 finops:
   enabled: true
   opencost:
-    base_url: "${OPENCOST_URL:http://opencost-cost-analyzer.opencost.svc.cluster.local:9003}"
-    api_key: "${OPENCOST_API_KEY}"
+    base_url: "http://opencost.opencost.svc.cluster.local:9003"
+    poll_interval: "1h"
   prometheus:
-    url: "${PROMETHEUS_URL:http://prometheus-server.monitoring.svc.cluster.local:80}"
-  sync_interval: "5m"
+    url: "http://prometheus-server.monitoring.svc.cluster.local:80"
+
+cron:
+  grace_timeout: "900s"
+  schedules:
+    ping: "*/5 * * * *"
+    cost-sync: "0 * * * *"
+  port: 8983
+
+redis:
+  master_name: "idp-core-redis_sentinel"
+  address: "redis-sentinel.idp-core.svc.cluster.local:26379"
+  password: "${REDIS_PASSWORD}"
 
 rightsizing:
   enabled: true
@@ -537,6 +548,12 @@ service_catalog:
 ## 📁 File Structure (Phase 2)
 
 ```
+cmd/
+├── http/main.go             # ✅ API server entry point
+├── http/server.go           # ✅ API server setup
+├── cron/main.go             # ✅ Cron server entry point
+└── cron/server.go           # ✅ Cron server setup
+
 internal/
 ├── handler/http/
 │   ├── user.go              # ✅ CREATED
@@ -549,6 +566,10 @@ internal/
 │   ├── rightsizing.go       # TODO
 │   ├── quota.go             # TODO
 │   └── service.go           # TODO
+│
+├── handler/cron/
+│   ├── init.go              # ✅ CREATED
+│   └── cost.go              # ✅ CREATED
 │
 ├── usecase/
 │   ├── user/                # ✅ CREATED
@@ -592,7 +613,8 @@ internal/
 ├── pkg/
 │   ├── oidc/                # ✅ CREATED
 │   ├── opencost/            # ✅ CREATED
-│   └── prometheus/          # ✅ CREATED (stub)
+│   ├── prometheus/          # ✅ CREATED (stub)
+│   └── redislock/           # ✅ CREATED (distributed locking)
 │
 └── mocks/
     ├── user_repository.go       # ✅ CREATED
@@ -603,6 +625,17 @@ internal/
     ├── auditlog_repository.go   # ✅ CREATED
     ├── cost_repository.go       # ✅ CREATED
     └── opencost_client.go       # ✅ CREATED
+
+deployments/
+└── kubernetes/
+    ├── base/
+    │   ├── cron-deployment.yaml # ✅ CREATED
+    │   ├── cron-service.yaml    # ✅ CREATED
+    │   └── cron-rbac.yaml       # ✅ CREATED
+    └── overlays/production/     # ✅ (updated)
+
+Dockerfile.cron                 # ✅ CREATED
+.air.cron.toml                  # ✅ CREATED
 
 migrations/
 ├── 20260501000000_create_users_table.sql        # ✅ CREATED
@@ -778,18 +811,30 @@ Each task is considered complete when:
 - `internal/repository/cost/init.go` (interface + implementation: Create, BatchCreate, List, GetByTeamAndPeriod)
 - `internal/usecase/cost/init.go`, `cost.go`, `cost_test.go`
 - `internal/handler/http/cost.go`
-- `internal/pkg/opencost/client.go`, `types.go`
+- `internal/handler/cron/init.go`, `cost.go` — cron job handlers
+- `internal/pkg/opencost/client.go`, `client_test.go`, `types.go`
 - `internal/pkg/prometheus/client.go` (stub for future queries)
+- `internal/pkg/redislock/` — Redis distributed lock (mutex, lock, redis)
 - `internal/mocks/cost_repository.go`
 - `internal/mocks/opencost_client.go`
+- `cmd/cron/main.go`, `server.go` — standalone cron job server
+- `Dockerfile.cron` — cron server Docker image
+- `.air.cron.toml` — hot-reload config for cron server
+- `deployments/kubernetes/base/cron-deployment.yaml`
+- `deployments/kubernetes/base/cron-service.yaml`
+- `deployments/kubernetes/base/cron-rbac.yaml`
 
 **Existing Files Modified:**
 
-- `internal/pkg/config/config.go` — added FinOpsConfig, OpenCostConfig, PrometheusConfig
-- `configs/config.yaml` — added finops section
+- `internal/pkg/config/config.go` — added FinOpsConfig, OpenCostConfig, PrometheusConfig, CronConfig
+- `configs/config.development.yaml`, `configs/config.example.yaml` — added finops, cron, redis sections
 - `internal/handler/http/init.go` — added costUseCase
 - `cmd/http/server.go` — added CostUseCase, cost routes
-- `cmd/http/main.go` — wired opencost/prometheus clients, cost repo/usecase, sync goroutine
+- `cmd/http/main.go` — wired opencost/prometheus clients, cost repo/usecase
+- `docker-compose.yml` — added cron service, Redis (master/slave/sentinel)
+- `Makefile` — added dev-redis-*, dev-cron-*, docker-build-cron targets
+- `deployments/kubernetes/base/configmap.yaml`, `secret.yaml`, `kustomization.yaml` — cron + redis config
+- `deployments/kubernetes/overlays/production/kustomization.yaml` — cron production overrides
 
 **API Endpoints Added:**
 
@@ -800,13 +845,20 @@ Each task is considered complete when:
 
 **Key Features:**
 
-- OpenCost Allocation API client with configurable base URL, API key, and timeout
-- Cost data synced via `time.Ticker` goroutine (gated by `finops.enabled` config)
+- OpenCost Allocation API client (open source, no API key required) with configurable base URL
+- Standalone **idp-core-cron** server using `robfig/cron` for scheduled job execution
+- Redis Sentinel distributed locking (`internal/pkg/redislock`) ensuring exactly-once job execution
+- Auto-extending lock TTL for long-running sync jobs (120s lock, 1s check interval)
+- HTTP server on port 8983 for manual job triggering via URL paths
+- Graceful shutdown with configurable timeout
 - Namespace-to-team mapping via OpenCost allocation labels
 - Prometheus client stub for future rightsizing queries
 - Cost records stored with NUMERIC(12,4) precision for all cost columns
 - JSONB raw\_data column preserving original OpenCost response
 - Indexes on `(team_id, period_start)` and `(namespace, period_start)` for query performance
+- Docker Compose with Redis master/slave/sentinel for local development
+- Kubernetes manifests (Deployment, Service, ServiceAccount) for production deployment
+- Hot-reload via Air for both API and cron servers
 
 **Next Steps:**
 

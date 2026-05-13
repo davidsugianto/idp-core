@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/davidsugianto/go-pkgs/config"
 )
@@ -47,6 +48,17 @@ func (c *Config) applyEnvOverrides() {
 	}
 	if v := os.Getenv("DB_NAME"); v != "" {
 		c.Database.Name = v
+	}
+
+	// Redis
+	if v := os.Getenv("REDIS_MASTER_NAME"); v != "" {
+		c.Redis.MasterName = v
+	}
+	if v := os.Getenv("REDIS_ADDRESS"); v != "" {
+		c.Redis.Address = v
+	}
+	if v := os.Getenv("REDIS_PASSWORD"); v != "" {
+		c.Redis.Password = v
 	}
 
 	// Auth
@@ -103,6 +115,13 @@ func (c *Config) applyEnvOverrides() {
 		c.OIDC.AdminGroup = v
 	}
 
+	// Cron
+	if v := os.Getenv("CRON_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil {
+			c.Cron.Port = port
+		}
+	}
+
 	// FinOps
 	if v := os.Getenv("FINOPS_ENABLED"); v != "" {
 		if enabled, err := strconv.ParseBool(v); err == nil {
@@ -122,7 +141,9 @@ func (c *Config) applyEnvOverrides() {
 
 type Config struct {
 	Server     ServerConfig     `json:"server" yaml:"server"`
+	Cron       CronConfig       `json:"cron" yaml:"cron"`
 	Database   DatabaseConfig   `json:"database" yaml:"database"`
+	Redis      RedisConfig      `json:"redis" yaml:"redis"`
 	Auth       AuthConfig       `json:"auth" yaml:"auth"`
 	CORS       CORSConfig       `json:"cors" yaml:"cors"`
 	Kubernetes KubernetesConfig `json:"kubernetes" yaml:"kubernetes"`
@@ -135,6 +156,12 @@ type ServerConfig struct {
 	Port int `json:"port" yaml:"port"`
 }
 
+type CronConfig struct {
+	GraceTimeout time.Duration     `json:"grace_timeout" yaml:"grace_timeout"`
+	Schedules    map[string]string `json:"schedules" yaml:"schedules"`
+	Port         int               `json:"port" yaml:"port"`
+}
+
 type DatabaseConfig struct {
 	Host     string `json:"host" yaml:"host"`
 	Port     int    `json:"port" yaml:"port"`
@@ -142,6 +169,12 @@ type DatabaseConfig struct {
 	Password string `json:"password" yaml:"password"`
 	Name     string `json:"name" yaml:"name"`
 	SSLMode  string `json:"sslmode" yaml:"sslmode"`
+}
+
+type RedisConfig struct {
+	MasterName string `json:"master_name" yaml:"master_name"`
+	Address    string `json:"address" yaml:"address"`
+	Password   string `json:"password" yaml:"password"`
 }
 
 type AuthConfig struct {
@@ -179,9 +212,9 @@ type OIDCConfig struct {
 }
 
 type FinOpsConfig struct {
-	Enabled    bool              `json:"enabled" yaml:"enabled"`
-	OpenCost   OpenCostConfig    `json:"opencost" yaml:"opencost"`
-	Prometheus PrometheusConfig  `json:"prometheus" yaml:"prometheus"`
+	Enabled    bool             `json:"enabled" yaml:"enabled"`
+	OpenCost   OpenCostConfig   `json:"opencost" yaml:"opencost"`
+	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
 }
 
 type OpenCostConfig struct {

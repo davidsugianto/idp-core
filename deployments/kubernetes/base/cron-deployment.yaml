@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idp-core-cron
+  namespace: idp-core
+  labels:
+    app.kubernetes.io/name: idp-core
+    app.kubernetes.io/component: cron-server
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: idp-core
+      app.kubernetes.io/component: cron-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: idp-core
+        app.kubernetes.io/component: cron-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8983"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: idp-core-cron
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: idp-core-cron
+          image: ghcr.io/davidsugianto/idp-core-cron:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8983
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: idp-core-config
+            - secretRef:
+                name: idp-core-secrets
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      tolerations: []
+      nodeSelector: {}

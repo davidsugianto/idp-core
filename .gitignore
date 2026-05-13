@@ -9,6 +9,7 @@
 bin/
 dist/
 http
+cron
 
 # Test binary, built with `go test -c`
 *.test
@@ -36,7 +37,7 @@ go.work.sum
 # Local config overrides
 configs/config.local.yaml
 configs/config.*.local.yaml
-configs/config.development.yaml
+# configs/config.development.yaml
 configs/config.staging.yaml
 configs/config.production.yaml
 

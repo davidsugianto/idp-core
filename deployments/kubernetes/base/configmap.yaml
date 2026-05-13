@@ -22,3 +22,10 @@ data:
   # ArgoCD configuration
   ARGOCD_NAMESPACE: "argocd"
   ARGOCD_BASE_URL: "http://argocd-server.argocd.svc.cluster.local:80"
+
+  # Cron configuration
+  CRON_PORT: "8983"
+
+  # Redis configuration
+  REDIS_MASTER_NAME: "idp-core-redis_sentinel"
+  REDIS_ADDRESS: "redis-sentinel.idp-core.svc.cluster.local:26379"

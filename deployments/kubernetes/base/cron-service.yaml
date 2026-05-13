@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: idp-core-cron
+  namespace: idp-core
+  labels:
+    app.kubernetes.io/name: idp-core
+    app.kubernetes.io/component: cron-server
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: idp-core
+    app.kubernetes.io/component: cron-server

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/davidsugianto/idp-core/internal/model/cost"
 	"github.com/davidsugianto/idp-core/internal/model/team"
@@ -161,28 +160,6 @@ func main() {
 		Logger:             logs,
 		WebhookValidator:   webhookValidator,
 	})
-
-	// Start cost sync goroutine (fire-and-forget)
-	if cfg.FinOps.Enabled {
-		pollInterval, err := time.ParseDuration(cfg.FinOps.OpenCost.PollInterval)
-		if err != nil {
-			pollInterval = 1 * time.Hour
-		}
-		go func() {
-			ticker := time.NewTicker(pollInterval)
-			defer ticker.Stop()
-			// Initial sync after startup
-			if err := costUC.SyncCosts(context.Background()); err != nil {
-				logs.Error().Err(err).Msg("initial cost sync failed")
-			}
-			for range ticker.C {
-				if err := costUC.SyncCosts(context.Background()); err != nil {
-					logs.Error().Err(err).Msg("cost sync failed")
-				}
-			}
-		}()
-		logs.Info().Str("poll_interval", pollInterval.String()).Msg("cost sync started")
-	}
 
 	logs.Info().Int("port", cfg.Server.Port).Msg("listening on port")
 	if err := server.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {

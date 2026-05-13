@@ -1,0 +1,58 @@
+# =============================================================================
+# Build stage
+# =============================================================================
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-w -s" -o /idp-cron ./cmd/cron
+
+# =============================================================================
+# Development stage (for docker-compose)
+# =============================================================================
+FROM golang:1.25-alpine AS development
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /app
+
+RUN go install github.com/air-verse/air@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+EXPOSE 8983
+
+CMD ["go", "run", "./cmd/cron"]
+
+# =============================================================================
+# Production stage
+# =============================================================================
+FROM alpine:3.19 AS production
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+RUN adduser -D -g '' -u 1000 appuser
+
+COPY --from=builder --chown=appuser:appuser /idp-cron .
+
+USER appuser
+
+EXPOSE 8983
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8983/health || exit 1
+
+ENTRYPOINT ["./idp-cron"]
