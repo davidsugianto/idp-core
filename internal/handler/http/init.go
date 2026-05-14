@@ -11,6 +11,7 @@ import (
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,6 +23,7 @@ type Handler struct {
 	apiKeyUseCase      apikeyUsecase.Usecase
 	auditLogUseCase    auditlogUsecase.Usecase
 	costUseCase        costUsecase.Usecase
+	budgetUseCase      budgetUsecase.Usecase
 	authConfig         *config.AuthConfig
 	webhookValidator   *webhook.Validator
 }
@@ -34,6 +36,7 @@ type Dependencies struct {
 	ApiKeyUseCase      apikeyUsecase.Usecase
 	AuditLogUseCase    auditlogUsecase.Usecase
 	CostUseCase        costUsecase.Usecase
+	BudgetUseCase      budgetUsecase.Usecase
 	AuthConfig         *config.AuthConfig
 	WebhookValidator   *webhook.Validator
 }
@@ -47,6 +50,7 @@ func New(deps Dependencies) *Handler {
 		apiKeyUseCase:      deps.ApiKeyUseCase,
 		auditLogUseCase:    deps.AuditLogUseCase,
 		costUseCase:        deps.CostUseCase,
+		budgetUseCase:      deps.BudgetUseCase,
 		authConfig:         deps.AuthConfig,
 		webhookValidator:   deps.WebhookValidator,
 	}

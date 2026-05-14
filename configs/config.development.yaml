@@ -6,6 +6,7 @@ cron:
   schedules:
     ping: "*/5 * * * *"
     cost-sync: "0 * * * *"
+    budget-alert-check: "*/15 * * * *"
   port: 8983
 
 database:
@@ -74,4 +75,8 @@ finops:
     poll_interval: "1h"
   prometheus:
     url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+
+slack:
+  webhook_url: ""
+  channel: "#finops-alerts"
 

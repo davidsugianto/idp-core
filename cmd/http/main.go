@@ -6,18 +6,21 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	"github.com/davidsugianto/idp-core/internal/pkg/prometheus"
+	"github.com/davidsugianto/idp-core/internal/pkg/slack"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
 
 	apikeyRepo "github.com/davidsugianto/idp-core/internal/repository/apikey"
 	auditlogRepo "github.com/davidsugianto/idp-core/internal/repository/auditlog"
+	budgetRepo "github.com/davidsugianto/idp-core/internal/repository/budget"
 	costRepo "github.com/davidsugianto/idp-core/internal/repository/cost"
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
 	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
@@ -26,6 +29,7 @@ import (
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
+	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
@@ -92,7 +96,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}); err != nil {
 		logs.Fatal("cannot migrate database")
 	}
 
@@ -103,6 +107,9 @@ func main() {
 	_ = prometheus.NewClient(prometheus.Config{
 		URL: cfg.FinOps.Prometheus.URL,
 	})
+
+	// Slack client
+	slackClient := slack.NewClient(cfg.Slack.WebhookURL, cfg.Slack.Channel)
 
 	// Repositories
 	envRepo := envRepository.New(envRepository.Dependencies{
@@ -127,6 +134,9 @@ func main() {
 		Database: dbClient,
 	})
 	costRepo := costRepo.New(costRepo.Dependencies{
+		Database: dbClient,
+	})
+	budgetRepo := budgetRepo.New(budgetRepo.Dependencies{
 		Database: dbClient,
 	})
 
@@ -157,6 +167,12 @@ func main() {
 		OpenCostClient: opencostClient,
 	})
 
+	budgetUC := budgetUsecase.New(budgetUsecase.Dependencies{
+		BudgetRepo:    budgetRepo,
+		CostRepo:      costRepo,
+		SlackNotifier: slackClient,
+	})
+
 	// Webhook validator
 	webhookValidator := webhook.NewValidator()
 
@@ -167,6 +183,7 @@ func main() {
 		RoleUseCase:        roleUC,
 		ApiKeyUseCase:      apiKeyUC,
 		AuditLogUseCase:    auditLogUC,
+		BudgetUseCase:      budgetUC,
 		CostUseCase:        costUC,
 		Config:             cfg,
 		WebhookValidator:   webhookValidator,
