@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/davidsugianto/go-pkgs/grace"
-	extlogger "github.com/davidsugianto/go-pkgs/logger"
 	httpHandler "github.com/davidsugianto/idp-core/internal/handler/http"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
@@ -29,7 +28,6 @@ type Server struct {
 	*http.Server
 	handler         *httpHandler.Handler
 	config          *config.Config
-	logger          *extlogger.Logger
 	apiKeyUseCase   apikeyUC.Usecase
 	auditLogUseCase auditlogUC.Usecase
 	costUseCase     costUC.Usecase
@@ -44,7 +42,6 @@ type Dependencies struct {
 	AuditLogUseCase    auditlogUC.Usecase
 	CostUseCase        costUC.Usecase
 	Config             *config.Config
-	Logger             *extlogger.Logger
 	WebhookValidator   *webhook.Validator
 }
 
@@ -66,7 +63,6 @@ func New(deps Dependencies) *Server {
 			WebhookValidator:   deps.WebhookValidator,
 		}),
 		config: deps.Config,
-		logger: deps.Logger,
 	}
 }
 
@@ -94,7 +90,7 @@ func (s *Server) setupPublicRoutes(r *gin.Engine) {
 func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	// API v1 routes (protected)
 	v1 := r.Group("/v1")
-	v1.Use(gin.Recovery(), middleware.RequestID(), middleware.Logger(s.logger), middleware.AuditLog(s.auditLogUseCase))
+	v1.Use(gin.Recovery(), middleware.RequestID(), middleware.AuditLog(s.auditLogUseCase))
 
 	// Environment routes (protected with JWT)
 	envs := v1.Group("/environments")

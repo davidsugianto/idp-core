@@ -3,7 +3,7 @@ package redislock
 import (
 	"time"
 
-	logs "github.com/davidsugianto/go-pkgs/logger"
+	"github.com/davidsugianto/go-pkgs/logs"
 )
 
 // GetLock for the keys,
@@ -39,7 +39,7 @@ func (m *mutex) GetLock() error {
 					for i := 0; i < m.maxRetryAutoExtend; i++ {
 						isSuccess, err := m.Extend()
 						if err != nil && !isSuccess {
-							logs.Error().Msgf("[Distlockredis][GetLock] Error when extend the lock %v", err)
+							logs.Errorf("[Distlockredis][GetLock] Error when extend the lock %v", err)
 
 							continue
 						}
@@ -51,7 +51,7 @@ func (m *mutex) GetLock() error {
 					}
 
 					if !successExtend {
-						logs.Error().Msgf("[Distlockredis][GetLock] Fail extend the lock")
+						logs.Errorf("[Distlockredis][GetLock] Fail extend the lock")
 
 						m.extendRelease <- true
 					}
