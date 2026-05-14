@@ -15,6 +15,7 @@
 - 🔐 **Secure by Default** — JWT + API Key authentication, team isolation, policy enforcement
 - 📋 **Audit Logging** — Automatic request logging with filterable audit trails
 - 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
+- 💸 **Budget Management** — Set spend limits with Slack alerts at configurable thresholds
 
 **Use Cases:**
 
@@ -38,6 +39,7 @@
 | 🔑 **API Keys**               | Service-to-service auth with scoped permissions and rate limiting |
 | 📋 **Audit Logging**          | Automatic request logging with filterable, paginated audit trails |
 | 💰 **Cost Tracking**          | Real-time K8s cost visibility via OpenCost (open source)          |
+| 💸 **Budget Management**      | Spend limits with Slack alerts at configurable thresholds         |
 | 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
@@ -52,6 +54,7 @@
 | GitOps        | ArgoCD          |
 | Cost Analysis | OpenCost        |
 | Monitoring    | Prometheus      |
+| Notifications | Slack Webhooks  |
 | Caching/Lock  | Redis Sentinel  |
 | API Docs      | Swagger/OpenAPI |
 
@@ -142,6 +145,17 @@ make test
 | GET    | `/v1/costs`      | List cost records (filterable by team, namespace, date) |
 | GET    | `/v1/costs/team` | Get team cost records by time range                     |
 
+### Budget Management
+
+| Method | Endpoint                   | Description                         |
+| ------ | -------------------------- | ----------------------------------- |
+| GET    | `/v1/budgets`              | List budgets (team-scoped)          |
+| POST   | `/v1/budgets`              | Create budget with alert thresholds |
+| GET    | `/v1/budgets/:id`          | Get budget details                  |
+| PATCH  | `/v1/budgets/:id`          | Update budget                       |
+| DELETE | `/v1/budgets/:id`          | Delete budget                       |
+| GET    | `/v1/budgets/:id/alerts`   | Get alert history for budget        |
+
 ## Architecture
 
 ```
@@ -221,6 +235,8 @@ CRON_PORT=8983
 REDIS_MASTER_NAME=idp-core-redis_sentinel
 REDIS_ADDRESS=localhost:26379
 REDIS_PASSWORD=redispassword
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
+SLACK_CHANNEL=#budget-alerts
 ```
 
 ## Project Structure

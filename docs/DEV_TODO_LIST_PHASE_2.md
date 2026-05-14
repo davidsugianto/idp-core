@@ -12,7 +12,7 @@
 | Milestone            | Status         | Progress |
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
-| M2: FinOps           | 🔄 In Progress | 25%      |
+| M2: FinOps           | 🔄 In Progress | 50%      |
 | M3: Rightsizing      | 🔲 Not Started | 0%       |
 | M4: Service Catalog  | 🔲 Not Started | 0%       |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
@@ -213,41 +213,42 @@
 
 ***
 
-### Week 5: Budget Management & Alerts
+### Week 5: Budget Management & Alerts ✅ COMPLETED
 
 #### Budget Models
 
-- [ ] Create migration: `budgets` table
-- [ ] Create migration: `budget_alerts` table
-- [ ] Create model: `internal/model/budget/type.go`
-- [ ] Create model: `internal/model/budget_alert/type.go`
+- [x] Create migration: `budgets` table
+- [x] Create migration: `budget_alerts` table
+- [x] Create model: `internal/model/budget/type.go`
+- [x] Create model: `internal/model/budget_alert/type.go` (included in budget/type.go)
 
 #### Budget Repository
 
-- [ ] Create `internal/repository/budget/init.go`
-- [ ] Create `internal/repository/budget/budget.go`
+- [x] Create `internal/repository/budget/init.go` (interface + implementation)
+- [x] Implement Create, GetByID, ListByTeam, ListActive, Update, Delete
+- [x] Implement CreateAlert, GetAlertsByBudget, GetLatestAlertForThreshold
 
 #### Budget Usecase
 
-- [ ] Create `internal/usecase/budget/init.go`
-- [ ] Create `internal/usecase/budget/budget.go`
-- [ ] Implement budget alert checker (cron)
-- [ ] Implement notification sender (email/Slack)
+- [x] Create `internal/usecase/budget/init.go`
+- [x] Create `internal/usecase/budget/budget.go`
+- [x] Implement budget alert checker (CheckAlerts with cron)
+- [x] Implement Slack notification sender
+
+#### Slack Client
+
+- [x] Create `internal/pkg/slack/client.go`
+- [x] Add SlackConfig to `internal/pkg/config/config.go`
 
 #### Budget Handler
 
-- [ ] Create `internal/handler/http/budget.go`
-- [ ] Add budget routes
-
-#### Cost Export
-
-- [ ] Implement CSV export functionality
-- [ ] Add export endpoint
+- [x] Create `internal/handler/http/budget.go`
+- [x] Add budget routes (`/v1/budgets`)
+- [x] Create `internal/handler/cron/budget.go` (BudgetAlertCheck)
 
 #### Tests
 
-- [ ] Unit tests: budget repository
-- [ ] Unit tests: budget alert logic
+- [x] Unit tests: budget usecase (24 tests)
 - [ ] Integration tests: budget API
 - [ ] Integration tests: alert triggering
 
@@ -562,14 +563,15 @@ internal/
 │   ├── apikey.go            # ✅ CREATED
 │   ├── auditlog.go          # ✅ CREATED
 │   ├── cost.go              # ✅ CREATED
-│   ├── budget.go            # TODO
+│   ├── budget.go            # ✅ CREATED
 │   ├── rightsizing.go       # TODO
 │   ├── quota.go             # TODO
 │   └── service.go           # TODO
 │
 ├── handler/cron/
 │   ├── init.go              # ✅ CREATED
-│   └── cost.go              # ✅ CREATED
+│   ├── cost.go              # ✅ CREATED
+│   └── budget.go            # ✅ CREATED
 │
 ├── usecase/
 │   ├── user/                # ✅ CREATED
@@ -579,7 +581,7 @@ internal/
 │   ├── auditlog/            # ✅ CREATED
 │   ├── auth/                # ✅ CREATED (RBAC engine)
 │   ├── cost/                # ✅ CREATED
-│   ├── budget/              # TODO
+│   ├── budget/              # ✅ CREATED
 │   ├── rightsizing/         # TODO
 │   ├── quota/               # TODO
 │   └── service/             # TODO
@@ -592,7 +594,7 @@ internal/
 │   ├── apikey/              # ✅ CREATED
 │   ├── auditlog/            # ✅ CREATED
 │   ├── cost/                # ✅ CREATED
-│   ├── budget/              # TODO
+│   ├── budget/              # ✅ CREATED
 │   ├── rightsizing/         # TODO
 │   ├── quota/               # TODO
 │   └── service/             # TODO
@@ -605,7 +607,7 @@ internal/
 │   ├── apikey/              # ✅ CREATED
 │   ├── auditlog/            # ✅ CREATED
 │   ├── cost/                # ✅ CREATED
-│   ├── budget/              # TODO
+│   ├── budget/              # ✅ CREATED
 │   ├── rightsizing/         # TODO
 │   ├── resource_quota/      # TODO
 │   └── service/             # TODO
@@ -614,6 +616,7 @@ internal/
 │   ├── oidc/                # ✅ CREATED
 │   ├── opencost/            # ✅ CREATED
 │   ├── prometheus/          # ✅ CREATED (stub)
+│   ├── slack/               # ✅ CREATED
 │   └── redislock/           # ✅ CREATED (distributed locking)
 │
 └── mocks/
@@ -624,6 +627,8 @@ internal/
     ├── apikey_repository.go     # ✅ CREATED
     ├── auditlog_repository.go   # ✅ CREATED
     ├── cost_repository.go       # ✅ CREATED
+    ├── budget_repository.go     # ✅ CREATED
+    ├── slack_notifier.go         # ✅ CREATED
     └── opencost_client.go       # ✅ CREATED
 
 deployments/
@@ -648,7 +653,8 @@ migrations/
 ├── 20260512000000_create_api_keys_table.sql     # ✅ CREATED
 ├── 20260512000001_create_audit_logs_table.sql   # ✅ CREATED
 ├── 20260513000000_create_cost_records_table.sql # ✅ CREATED
-└── ... (remaining Phase 2 migrations - TODO)
+├── 20260514000000_create_budgets_table.sql      # ✅ CREATED
+└── 20260514000001_create_budget_alerts_table.sql # ✅ CREATED
 ```
 
 ***
@@ -862,8 +868,66 @@ Each task is considered complete when:
 
 **Next Steps:**
 
-- Begin M2: FinOps (Week 5) — Budget Management & Alerts
 - Integration tests: cost API
+
+***
+
+### M2 Week 5: Budget Management & Alerts (May 2026)
+
+**Files Created:**
+
+- `migrations/20260514000000_create_budgets_table.sql`
+- `migrations/20260514000001_create_budget_alerts_table.sql`
+- `internal/model/budget/type.go` (Budget, BudgetAlert, request/response types, converters, helpers)
+- `internal/repository/budget/init.go` (interface + implementation: Create, GetByID, ListByTeam, ListActive, Update, Delete, CreateAlert, GetAlertsByBudget, GetLatestAlertForThreshold)
+- `internal/usecase/budget/init.go`, `budget.go`, `budget_test.go`
+- `internal/handler/http/budget.go`
+- `internal/handler/cron/budget.go`
+- `internal/pkg/slack/client.go` (Slack webhook client wrapping slack-go/slack)
+- `internal/mocks/budget_repository.go`
+- `internal/mocks/slack_notifier.go`
+
+**Existing Files Modified:**
+
+- `internal/pkg/config/config.go` — added SlackConfig
+- `configs/config.development.yaml`, `configs/config.example.yaml` — added slack block + budget-alert-check schedule
+- `internal/handler/http/init.go` — added budgetUseCase
+- `internal/handler/cron/init.go` — added budgetUseCase
+- `cmd/http/server.go` — added BudgetUseCase, budget routes
+- `cmd/http/main.go` — wired budget repo, usecase, Slack client, AutoMigrate
+- `cmd/cron/server.go` — added BudgetUseCase, registered budget-alert-check cron job
+- `cmd/cron/main.go` — wired budget repo, usecase, Slack client
+
+**API Endpoints Added:**
+
+| Method | Endpoint                | Description                   |
+| ------ | ----------------------- | ----------------------------- |
+| GET    | `/v1/budgets`           | List budgets (team-scoped)    |
+| POST   | `/v1/budgets`           | Create a new budget           |
+| GET    | `/v1/budgets/:id`       | Get budget details            |
+| PATCH  | `/v1/budgets/:id`       | Update budget                 |
+| DELETE | `/v1/budgets/:id`       | Delete budget                 |
+| GET    | `/v1/budgets/:id/alerts`| Get alert history for budget  |
+
+**Key Features:**
+
+- Budget CRUD with validation (name required, limit > 0, valid period: daily/weekly/monthly)
+- Alert thresholds stored as comma-separated TEXT (e.g., `"80,90,100"`), channels as JSON TEXT (e.g., `'["slack"]'`)
+- Default thresholds [80, 90, 100] and default channels ["slack"] when not specified
+- Partial updates via pointer fields in UpdateBudgetRequest
+- Slack webhook notifications via `github.com/slack-go/slack` with red attachment format
+- `SlackNotifier` interface in usecase layer for testability
+- Cron job `budget-alert-check` runs every 15 minutes (`*/15 * * * *`) with Redis distributed locking
+- Alert deduplication: (budgetID, threshold, periodStart) prevents duplicate alerts in same period
+- Period window calculation in UTC: daily (start of day), weekly (Monday 00:00), monthly (1st 00:00)
+- Current spend calculated by summing `TotalCost` from cost records filtered by team/environment/period
+- Slacks alerts only fire when percentage crosses a threshold for the first time in the period
+- Failed Slack sends are logged and alert recorded with `failed` status (does not block processing)
+
+**Next Steps:**
+
+- Integration tests: budget API, alert triggering
+- Begin M3: Rightsizing (Week 6)
 
 ***
 

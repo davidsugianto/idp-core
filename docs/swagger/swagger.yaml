@@ -97,6 +97,111 @@ definitions:
       user_id:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_budget.BudgetAlertResponse:
+    properties:
+      budget_id:
+        type: string
+      created_at:
+        type: string
+      current_spend:
+        type: number
+      id:
+        type: string
+      limit:
+        type: number
+      percentage:
+        type: number
+      sent_to:
+        type: string
+      status:
+        type: string
+      threshold:
+        type: integer
+      timestamp:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_budget.BudgetListResponse:
+    properties:
+      budgets:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_budget.BudgetResponse:
+    properties:
+      alert_channels:
+        items:
+          type: string
+        type: array
+      alert_thresholds:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      environment_id:
+        type: string
+      id:
+        type: string
+      limit:
+        type: number
+      name:
+        type: string
+      period:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_budget.CreateBudgetRequest:
+    properties:
+      alert_channels:
+        items:
+          type: string
+        type: array
+      alert_thresholds:
+        items:
+          type: integer
+        type: array
+      environment_id:
+        type: string
+      limit:
+        type: number
+      name:
+        type: string
+      period:
+        type: string
+      team_id:
+        type: string
+    required:
+    - limit
+    - name
+    - team_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_budget.UpdateBudgetRequest:
+    properties:
+      alert_channels:
+        items:
+          type: string
+        type: array
+      alert_thresholds:
+        items:
+          type: integer
+        type: array
+      limit:
+        type: number
+      name:
+        type: string
+      period:
+        type: string
+      status:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_cost.CostListResponse:
     properties:
       cost_records:
@@ -1005,6 +1110,188 @@ paths:
       summary: Get audit log by ID
       tags:
       - audit-logs
+  /v1/budgets:
+    get:
+      description: List all budgets for a team
+      parameters:
+      - description: Team ID
+        in: query
+        name: team_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List budgets
+      tags:
+      - budgets
+    post:
+      consumes:
+      - application/json
+      description: Create a new budget with alert thresholds
+      parameters:
+      - description: Budget details
+        in: body
+        name: budget
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.CreateBudgetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create budget
+      tags:
+      - budgets
+  /v1/budgets/{id}:
+    delete:
+      description: Delete a budget by ID
+      parameters:
+      - description: Budget ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete budget
+      tags:
+      - budgets
+    get:
+      description: Get a budget by ID
+      parameters:
+      - description: Budget ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get budget
+      tags:
+      - budgets
+    patch:
+      consumes:
+      - application/json
+      description: Partially update a budget
+      parameters:
+      - description: Budget ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Budget fields to update
+        in: body
+        name: budget
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.UpdateBudgetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update budget
+      tags:
+      - budgets
+  /v1/budgets/{id}/alerts:
+    get:
+      description: Get alert history for a budget
+      parameters:
+      - description: Budget ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_budget.BudgetAlertResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get budget alerts
+      tags:
+      - budgets
   /v1/costs:
     get:
       description: List cost records with filtering and pagination

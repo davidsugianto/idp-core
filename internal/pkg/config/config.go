@@ -137,6 +137,14 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("FINOPS_PROMETHEUS_URL"); v != "" {
 		c.FinOps.Prometheus.URL = v
 	}
+
+	// Slack
+	if v := os.Getenv("SLACK_WEBHOOK_URL"); v != "" {
+		c.Slack.WebhookURL = v
+	}
+	if v := os.Getenv("SLACK_CHANNEL"); v != "" {
+		c.Slack.Channel = v
+	}
 }
 
 type Config struct {
@@ -150,6 +158,7 @@ type Config struct {
 	ArgoCD     ArgoCDConfig     `json:"argocd" yaml:"argocd"`
 	OIDC       OIDCConfig       `json:"oidc" yaml:"oidc"`
 	FinOps     FinOpsConfig     `json:"finops" yaml:"finops"`
+	Slack      SlackConfig      `json:"slack" yaml:"slack"`
 }
 
 type ServerConfig struct {
@@ -224,4 +233,9 @@ type OpenCostConfig struct {
 
 type PrometheusConfig struct {
 	URL string `json:"url" yaml:"url"`
+}
+
+type SlackConfig struct {
+	WebhookURL string `json:"webhook_url" yaml:"webhook_url"`
+	Channel    string `json:"channel" yaml:"channel"`
 }
