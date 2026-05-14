@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
-	"github.com/davidsugianto/go-pkgs/logger"
 
 	apikeyRepo "github.com/davidsugianto/idp-core/internal/repository/apikey"
 	auditlogRepo "github.com/davidsugianto/idp-core/internal/repository/auditlog"
@@ -31,6 +31,8 @@ import (
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
+
+	"github.com/davidsugianto/go-pkgs/logs"
 )
 
 // @title IDP Core API
@@ -50,20 +52,30 @@ import (
 // @in header
 // @name Authorization
 
+var (
+	errLogPath   string
+	infoLogPath  string
+	debugLogPath string
+)
+
 func main() {
-	// Logger
-	logs := logger.NewWithConfig(logger.Config{
-		ServiceName: "idp-core",
-		Environment: os.Getenv("APP_ENV"),
-		Format:      logger.FormatJSON,
-	})
-	logs.Info().Msg("Starting IDP Core API server")
+	// Logs
+	flag.StringVar(&errLogPath, "error_log", "log/idp-core.error.log", "error log")
+	flag.StringVar(&infoLogPath, "info_log", "log/idp-core.info.log", "info log")
+	flag.StringVar(&debugLogPath, "debug_log", "log/idp-core.debug.log", "debug log")
+	flag.Parse()
+
+	setLog(logs.ErrorLevel, errLogPath)
+	setLog(logs.InfoLevel, infoLogPath)
+	setLog(logs.DebugLevel, debugLogPath)
+
+	logs.Info("Starting IDP Core API server")
 
 	// Config
 	cfgPath := fmt.Sprintf("configs/config.%s.yaml", os.Getenv("APP_ENV"))
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		logs.Fatal().Err(err).Msg(fmt.Sprintf("cannot load config from %s", cfgPath))
+		logs.Fatalf("cannot load config from %s", cfgPath)
 		panic(err)
 	}
 
@@ -75,13 +87,13 @@ func main() {
 
 	dbClientWrapper, err := db.New(ctx, dbConfig)
 	if err != nil {
-		logs.Fatal().Err(err).Msg("cannot connect to database")
+		logs.Fatal("cannot connect to database")
 	}
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
 	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}); err != nil {
-		logs.Fatal().Err(err).Msg("cannot migrate database")
+		logs.Fatal("cannot migrate database")
 	}
 
 	// FinOps clients
@@ -157,12 +169,29 @@ func main() {
 		AuditLogUseCase:    auditLogUC,
 		CostUseCase:        costUC,
 		Config:             cfg,
-		Logger:             logs,
 		WebhookValidator:   webhookValidator,
 	})
 
-	logs.Info().Int("port", cfg.Server.Port).Msg("listening on port")
+	logs.Info("listening on port")
 	if err := server.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {
-		logs.Fatal().Err(err).Msg("server failed to run")
+		logs.Fatal("server failed to run")
+	}
+}
+
+func setLog(level logs.Level, filePath string) {
+	lgr, err := logs.NewLogger(&logs.Config{
+		Level:   level,
+		LogFile: filePath,
+		Caller:  false,
+		AppName: "idp-core - API",
+		UseJSON: false,
+	})
+	if err != nil {
+		logs.Fatalln(err)
+	}
+
+	err = logs.SetLogger(level, lgr)
+	if err != nil {
+		logs.Fatalln(err)
 	}
 }
