@@ -13,7 +13,7 @@
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
 | M2: FinOps           | 🔄 In Progress | 50%      |
-| M3: Rightsizing      | 🔲 Not Started | 0%       |
+| M3: Rightsizing      | 🔄 In Progress | 50%      |
 | M4: Service Catalog  | 🔲 Not Started | 0%       |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
 
@@ -256,39 +256,39 @@
 
 ## 🗓️ M3: Rightsizing (Week 6-7)
 
-### Week 6: Rightsizing Recommendations
+### Week 6: Rightsizing Recommendations ✅ COMPLETED
 
 #### Configuration
 
-- [ ] Add rightsizing config to `config.go`
+- [x] Add rightsizing config to `config.go`
 
 #### Rightsizing Models
 
-- [ ] Create migration: `rightsizing_recommendations` table
-- [ ] Create model: `internal/model/rightsizing/type.go`
+- [x] Create migration: `rightsizing_recommendations` table
+- [x] Create model: `internal/model/rightsizing/type.go`
 
 #### Rightsizing Repository
 
-- [ ] Create `internal/repository/rightsizing/init.go`
-- [ ] Create `internal/repository/rightsizing/rightsizing.go`
+- [x] Create `internal/repository/rightsizing/init.go`
+- [x] Create `internal/repository/rightsizing/rightsizing.go`
 
 #### Rightsizing Usecase
 
-- [ ] Create `internal/usecase/rightsizing/init.go`
-- [ ] Create `internal/usecase/rightsizing/rightsizing.go`
-- [ ] Implement usage analyzer (query Prometheus)
-- [ ] Implement recommendation generator
-- [ ] Implement recommendation scheduler (cron)
+- [x] Create `internal/usecase/rightsizing/init.go`
+- [x] Create `internal/usecase/rightsizing/rightsizing.go`
+- [x] Implement usage analyzer (query Prometheus)
+- [x] Implement recommendation generator
+- [x] Implement recommendation scheduler (cron)
 
 #### Rightsizing Handler
 
-- [ ] Create `internal/handler/http/rightsizing.go`
-- [ ] Add rightsizing routes
+- [x] Create `internal/handler/http/rightsizing.go`
+- [x] Add rightsizing routes
 
 #### K8s Integration
 
-- [ ] Implement apply recommendation (update workload)
-- [ ] Handle rollback on failure
+- [x] Implement apply recommendation (update workload)
+- [x] Handle rollback on failure
 
 #### Tests
 
@@ -927,7 +927,66 @@ Each task is considered complete when:
 **Next Steps:**
 
 - Integration tests: budget API, alert triggering
-- Begin M3: Rightsizing (Week 6)
+
+***
+
+### M3 Week 6: Rightsizing Recommendations (May 2026)
+
+**Files Created:**
+
+- `migrations/20260515000000_create_rightsizing_recommendations_table.sql`
+- `internal/model/rightsizing/type.go` (RightsizingRecommendation, PreviousResourceState, request/response types, converters, helpers)
+- `internal/repository/rightsizing/init.go` (interface + implementation: Create, GetByID, List, Update, Delete, DeletePendingByWorkload, ListPendingByWorkload, ExistsPendingForContainer)
+- `internal/repository/monitoring/init.go`, `prometheus.go` (Prometheus query wrapper)
+- `internal/repository/provisioner/rightsizing.go` (GetDeployment, GetStatefulSet, UpdateDeploymentResources, UpdateStatefulSetResources)
+- `internal/usecase/rightsizing/init.go`, `rightsizing.go`, `helpers.go` (GenerateRecommendations, ApplyRecommendation, RollbackRecommendation, DismissRecommendation)
+- `internal/handler/http/rightsizing.go`
+- `internal/handler/cron/rightsizing.go`
+
+**Existing Files Modified:**
+
+- `internal/pkg/config/config.go` — added RightsizingConfig with thresholds and safety buffers
+- `configs/config.development.yaml`, `configs/config.example.yaml` — added rightsizing block + rightsizing-generate schedule
+- `internal/pkg/prometheus/client.go` — implemented Query, QueryRange, QuerySingle methods
+- `internal/repository/provisioner/init.go` — added K8s update interface methods
+- `internal/mocks/provisioner_repository.go` — added mock methods for rightsizing
+- `internal/handler/http/init.go` — added rightsizingUseCase
+- `internal/handler/cron/init.go` — added rightsizingUseCase
+- `cmd/http/server.go` — added RightsizingUseCase, rightsizing routes
+- `cmd/http/main.go` — wired rightsizing repo, AutoMigrate
+- `cmd/cron/server.go` — registered rightsizing-generate cron job
+- `cmd/cron/main.go` — wired rightsizing repo
+
+**API Endpoints Added:**
+
+| Method | Endpoint                                      | Description                        |
+| ------ | --------------------------------------------- | ---------------------------------- |
+| GET    | `/v1/rightsizing/recommendations`             | List recommendations (filterable)  |
+| GET    | `/v1/rightsizing/recommendations/:id`         | Get recommendation details         |
+| POST   | `/v1/rightsizing/recommendations/:id/apply`   | Apply recommendation to workload   |
+| POST   | `/v1/rightsizing/recommendations/:id/rollback`| Rollback to previous resources     |
+| POST   | `/v1/rightsizing/recommendations/:id/dismiss` | Dismiss recommendation             |
+
+**Key Features:**
+
+- Recommendation algorithm: if utilization < 50% of request → scale_down, if > 90% → scale_up
+- Prometheus queries for CPU/memory usage: `avg_over_time` and `max_over_time` over configurable lookback period (default 7 days)
+- Confidence score (0-100) based on data availability and variance
+- Safety buffers: 1.2x for CPU, 1.3x for memory to prevent under-provisioning
+- Previous state stored as JSONB for rollback capability
+- Manual apply only (no auto-apply) for production safety
+- Cron job `rightsizing-generate` runs daily at 6 AM (`0 6 * * *`) with Redis distributed locking
+- Supports Deployments and StatefulSets
+- Recommendation types: scale_down, scale_up, optimal
+- Status flow: pending → applied → (rollback) → pending
+- Kubernetes resource updates via client-go with proper resource.Quantity parsing
+
+**Next Steps:**
+
+- Unit tests: usage analyzer, recommendation generator
+- Integration tests: rightsizing API
+- E2E test: apply recommendation
+- Begin M3 Week 7: Resource Quotas
 
 ***
 

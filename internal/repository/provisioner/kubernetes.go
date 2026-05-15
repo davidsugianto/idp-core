@@ -4,51 +4,34 @@ import (
 	"context"
 	"sync"
 
-	"github.com/davidsugianto/idp-core/internal/model/environment"
+	envModel "github.com/davidsugianto/idp-core/internal/model/environment"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// CreateNamespace creates a new namespace with the given name and labels
 func (r *repository) CreateNamespace(ctx context.Context, name string, labels map[string]string) error {
-	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   name,
-			Labels: labels,
-		},
-	}
-
-	_, err := r.client.Clientset.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
-	return err
+	return r.k8sClient.CreateNamespace(ctx, name, labels)
 }
 
-// DeleteNamespace deletes the namespace with the given name
 func (r *repository) DeleteNamespace(ctx context.Context, name string) error {
-	return r.client.Clientset.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+	return r.k8sClient.DeleteNamespace(ctx, name)
 }
 
-// GetNamespace retrieves a namespace by name
 func (r *repository) GetNamespace(ctx context.Context, name string) (*corev1.Namespace, error) {
-	return r.client.Clientset.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	return r.k8sClient.GetNamespace(ctx, name)
 }
 
-// NamespaceExists checks if a namespace exists
 func (r *repository) NamespaceExists(ctx context.Context, name string) (bool, error) {
-	_, err := r.client.Clientset.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return false, nil
-	}
-	return true, nil
+	return r.k8sClient.NamespaceExists(ctx, name)
 }
 
 // GetPodSummary returns the pod summary for a namespace from cache
-func (r *repository) GetPodSummary(namespace string) (environment.PodSummary, bool) {
+func (r *repository) GetPodSummary(namespace string) (envModel.PodSummary, bool) {
 	return r.statusStore.getPodSummary(namespace)
 }
 
 // GetDeploymentSummary returns the deployment summary for a namespace from cache
-func (r *repository) GetDeploymentSummary(namespace string) (environment.DeploymentSummary, bool) {
+func (r *repository) GetDeploymentSummary(namespace string) (envModel.DeploymentSummary, bool) {
 	return r.statusStore.getDeploymentSummary(namespace)
 }
 
@@ -71,39 +54,39 @@ var (
 type statusStore struct {
 	mu sync.RWMutex
 
-	podSummaries        map[string]environment.PodSummary
-	deploymentSummaries map[string]environment.DeploymentSummary
+	PodSummaries        map[string]envModel.PodSummary
+	DeploymentSummaries map[string]envModel.DeploymentSummary
 }
 
 func init() {
 	globalStatusStore = &statusStore{
-		podSummaries:        make(map[string]environment.PodSummary),
-		deploymentSummaries: make(map[string]environment.DeploymentSummary),
+		PodSummaries:        make(map[string]envModel.PodSummary),
+		DeploymentSummaries: make(map[string]envModel.DeploymentSummary),
 	}
 }
 
-func (s *statusStore) getPodSummary(namespace string) (environment.PodSummary, bool) {
+func (s *statusStore) getPodSummary(namespace string) (envModel.PodSummary, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	summary, ok := s.podSummaries[namespace]
+	summary, ok := s.PodSummaries[namespace]
 	return summary, ok
 }
 
-func (s *statusStore) getDeploymentSummary(namespace string) (environment.DeploymentSummary, bool) {
+func (s *statusStore) getDeploymentSummary(namespace string) (envModel.DeploymentSummary, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	summary, ok := s.deploymentSummaries[namespace]
+	summary, ok := s.DeploymentSummaries[namespace]
 	return summary, ok
 }
 
-func (s *statusStore) updatePodSummary(namespace string, summary environment.PodSummary) {
+func (s *statusStore) updatePodSummary(namespace string, summary envModel.PodSummary) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.podSummaries[namespace] = summary
+	s.PodSummaries[namespace] = summary
 }
 
-func (s *statusStore) updateDeploymentSummary(namespace string, summary environment.DeploymentSummary) {
+func (s *statusStore) updateDeploymentSummary(namespace string, summary envModel.DeploymentSummary) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.deploymentSummaries[namespace] = summary
+	s.DeploymentSummaries[namespace] = summary
 }

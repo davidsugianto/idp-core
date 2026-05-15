@@ -1494,6 +1494,281 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/rightsizing/recommendations": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all rightsizing recommendations with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rightsizing"
+                ],
+                "summary": "List rightsizing recommendations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by namespace",
+                        "name": "namespace",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (pending, applied, dismissed, failed)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by team ID",
+                        "name": "team_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by workload type (Deployment, StatefulSet)",
+                        "name": "workload_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by recommendation type (scale_down, scale_up, optimal)",
+                        "name": "recommendation_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rightsizing/recommendations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific recommendation",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rightsizing"
+                ],
+                "summary": "Get a rightsizing recommendation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recommendation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rightsizing/recommendations/{id}/apply": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Apply the recommended resource changes to the Kubernetes workload",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rightsizing"
+                ],
+                "summary": "Apply a rightsizing recommendation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recommendation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rightsizing/recommendations/{id}/dismiss": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Dismiss a pending recommendation that should not be applied",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rightsizing"
+                ],
+                "summary": "Dismiss a rightsizing recommendation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recommendation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dismissal reason",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.DismissRecommendationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rightsizing/recommendations/{id}/rollback": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Restore the workload to its previous resource configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rightsizing"
+                ],
+                "summary": "Rollback a rightsizing recommendation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recommendation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/v1/roles": {
             "get": {
                 "security": [
@@ -3665,6 +3940,121 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_rightsizing.DismissRecommendationRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "description": "Optional dismissal reason",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationListResponse": {
+            "type": "object",
+            "properties": {
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse": {
+            "type": "object",
+            "properties": {
+                "analysis_period_end": {
+                    "type": "string"
+                },
+                "analysis_period_start": {
+                    "type": "string"
+                },
+                "applied_at": {
+                    "type": "string"
+                },
+                "applied_by": {
+                    "type": "string"
+                },
+                "confidence_score": {
+                    "type": "number"
+                },
+                "container_name": {
+                    "type": "string"
+                },
+                "cpu_usage_avg": {
+                    "type": "string"
+                },
+                "cpu_usage_max": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_cpu_limit": {
+                    "type": "string"
+                },
+                "current_cpu_request": {
+                    "type": "string"
+                },
+                "current_memory_limit": {
+                    "type": "string"
+                },
+                "current_memory_request": {
+                    "type": "string"
+                },
+                "environment_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "memory_usage_avg": {
+                    "type": "string"
+                },
+                "memory_usage_max": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "recommendation_type": {
+                    "type": "string"
+                },
+                "recommended_cpu_limit": {
+                    "type": "string"
+                },
+                "recommended_cpu_request": {
+                    "type": "string"
+                },
+                "recommended_memory_limit": {
+                    "type": "string"
+                },
+                "recommended_memory_request": {
+                    "type": "string"
+                },
+                "savings_potential": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "workload_name": {
+                    "type": "string"
+                },
+                "workload_type": {
+                    "type": "string"
                 }
             }
         },

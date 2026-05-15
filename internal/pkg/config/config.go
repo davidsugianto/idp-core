@@ -8,6 +8,10 @@ import (
 	"github.com/davidsugianto/go-pkgs/config"
 )
 
+var (
+	cfg *Config
+)
+
 func Load(path string) (*Config, error) {
 	if path == "" {
 		path = "configs/config.yaml"
@@ -21,6 +25,13 @@ func Load(path string) (*Config, error) {
 	cfg.applyEnvOverrides()
 
 	return &cfg, nil
+}
+
+func GetConfig() *Config {
+	if cfg == nil {
+		cfg = &Config{}
+	}
+	return cfg
 }
 
 func (c *Config) applyEnvOverrides() {
@@ -138,6 +149,18 @@ func (c *Config) applyEnvOverrides() {
 		c.FinOps.Prometheus.URL = v
 	}
 
+	// Rightsizing
+	if v := os.Getenv("RIGHTSIZING_ENABLED"); v != "" {
+		if enabled, err := strconv.ParseBool(v); err == nil {
+			c.FinOps.Rightsizing.Enabled = enabled
+		}
+	}
+	if v := os.Getenv("RIGHTSIZING_LOOKBACK_DAYS"); v != "" {
+		if days, err := strconv.Atoi(v); err == nil {
+			c.FinOps.Rightsizing.LookbackDays = days
+		}
+	}
+
 	// Slack
 	if v := os.Getenv("SLACK_WEBHOOK_URL"); v != "" {
 		c.Slack.WebhookURL = v
@@ -221,9 +244,10 @@ type OIDCConfig struct {
 }
 
 type FinOpsConfig struct {
-	Enabled    bool             `json:"enabled" yaml:"enabled"`
-	OpenCost   OpenCostConfig   `json:"opencost" yaml:"opencost"`
-	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
+	Enabled     bool              `json:"enabled" yaml:"enabled"`
+	OpenCost    OpenCostConfig    `json:"opencost" yaml:"opencost"`
+	Prometheus  PrometheusConfig  `json:"prometheus" yaml:"prometheus"`
+	Rightsizing RightsizingConfig `json:"rightsizing" yaml:"rightsizing"`
 }
 
 type OpenCostConfig struct {
@@ -233,6 +257,18 @@ type OpenCostConfig struct {
 
 type PrometheusConfig struct {
 	URL string `json:"url" yaml:"url"`
+}
+
+type RightsizingConfig struct {
+	Enabled                  bool    `json:"enabled" yaml:"enabled"`
+	LookbackDays             int     `json:"lookback_days" yaml:"lookback_days"`
+	CPUUnderutilThreshold    float64 `json:"cpu_underutil_threshold" yaml:"cpu_underutil_threshold"`
+	MemoryUnderutilThreshold float64 `json:"memory_underutil_threshold" yaml:"memory_underutil_threshold"`
+	CPUOverutilThreshold     float64 `json:"cpu_overutil_threshold" yaml:"cpu_overutil_threshold"`
+	MemoryOverutilThreshold  float64 `json:"memory_overutil_threshold" yaml:"memory_overutil_threshold"`
+	MinConfidenceScore       float64 `json:"min_confidence_score" yaml:"min_confidence_score"`
+	SafetyBufferCPU          float64 `json:"safety_buffer_cpu" yaml:"safety_buffer_cpu"`
+	SafetyBufferMemory       float64 `json:"safety_buffer_memory" yaml:"safety_buffer_memory"`
 }
 
 type SlackConfig struct {

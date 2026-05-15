@@ -419,6 +419,82 @@ definitions:
       total:
         type: integer
     type: object
+  github_com_davidsugianto_idp-core_internal_model_rightsizing.DismissRecommendationRequest:
+    properties:
+      reason:
+        description: Optional dismissal reason
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationListResponse:
+    properties:
+      recommendations:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse:
+    properties:
+      analysis_period_end:
+        type: string
+      analysis_period_start:
+        type: string
+      applied_at:
+        type: string
+      applied_by:
+        type: string
+      confidence_score:
+        type: number
+      container_name:
+        type: string
+      cpu_usage_avg:
+        type: string
+      cpu_usage_max:
+        type: string
+      created_at:
+        type: string
+      current_cpu_limit:
+        type: string
+      current_cpu_request:
+        type: string
+      current_memory_limit:
+        type: string
+      current_memory_request:
+        type: string
+      environment_id:
+        type: string
+      id:
+        type: string
+      memory_usage_avg:
+        type: string
+      memory_usage_max:
+        type: string
+      namespace:
+        type: string
+      recommendation_type:
+        type: string
+      recommended_cpu_limit:
+        type: string
+      recommended_cpu_request:
+        type: string
+      recommended_memory_limit:
+        type: string
+      recommended_memory_request:
+        type: string
+      savings_potential:
+        type: number
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+      workload_name:
+        type: string
+      workload_type:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_role.AssignRoleRequest:
     properties:
       role_id:
@@ -1738,6 +1814,184 @@ paths:
       summary: Get workload details
       tags:
       - environments
+  /v1/rightsizing/recommendations:
+    get:
+      description: List all rightsizing recommendations with optional filters
+      parameters:
+      - description: Filter by namespace
+        in: query
+        name: namespace
+        type: string
+      - description: Filter by status (pending, applied, dismissed, failed)
+        in: query
+        name: status
+        type: string
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by workload type (Deployment, StatefulSet)
+        in: query
+        name: workload_type
+        type: string
+      - description: Filter by recommendation type (scale_down, scale_up, optimal)
+        in: query
+        name: recommendation_type
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List rightsizing recommendations
+      tags:
+      - rightsizing
+  /v1/rightsizing/recommendations/{id}:
+    get:
+      description: Get detailed information about a specific recommendation
+      parameters:
+      - description: Recommendation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.RecommendationResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a rightsizing recommendation
+      tags:
+      - rightsizing
+  /v1/rightsizing/recommendations/{id}/apply:
+    post:
+      description: Apply the recommended resource changes to the Kubernetes workload
+      parameters:
+      - description: Recommendation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Apply a rightsizing recommendation
+      tags:
+      - rightsizing
+  /v1/rightsizing/recommendations/{id}/dismiss:
+    post:
+      consumes:
+      - application/json
+      description: Dismiss a pending recommendation that should not be applied
+      parameters:
+      - description: Recommendation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dismissal reason
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_rightsizing.DismissRecommendationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Dismiss a rightsizing recommendation
+      tags:
+      - rightsizing
+  /v1/rightsizing/recommendations/{id}/rollback:
+    post:
+      description: Restore the workload to its previous resource configuration
+      parameters:
+      - description: Recommendation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Rollback a rightsizing recommendation
+      tags:
+      - rightsizing
   /v1/roles:
     get:
       description: Get a paginated list of roles

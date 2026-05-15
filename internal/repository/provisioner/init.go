@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
-	"github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
+	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -33,24 +33,30 @@ type Repository interface {
 	GetWorkloads(namespace string) ([]*appsv1.Deployment, error)
 	GetPods(namespace string) ([]*corev1.Pod, error)
 
+	// Workload updates for rightsizing
+	GetDeployment(ctx context.Context, namespace, name string) (*appsv1.Deployment, error)
+	GetStatefulSet(ctx context.Context, namespace, name string) (*appsv1.StatefulSet, error)
+	UpdateDeploymentResources(ctx context.Context, namespace, name, containerName string, cpuRequest, cpuLimit, memoryRequest, memoryLimit string) error
+	UpdateStatefulSetResources(ctx context.Context, namespace, name, containerName string, cpuRequest, cpuLimit, memoryRequest, memoryLimit string) error
+
 	// Informer management
 	StartInformers(ctx context.Context) error
 	StopInformers()
 }
 
 type repository struct {
-	client          *kubernetes.Client
+	k8sClient       *k8sPkg.Client
 	statusStore     *statusStore
 	informerManager *informerManager
 }
 
 type Dependencies struct {
-	K8sClient *kubernetes.Client
+	K8sClient *k8sPkg.Client
 }
 
 func New(deps Dependencies) Repository {
 	return &repository{
-		client:          deps.K8sClient,
+		k8sClient:       deps.K8sClient,
 		statusStore:     globalStatusStore,
 		informerManager: newInformerManager(deps.K8sClient, globalStatusStore),
 	}

@@ -8,28 +8,32 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 )
 
 type Handler struct {
-	costUseCase      costUsecase.Usecase
-	budgetUseCase    budgetUsecase.Usecase
-	authConfig       *config.AuthConfig
-	webhookValidator *webhook.Validator
+	costUseCase         costUsecase.Usecase
+	budgetUseCase       budgetUsecase.Usecase
+	rightsizingUseCase  rightsizingUsecase.Usecase
+	authConfig          *config.AuthConfig
+	webhookValidator    *webhook.Validator
 }
 
 type Dependencies struct {
-	CostUseCase      costUsecase.Usecase
-	BudgetUseCase    budgetUsecase.Usecase
-	AuthConfig       *config.AuthConfig
-	WebhookValidator *webhook.Validator
+	CostUseCase         costUsecase.Usecase
+	BudgetUseCase       budgetUsecase.Usecase
+	RightsizingUseCase  rightsizingUsecase.Usecase
+	AuthConfig          *config.AuthConfig
+	WebhookValidator    *webhook.Validator
 }
 
 func New(deps Dependencies) *Handler {
 	return &Handler{
-		costUseCase:      deps.CostUseCase,
-		budgetUseCase:    deps.BudgetUseCase,
-		authConfig:       deps.AuthConfig,
-		webhookValidator: deps.WebhookValidator,
+		costUseCase:         deps.CostUseCase,
+		budgetUseCase:       deps.BudgetUseCase,
+		rightsizingUseCase:  deps.RightsizingUseCase,
+		authConfig:          deps.AuthConfig,
+		webhookValidator:    deps.WebhookValidator,
 	}
 }
 

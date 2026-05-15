@@ -18,6 +18,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	budgetUC "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	"github.com/robfig/cron/v3"
 )
 
@@ -32,13 +33,14 @@ type Server struct {
 }
 
 type Dependencies struct {
-	Schedules        map[string]string
-	Port             int
-	CostUseCase      costUC.Usecase
-	BudgetUseCase    budgetUC.Usecase
-	Config           *config.Config
-	Distlock         redislock.IMutex
-	WebhookValidator *webhook.Validator
+	Schedules         map[string]string
+	Port              int
+	CostUseCase       costUC.Usecase
+	BudgetUseCase     budgetUC.Usecase
+	RightsizingUseCase rightsizingUC.Usecase
+	Config            *config.Config
+	Distlock          redislock.IMutex
+	WebhookValidator  *webhook.Validator
 }
 
 func New(deps Dependencies) *Server {
@@ -47,10 +49,11 @@ func New(deps Dependencies) *Server {
 		schedules: deps.Schedules,
 		port:      deps.Port,
 		handler: cronHandler.New(cronHandler.Dependencies{
-			CostUseCase:      deps.CostUseCase,
-			BudgetUseCase:    deps.BudgetUseCase,
-			AuthConfig:       &deps.Config.Auth,
-			WebhookValidator: deps.WebhookValidator,
+			CostUseCase:        deps.CostUseCase,
+			BudgetUseCase:      deps.BudgetUseCase,
+			RightsizingUseCase: deps.RightsizingUseCase,
+			AuthConfig:         &deps.Config.Auth,
+			WebhookValidator:   deps.WebhookValidator,
 		}),
 		config:   deps.Config,
 		distlock: deps.Distlock,
@@ -63,6 +66,7 @@ func (s *Server) Run(ctx context.Context, graceTimeOut time.Duration) {
 	s.register(ctx, "ping", s.handler.Ping)
 	s.register(ctx, "cost-sync", s.handler.FinopsSyncCosts)
 	s.register(ctx, "budget-alert-check", s.handler.BudgetAlertCheck)
+	s.register(ctx, "rightsizing-generate", s.handler.RightsizingGenerate)
 
 	httpServer := s.httpServer(ctx)
 	go func() {

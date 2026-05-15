@@ -173,3 +173,45 @@ func (m *MockProvisionerRepository) StopInformers() {
 func (mr *MockProvisionerRepositoryMockRecorder) StopInformers() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopInformers", reflect.TypeOf((*MockProvisionerRepository)(nil).StopInformers))
 }
+
+func (m *MockProvisionerRepository) GetDeployment(ctx context.Context, namespace, name string) (*appsv1.Deployment, error) {
+	ret := m.ctrl.Call(m, "GetDeployment", ctx, namespace, name)
+	ret0, _ := ret[0].(*appsv1.Deployment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) GetDeployment(ctx, namespace, name interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeployment", reflect.TypeOf((*MockProvisionerRepository)(nil).GetDeployment), ctx, namespace, name)
+}
+
+func (m *MockProvisionerRepository) GetStatefulSet(ctx context.Context, namespace, name string) (*appsv1.StatefulSet, error) {
+	ret := m.ctrl.Call(m, "GetStatefulSet", ctx, namespace, name)
+	ret0, _ := ret[0].(*appsv1.StatefulSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) GetStatefulSet(ctx, namespace, name interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatefulSet", reflect.TypeOf((*MockProvisionerRepository)(nil).GetStatefulSet), ctx, namespace, name)
+}
+
+func (m *MockProvisionerRepository) UpdateDeploymentResources(ctx context.Context, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit string) error {
+	ret := m.ctrl.Call(m, "UpdateDeploymentResources", ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) UpdateDeploymentResources(ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeploymentResources", reflect.TypeOf((*MockProvisionerRepository)(nil).UpdateDeploymentResources), ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit)
+}
+
+func (m *MockProvisionerRepository) UpdateStatefulSetResources(ctx context.Context, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit string) error {
+	ret := m.ctrl.Call(m, "UpdateStatefulSetResources", ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) UpdateStatefulSetResources(ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatefulSetResources", reflect.TypeOf((*MockProvisionerRepository)(nil).UpdateStatefulSetResources), ctx, namespace, name, containerName, cpuRequest, cpuLimit, memoryRequest, memoryLimit)
+}

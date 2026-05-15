@@ -13,6 +13,7 @@ import (
 	budgetUC "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -27,12 +28,13 @@ import (
 
 type Server struct {
 	*http.Server
-	handler         *httpHandler.Handler
-	config          *config.Config
-	apiKeyUseCase   apikeyUC.Usecase
-	auditLogUseCase auditlogUC.Usecase
-	budgetUseCase   budgetUC.Usecase
-	costUseCase     costUC.Usecase
+	handler            *httpHandler.Handler
+	config             *config.Config
+	apiKeyUseCase      apikeyUC.Usecase
+	auditLogUseCase    auditlogUC.Usecase
+	budgetUseCase      budgetUC.Usecase
+	costUseCase        costUC.Usecase
+	rightsizingUseCase rightsizingUC.Usecase
 }
 
 type Dependencies struct {
@@ -44,17 +46,19 @@ type Dependencies struct {
 	AuditLogUseCase    auditlogUC.Usecase
 	BudgetUseCase      budgetUC.Usecase
 	CostUseCase        costUC.Usecase
+	RightsizingUseCase rightsizingUC.Usecase
 	Config             *config.Config
 	WebhookValidator   *webhook.Validator
 }
 
 func New(deps Dependencies) *Server {
 	return &Server{
-		Server:          &http.Server{},
-		apiKeyUseCase:   deps.ApiKeyUseCase,
-		auditLogUseCase: deps.AuditLogUseCase,
-		budgetUseCase:   deps.BudgetUseCase,
-		costUseCase:     deps.CostUseCase,
+		Server:             &http.Server{},
+		apiKeyUseCase:      deps.ApiKeyUseCase,
+		auditLogUseCase:    deps.AuditLogUseCase,
+		budgetUseCase:      deps.BudgetUseCase,
+		costUseCase:        deps.CostUseCase,
+		rightsizingUseCase: deps.RightsizingUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
@@ -64,6 +68,7 @@ func New(deps Dependencies) *Server {
 			AuditLogUseCase:    deps.AuditLogUseCase,
 			BudgetUseCase:      deps.BudgetUseCase,
 			CostUseCase:        deps.CostUseCase,
+			RightsizingUseCase: deps.RightsizingUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),

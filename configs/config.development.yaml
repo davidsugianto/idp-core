@@ -7,6 +7,7 @@ cron:
     ping: "*/5 * * * *"
     cost-sync: "0 * * * *"
     budget-alert-check: "*/15 * * * *"
+    rightsizing-generate: "0 6 * * *"
   port: 8983
 
 database:
@@ -47,7 +48,7 @@ cors:
 
 kubernetes:
   in_cluster: false
-  kubeconfig_path: "~/.kube/config"
+  kubeconfig_path: "/app/.kube/config"
 
 argocd:
   base_url: "http://argocd-server.argocd.svc.cluster.local:80"
@@ -75,6 +76,16 @@ finops:
     poll_interval: "1h"
   prometheus:
     url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+  rightsizing:
+    enabled: false
+    lookback_days: 7
+    cpu_underutil_threshold: 0.5
+    memory_underutil_threshold: 0.5
+    cpu_overutil_threshold: 0.9
+    memory_overutil_threshold: 0.9
+    min_confidence_score: 70
+    safety_buffer_cpu: 1.2
+    safety_buffer_memory: 1.3
 
 slack:
   webhook_url: ""
