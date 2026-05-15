@@ -66,6 +66,7 @@ services:
       - "8989:8989"
     volumes:
       - .:/app
+      - ~/.kube:/app/.kube
     depends_on:
       postgres:
         condition: service_healthy
@@ -91,6 +92,7 @@ services:
       - "8983:8983"
     volumes:
       - .:/app
+      - ~/.kube:/app/.kube
     depends_on:
       postgres:
         condition: service_healthy

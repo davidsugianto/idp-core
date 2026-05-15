@@ -16,6 +16,7 @@
 - 📋 **Audit Logging** — Automatic request logging with filterable audit trails
 - 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
 - 💸 **Budget Management** — Set spend limits with Slack alerts at configurable thresholds
+- ⚖️ **Rightsizing** — CPU/memory optimization recommendations based on Prometheus usage data
 
 **Use Cases:**
 
@@ -40,6 +41,7 @@
 | 📋 **Audit Logging**          | Automatic request logging with filterable, paginated audit trails |
 | 💰 **Cost Tracking**          | Real-time K8s cost visibility via OpenCost (open source)          |
 | 💸 **Budget Management**      | Spend limits with Slack alerts at configurable thresholds         |
+| ⚖️ **Rightsizing**            | CPU/memory optimization recommendations with apply/rollback       |
 | 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
@@ -155,6 +157,16 @@ make test
 | PATCH  | `/v1/budgets/:id`          | Update budget                       |
 | DELETE | `/v1/budgets/:id`          | Delete budget                       |
 | GET    | `/v1/budgets/:id/alerts`   | Get alert history for budget        |
+
+### Rightsizing
+
+| Method | Endpoint                                      | Description                        |
+| ------ | --------------------------------------------- | ---------------------------------- |
+| GET    | `/v1/rightsizing/recommendations`             | List recommendations (filterable)  |
+| GET    | `/v1/rightsizing/recommendations/:id`         | Get recommendation details         |
+| POST   | `/v1/rightsizing/recommendations/:id/apply`   | Apply recommendation to workload   |
+| POST   | `/v1/rightsizing/recommendations/:id/rollback`| Rollback to previous resources     |
+| POST   | `/v1/rightsizing/recommendations/:id/dismiss` | Dismiss recommendation             |
 
 ## Architecture
 

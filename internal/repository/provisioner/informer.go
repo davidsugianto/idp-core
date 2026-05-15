@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davidsugianto/idp-core/internal/model/environment"
-	"github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
+	envModel "github.com/davidsugianto/idp-core/internal/model/environment"
+	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -16,16 +16,16 @@ import (
 
 // informerManager manages Kubernetes informers for status tracking
 type informerManager struct {
-	client       *kubernetes.Client
-	statusStore  *statusStore
-	factory      informers.SharedInformerFactory
-	stopCh       chan struct{}
-	started      bool
-	mu           sync.RWMutex
+	client      *k8sPkg.Client
+	statusStore *statusStore
+	factory     informers.SharedInformerFactory
+	stopCh      chan struct{}
+	started     bool
+	mu          sync.RWMutex
 }
 
 // newInformerManager creates a new informer manager
-func newInformerManager(client *kubernetes.Client, store *statusStore) *informerManager {
+func newInformerManager(client *k8sPkg.Client, store *statusStore) *informerManager {
 	return &informerManager{
 		client:      client,
 		statusStore: store,
@@ -43,7 +43,7 @@ func (r *repository) StartInformers(ctx context.Context) error {
 	}
 
 	// Create shared informer factory watching all namespaces
-	r.informerManager.factory = informers.NewSharedInformerFactory(r.client.Clientset, 30*time.Second)
+	r.informerManager.factory = informers.NewSharedInformerFactory(r.k8sClient.Clientset, 30*time.Second)
 
 	// Set up pod informer
 	podInformer := r.informerManager.factory.Core().V1().Pods().Informer()
@@ -104,7 +104,7 @@ func (m *informerManager) updatePodStatus(obj interface{}) {
 		return
 	}
 
-	summary := environment.PodSummary{}
+	summary := envModel.PodSummary{}
 	for _, p := range pods {
 		summary.Total++
 		switch p.Status.Phase {
@@ -134,7 +134,7 @@ func (m *informerManager) updateDeploymentStatus(obj interface{}) {
 		return
 	}
 
-	summary := environment.DeploymentSummary{}
+	summary := envModel.DeploymentSummary{}
 	for _, d := range deploys {
 		if d.Spec.Replicas != nil {
 			summary.Desired += int(*d.Spec.Replicas)

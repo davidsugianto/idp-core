@@ -8,18 +8,18 @@ import (
 
 // Environment represents an isolated Kubernetes environment
 type Environment struct {
-	ID           string         `gorm:"primaryKey;type:varchar(36)" json:"id"`
-	TeamID       string         `gorm:"index;not null;type:varchar(36)" json:"team_id"`
-	Name         string         `gorm:"not null;type:varchar(255)" json:"name"`
-	Description  string         `gorm:"type:text" json:"description,omitempty"`
-	Namespace    string         `gorm:"unique;not null;type:varchar(63)" json:"namespace"`
-	Status       string         `gorm:"not null;type:varchar(20)" json:"status"` // creating|ready|deleting|failed
+	ID          string `gorm:"primaryKey;type:varchar(36)" json:"id"`
+	TeamID      string `gorm:"index;not null;type:varchar(36)" json:"team_id"`
+	Name        string `gorm:"not null;type:varchar(255)" json:"name"`
+	Description string `gorm:"type:text" json:"description,omitempty"`
+	Namespace   string `gorm:"unique;not null;type:varchar(63)" json:"namespace"`
+	Status      string `gorm:"not null;type:varchar(20)" json:"status"` // creating|ready|deleting|failed
 
 	// GitOps configuration
-	GitRepoURL   string         `gorm:"type:varchar(512)" json:"git_repo_url"`
-	GitRevision  string         `gorm:"default:'main';type:varchar(64)" json:"git_revision"`
-	ManifestPath string         `gorm:"type:varchar(512)" json:"manifest_path"`
-	ArgoAppName  string         `gorm:"type:varchar(63)" json:"argo_app_name"`
+	GitRepoURL   string `gorm:"type:varchar(512)" json:"git_repo_url"`
+	GitRevision  string `gorm:"default:'main';type:varchar(64)" json:"git_revision"`
+	ManifestPath string `gorm:"type:varchar(512)" json:"manifest_path"`
+	ArgoAppName  string `gorm:"type:varchar(63)" json:"argo_app_name"`
 
 	// Cluster information
 	ClusterName   string `gorm:"type:varchar(255)" json:"cluster_name,omitempty"`
@@ -30,17 +30,17 @@ type Environment struct {
 	ResourceQuotaMemory string `gorm:"type:varchar(32)" json:"resource_quota_memory,omitempty"`
 
 	// Metadata
-	Labels      string `gorm:"type:text" json:"labels,omitempty"`       // JSON encoded labels
+	Labels      string `gorm:"type:text" json:"labels,omitempty"`      // JSON encoded labels
 	Annotations string `gorm:"type:text" json:"annotations,omitempty"` // JSON encoded annotations
 
 	// Ownership and lifecycle
-	OwnerID     string     `gorm:"type:varchar(36)" json:"owner_id,omitempty"`
-	ExpiresAt   *time.Time `gorm:"index" json:"expires_at,omitempty"`
-	LastSyncAt  *time.Time `json:"last_sync_at,omitempty"`
+	OwnerID    string     `gorm:"type:varchar(36)" json:"owner_id,omitempty"`
+	ExpiresAt  *time.Time `gorm:"index" json:"expires_at,omitempty"`
+	LastSyncAt *time.Time `json:"last_sync_at,omitempty"`
 
 	// Error tracking
-	LastError    string `gorm:"type:text" json:"last_error,omitempty"`
-	ErrorCount   int    `gorm:"default:0" json:"error_count"`
+	LastError  string `gorm:"type:text" json:"last_error,omitempty"`
+	ErrorCount int    `gorm:"default:0" json:"error_count"`
 
 	// Timestamps
 	CreatedAt time.Time      `json:"created_at"`
@@ -88,16 +88,16 @@ type UpdateEnvironmentRequest struct {
 
 // EnvironmentResponse is the response for environment endpoints
 type EnvironmentResponse struct {
-	ID           string    `json:"id"`
-	TeamID       string    `json:"team_id"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description,omitempty"`
-	Namespace    string    `json:"namespace"`
-	Status       string    `json:"status"`
-	GitRepoURL   string    `json:"git_repo_url"`
-	GitRevision  string    `json:"git_revision"`
-	ManifestPath string    `json:"manifest_path"`
-	ArgoAppName  string    `json:"argo_app_name,omitempty"`
+	ID           string `json:"id"`
+	TeamID       string `json:"team_id"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	Namespace    string `json:"namespace"`
+	Status       string `json:"status"`
+	GitRepoURL   string `json:"git_repo_url"`
+	GitRevision  string `json:"git_revision"`
+	ManifestPath string `json:"manifest_path"`
+	ArgoAppName  string `json:"argo_app_name,omitempty"`
 
 	// Cluster info
 	ClusterName   string `json:"cluster_name,omitempty"`
@@ -184,6 +184,6 @@ func ToEnvironmentResponse(env *Environment) *EnvironmentResponse {
 		LastError:           env.LastError,
 		ErrorCount:          env.ErrorCount,
 		CreatedAt:           env.CreatedAt,
-		UpdatedAt:            env.UpdatedAt,
+		UpdatedAt:           env.UpdatedAt,
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
+	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
@@ -17,14 +18,18 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 
 	"github.com/davidsugianto/go-pkgs/db"
+	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
 
-	apikeyRepo "github.com/davidsugianto/idp-core/internal/repository/apikey"
-	auditlogRepo "github.com/davidsugianto/idp-core/internal/repository/auditlog"
-	budgetRepo "github.com/davidsugianto/idp-core/internal/repository/budget"
-	costRepo "github.com/davidsugianto/idp-core/internal/repository/cost"
+	apikeyRepository "github.com/davidsugianto/idp-core/internal/repository/apikey"
+	auditlogRepository "github.com/davidsugianto/idp-core/internal/repository/auditlog"
+	budgetRepository "github.com/davidsugianto/idp-core/internal/repository/budget"
+	costRepository "github.com/davidsugianto/idp-core/internal/repository/cost"
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
-	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
-	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
+	monitoringRepository "github.com/davidsugianto/idp-core/internal/repository/monitoring"
+	permissionRepository "github.com/davidsugianto/idp-core/internal/repository/permission"
+	provisionerRepository "github.com/davidsugianto/idp-core/internal/repository/provisioner"
+	rightsizingRepository "github.com/davidsugianto/idp-core/internal/repository/rightsizing"
+	roleRepository "github.com/davidsugianto/idp-core/internal/repository/role"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
@@ -32,6 +37,7 @@ import (
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -91,20 +97,26 @@ func main() {
 
 	dbClientWrapper, err := db.New(ctx, dbConfig)
 	if err != nil {
-		logs.Fatal("cannot connect to database")
+		logs.Fatalf("cannot connect to database: %v", err)
 	}
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}); err != nil {
-		logs.Fatal("cannot migrate database")
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}); err != nil {
+		logs.Fatalf("cannot migrate database: %v", err)
+	}
+
+	// K8s client
+	k8sClient, err := k8sPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+	if err != nil {
+		logs.Fatalf("cannot create k8s client: %v", err)
 	}
 
 	// FinOps clients
 	opencostClient := opencost.NewClient(opencost.Config{
 		BaseURL: cfg.FinOps.OpenCost.BaseURL,
 	})
-	_ = prometheus.NewClient(prometheus.Config{
+	promClient := prometheus.NewClient(prometheus.Config{
 		URL: cfg.FinOps.Prometheus.URL,
 	})
 
@@ -112,6 +124,9 @@ func main() {
 	slackClient := slack.NewClient(cfg.Slack.WebhookURL, cfg.Slack.Channel)
 
 	// Repositories
+	provisionerRepo := provisionerRepository.New(provisionerRepository.Dependencies{
+		K8sClient: k8sClient,
+	})
 	envRepo := envRepository.New(envRepository.Dependencies{
 		Database: dbClient,
 	})
@@ -121,28 +136,35 @@ func main() {
 	teamRepo := teamRepository.New(teamRepository.Dependencies{
 		Database: dbClient,
 	})
-	roleRepo := roleRepo.New(roleRepo.Dependencies{
+	roleRepo := roleRepository.New(roleRepository.Dependencies{
 		Database: dbClient,
 	})
-	permRepo := permissionRepo.New(permissionRepo.Dependencies{
+	permRepo := permissionRepository.New(permissionRepository.Dependencies{
 		Database: dbClient,
 	})
-	apiKeyRepo := apikeyRepo.New(apikeyRepo.Dependencies{
+	apiKeyRepo := apikeyRepository.New(apikeyRepository.Dependencies{
 		Database: dbClient,
 	})
-	auditLogRepo := auditlogRepo.New(auditlogRepo.Dependencies{
+	auditLogRepo := auditlogRepository.New(auditlogRepository.Dependencies{
 		Database: dbClient,
 	})
-	costRepo := costRepo.New(costRepo.Dependencies{
+	costRepo := costRepository.New(costRepository.Dependencies{
 		Database: dbClient,
 	})
-	budgetRepo := budgetRepo.New(budgetRepo.Dependencies{
+	budgetRepo := budgetRepository.New(budgetRepository.Dependencies{
 		Database: dbClient,
+	})
+	rightsizingRepo := rightsizingRepository.New(rightsizingRepository.Dependencies{
+		Database: dbClient,
+	})
+	monitoringRepo := monitoringRepository.New(monitoringRepository.Dependencies{
+		PromClient: promClient,
 	})
 
 	// UseCases
 	envUC := envUsecase.New(envUsecase.Dependencies{
 		EnvironmentRepo: envRepo,
+		ProvisionerRepo: provisionerRepo,
 	})
 	userUC := userUsecase.New(userUsecase.Dependencies{
 		UserRepo: userRepo,
@@ -166,11 +188,15 @@ func main() {
 		Repo:           costRepo,
 		OpenCostClient: opencostClient,
 	})
-
 	budgetUC := budgetUsecase.New(budgetUsecase.Dependencies{
 		BudgetRepo:    budgetRepo,
 		CostRepo:      costRepo,
 		SlackNotifier: slackClient,
+	})
+	rightsizingUC := rightsizingUsecase.New(rightsizingUsecase.Dependencies{
+		RightsizingRepo: rightsizingRepo,
+		ProvisionerRepo: provisionerRepo,
+		MonitoringRepo:  monitoringRepo,
 	})
 
 	// Webhook validator
@@ -185,6 +211,7 @@ func main() {
 		AuditLogUseCase:    auditLogUC,
 		BudgetUseCase:      budgetUC,
 		CostUseCase:        costUC,
+		RightsizingUseCase: rightsizingUC,
 		Config:             cfg,
 		WebhookValidator:   webhookValidator,
 	})

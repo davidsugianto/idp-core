@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
+
 	"github.com/davidsugianto/go-pkgs/db"
 	"github.com/davidsugianto/go-pkgs/logs"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
@@ -15,10 +17,14 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/redislock"
 	"github.com/davidsugianto/idp-core/internal/pkg/slack"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
-	budgetRepo "github.com/davidsugianto/idp-core/internal/repository/budget"
-	costRepo "github.com/davidsugianto/idp-core/internal/repository/cost"
+	budgetRepository "github.com/davidsugianto/idp-core/internal/repository/budget"
+	costRepository "github.com/davidsugianto/idp-core/internal/repository/cost"
+	monitoringRepository "github.com/davidsugianto/idp-core/internal/repository/monitoring"
+	provisionerRepository "github.com/davidsugianto/idp-core/internal/repository/provisioner"
+	rightsizingRepository "github.com/davidsugianto/idp-core/internal/repository/rightsizing"
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -79,11 +85,16 @@ func main() {
 	// distributed lock redis
 	distlock := redislock.New(optGoredis)
 
+	k8sClient, err := k8sPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+	if err != nil {
+		logs.Fatal("cannot create k8s client")
+	}
+
 	// FinOps clients
 	opencostClient := opencost.NewClient(opencost.Config{
 		BaseURL: cfg.FinOps.OpenCost.BaseURL,
 	})
-	_ = prometheus.NewClient(prometheus.Config{
+	promClient := prometheus.NewClient(prometheus.Config{
 		URL: cfg.FinOps.Prometheus.URL,
 	})
 
@@ -94,11 +105,20 @@ func main() {
 	slackClient := slack.NewClient(cfg.Slack.WebhookURL, cfg.Slack.Channel)
 
 	// Repositories
-	costRepo := costRepo.New(costRepo.Dependencies{
+	provisionerRepo := provisionerRepository.New(provisionerRepository.Dependencies{
+		K8sClient: k8sClient,
+	})
+	costRepo := costRepository.New(costRepository.Dependencies{
 		Database: dbClient,
 	})
-	budgetRepo := budgetRepo.New(budgetRepo.Dependencies{
+	budgetRepo := budgetRepository.New(budgetRepository.Dependencies{
 		Database: dbClient,
+	})
+	rightsizingRepo := rightsizingRepository.New(rightsizingRepository.Dependencies{
+		Database: dbClient,
+	})
+	monitoringRepo := monitoringRepository.New(monitoringRepository.Dependencies{
+		PromClient: promClient,
 	})
 
 	// UseCases
@@ -111,16 +131,22 @@ func main() {
 		CostRepo:      costRepo,
 		SlackNotifier: slackClient,
 	})
+	rightsizingUC := rightsizingUsecase.New(rightsizingUsecase.Dependencies{
+		RightsizingRepo: rightsizingRepo,
+		ProvisionerRepo: provisionerRepo,
+		MonitoringRepo:  monitoringRepo,
+	})
 
 	// Server
 	server := New(Dependencies{
-		Schedules:        cfg.Cron.Schedules,
-		Port:             cfg.Cron.Port,
-		CostUseCase:      costUC,
-		BudgetUseCase:    budgetUC,
-		Config:           cfg,
-		Distlock:         distlock,
-		WebhookValidator: webhookValidator,
+		Schedules:          cfg.Cron.Schedules,
+		Port:               cfg.Cron.Port,
+		CostUseCase:        costUC,
+		BudgetUseCase:      budgetUC,
+		RightsizingUseCase: rightsizingUC,
+		Config:             cfg,
+		Distlock:           distlock,
+		WebhookValidator:   webhookValidator,
 	})
 	server.Run(ctx, cfg.Cron.GraceTimeout*time.Second)
 }
