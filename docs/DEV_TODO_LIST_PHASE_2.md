@@ -900,20 +900,20 @@ Each task is considered complete when:
 
 **API Endpoints Added:**
 
-| Method | Endpoint                | Description                   |
-| ------ | ----------------------- | ----------------------------- |
-| GET    | `/v1/budgets`           | List budgets (team-scoped)    |
-| POST   | `/v1/budgets`           | Create a new budget           |
-| GET    | `/v1/budgets/:id`       | Get budget details            |
-| PATCH  | `/v1/budgets/:id`       | Update budget                 |
-| DELETE | `/v1/budgets/:id`       | Delete budget                 |
-| GET    | `/v1/budgets/:id/alerts`| Get alert history for budget  |
+| Method | Endpoint                 | Description                  |
+| ------ | ------------------------ | ---------------------------- |
+| GET    | `/v1/budgets`            | List budgets (team-scoped)   |
+| POST   | `/v1/budgets`            | Create a new budget          |
+| GET    | `/v1/budgets/:id`        | Get budget details           |
+| PATCH  | `/v1/budgets/:id`        | Update budget                |
+| DELETE | `/v1/budgets/:id`        | Delete budget                |
+| GET    | `/v1/budgets/:id/alerts` | Get alert history for budget |
 
 **Key Features:**
 
 - Budget CRUD with validation (name required, limit > 0, valid period: daily/weekly/monthly)
 - Alert thresholds stored as comma-separated TEXT (e.g., `"80,90,100"`), channels as JSON TEXT (e.g., `'["slack"]'`)
-- Default thresholds [80, 90, 100] and default channels ["slack"] when not specified
+- Default thresholds \[80, 90, 100] and default channels \["slack"] when not specified
 - Partial updates via pointer fields in UpdateBudgetRequest
 - Slack webhook notifications via `github.com/slack-go/slack` with red attachment format
 - `SlackNotifier` interface in usecase layer for testability
