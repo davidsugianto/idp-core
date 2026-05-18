@@ -13,7 +13,7 @@
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
 | M2: FinOps           | 🔄 In Progress | 50%      |
-| M3: Rightsizing      | 🔄 In Progress | 50%      |
+| M3: Rightsizing      | ✅ Complete    | 100%     |
 | M4: Service Catalog  | 🔲 Not Started | 0%       |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
 
@@ -299,34 +299,34 @@
 
 ***
 
-### Week 7: Resource Quotas
+### Week 7: Resource Quotas ✅ COMPLETED
 
 #### Resource Quota Models
 
-- [ ] Create migration: `resource_quotas` table
-- [ ] Create model: `internal/model/resource_quota/type.go`
+- [x] Create migration: `resource_quotas` table
+- [x] Create model: `internal/model/resourcequota/type.go`
 
 #### Resource Quota Repository
 
-- [ ] Create `internal/repository/quota/init.go`
-- [ ] Create `internal/repository/quota/quota.go`
+- [x] Create `internal/repository/quota/init.go`
+- [x] Create `internal/repository/quota/quota.go`
 
 #### Resource Quota Usecase
 
-- [ ] Create `internal/usecase/quota/init.go`
-- [ ] Create `internal/usecase/quota/quota.go`
-- [ ] Implement usage calculator
-- [ ] Implement quota enforcement (admission webhook)
+- [x] Create `internal/usecase/quota/init.go`
+- [x] Create `internal/usecase/quota/quota.go`
+- [x] Implement usage calculator
+- [x] Implement quota enforcement (admission webhook)
 
 #### Resource Quota Handler
 
-- [ ] Create `internal/handler/http/quota.go`
-- [ ] Add quota routes
+- [x] Create `internal/handler/http/quota.go`
+- [x] Add quota routes
 
 #### Admission Webhook Update
 
-- [ ] Update webhook to check quotas
-- [ ] Return quota exceeded error
+- [x] Update webhook to check quotas
+- [x] Return quota exceeded error
 
 #### Tests
 
@@ -564,14 +564,15 @@ internal/
 │   ├── auditlog.go          # ✅ CREATED
 │   ├── cost.go              # ✅ CREATED
 │   ├── budget.go            # ✅ CREATED
-│   ├── rightsizing.go       # TODO
-│   ├── quota.go             # TODO
+│   ├── rightsizing.go       # ✅ CREATED
+│   ├── quota.go             # ✅ CREATED
 │   └── service.go           # TODO
 │
 ├── handler/cron/
 │   ├── init.go              # ✅ CREATED
 │   ├── cost.go              # ✅ CREATED
-│   └── budget.go            # ✅ CREATED
+│   ├── budget.go            # ✅ CREATED
+│   └── rightsizing.go       # ✅ CREATED
 │
 ├── usecase/
 │   ├── user/                # ✅ CREATED
@@ -582,8 +583,8 @@ internal/
 │   ├── auth/                # ✅ CREATED (RBAC engine)
 │   ├── cost/                # ✅ CREATED
 │   ├── budget/              # ✅ CREATED
-│   ├── rightsizing/         # TODO
-│   ├── quota/               # TODO
+│   ├── rightsizing/         # ✅ CREATED
+│   ├── quota/               # ✅ CREATED
 │   └── service/             # TODO
 │
 ├── repository/
@@ -595,8 +596,9 @@ internal/
 │   ├── auditlog/            # ✅ CREATED
 │   ├── cost/                # ✅ CREATED
 │   ├── budget/              # ✅ CREATED
-│   ├── rightsizing/         # TODO
-│   ├── quota/               # TODO
+│   ├── rightsizing/         # ✅ CREATED
+│   ├── monitoring/          # ✅ CREATED (Prometheus wrapper)
+│   ├── quota/               # ✅ CREATED
 │   └── service/             # TODO
 │
 ├── model/
@@ -608,15 +610,16 @@ internal/
 │   ├── auditlog/            # ✅ CREATED
 │   ├── cost/                # ✅ CREATED
 │   ├── budget/              # ✅ CREATED
-│   ├── rightsizing/         # TODO
-│   ├── resource_quota/      # TODO
+│   ├── rightsizing/         # ✅ CREATED
+│   ├── resourcequota/       # ✅ CREATED
 │   └── service/             # TODO
 │
 ├── pkg/
 │   ├── oidc/                # ✅ CREATED
 │   ├── opencost/            # ✅ CREATED
-│   ├── prometheus/          # ✅ CREATED (stub)
+│   ├── prometheus/          # ✅ CREATED
 │   ├── slack/               # ✅ CREATED
+│   ├── webhook/             # ✅ CREATED (admission validator)
 │   └── redislock/           # ✅ CREATED (distributed locking)
 │
 └── mocks/
@@ -628,7 +631,8 @@ internal/
     ├── auditlog_repository.go   # ✅ CREATED
     ├── cost_repository.go       # ✅ CREATED
     ├── budget_repository.go     # ✅ CREATED
-    ├── slack_notifier.go         # ✅ CREATED
+    ├── provisioner_repository.go # ✅ CREATED (for rightsizing)
+    ├── slack_notifier.go        # ✅ CREATED
     └── opencost_client.go       # ✅ CREATED
 
 deployments/
@@ -654,7 +658,9 @@ migrations/
 ├── 20260512000001_create_audit_logs_table.sql   # ✅ CREATED
 ├── 20260513000000_create_cost_records_table.sql # ✅ CREATED
 ├── 20260514000000_create_budgets_table.sql      # ✅ CREATED
-└── 20260514000001_create_budget_alerts_table.sql # ✅ CREATED
+├── 20260514000001_create_budget_alerts_table.sql # ✅ CREATED
+├── 20260515000000_create_rightsizing_recommendations_table.sql # ✅ CREATED
+└── 20260516000000_create_resource_quotas_table.sql # ✅ CREATED
 ```
 
 ***
@@ -986,7 +992,58 @@ Each task is considered complete when:
 - Unit tests: usage analyzer, recommendation generator
 - Integration tests: rightsizing API
 - E2E test: apply recommendation
-- Begin M3 Week 7: Resource Quotas
+
+***
+
+### M3 Week 7: Resource Quotas (May 2026)
+
+**Files Created:**
+
+- `migrations/20260516000000_create_resource_quotas_table.sql`
+- `internal/model/resourcequota/type.go` (ResourceQuota, request/response types, converters, helpers)
+- `internal/repository/quota/init.go` (interface + implementation: Create, GetByID, GetByNamespace, List, Update, Delete, UpdateUsage, GetActiveByNamespace, ExistsForNamespace)
+- `internal/usecase/quota/quota.go` (CreateQuota, GetQuota, ListQuotas, UpdateQuota, DeleteQuota, GetUsage, RefreshUsage, CheckQuota, IsQuotaExceeded)
+- `internal/handler/http/quota.go`
+
+**Existing Files Modified:**
+
+- `internal/pkg/webhook/validator.go` — added QuotaRule for admission webhook quota enforcement
+- `internal/handler/http/init.go` — added quotaUseCase
+- `cmd/http/server.go` — added QuotaUseCase, quota routes
+- `cmd/http/main.go` — wired quota repo, usecase, AutoMigrate, webhook with quota
+
+**API Endpoints Added:**
+
+| Method | Endpoint                                        | Description                         |
+| ------ | ----------------------------------------------- | ----------------------------------- |
+| GET    | `/v1/quotas`                                    | List resource quotas (filterable)   |
+| POST   | `/v1/quotas`                                    | Create a new resource quota         |
+| GET    | `/v1/quotas/:id`                                | Get quota details                   |
+| PATCH  | `/v1/quotas/:id`                                | Update quota                        |
+| DELETE | `/v1/quotas/:id`                                | Delete quota                        |
+| GET    | `/v1/quotas/namespace/:namespace`               | Get quota by namespace              |
+| GET    | `/v1/quotas/namespace/:namespace/usage`         | Get namespace resource usage        |
+| POST   | `/v1/quotas/namespace/:namespace/usage/refresh` | Refresh cached usage                |
+| POST   | `/v1/quotas/check`                              | Check if request exceeds quota      |
+
+**Key Features:**
+
+- Resource quota model with limits for CPU request/limit, memory request/limit, storage, pod count, configmap count, secret count, PVC count
+- Usage calculation from Kubernetes pods via provisioner repository
+- Quota enforcement via admission webhook: pods that would exceed quota are rejected
+- Current usage tracking with CPU/memory/pod count fields
+- Grace period support for soft enforcement
+- Fail-open design: if quota check fails, allow the pod through
+- QuotaRule added to webhook validator pipeline
+- Namespace-scoped quotas with team/environment association
+- Utilization calculation helpers for percentage display
+
+**Next Steps:**
+
+- Unit tests: quota repository, quota enforcement
+- Integration tests: quota API
+- E2E test: quota enforcement
+- Begin M4: Service Catalog
 
 ***
 

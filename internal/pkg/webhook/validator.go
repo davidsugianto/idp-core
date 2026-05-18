@@ -1,14 +1,91 @@
 package webhook
 
 import (
+	"context"
 	"fmt"
 
+	quotaModel "github.com/davidsugianto/idp-core/internal/model/resourcequota"
+	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // PolicyRule defines a validation rule
 type PolicyRule interface {
 	Validate(obj interface{}) (bool, string)
+}
+
+// QuotaRule checks resource quota limits
+type QuotaRule struct {
+	quotaUC quotaUsecase.Usecase
+}
+
+func NewQuotaRule(quotaUC quotaUsecase.Usecase) *QuotaRule {
+	return &QuotaRule{quotaUC: quotaUC}
+}
+
+func (r *QuotaRule) Validate(obj interface{}) (bool, string) {
+	pod, ok := obj.(*corev1.Pod)
+	if !ok {
+		return true, ""
+	}
+
+	if r.quotaUC == nil {
+		return true, ""
+	}
+
+	namespace := pod.Namespace
+	if namespace == "" {
+		return true, ""
+	}
+
+	// Calculate total resources for the pod
+	var totalCPU, totalMemory int64
+	for _, container := range pod.Spec.Containers {
+		if container.Resources.Requests != nil {
+			if cpu := container.Resources.Requests.Cpu(); cpu != nil {
+				totalCPU += cpu.Value()
+			}
+			if mem := container.Resources.Requests.Memory(); mem != nil {
+				totalMemory += mem.Value()
+			}
+		}
+	}
+	for _, container := range pod.Spec.InitContainers {
+		if container.Resources.Requests != nil {
+			if cpu := container.Resources.Requests.Cpu(); cpu != nil {
+				totalCPU += cpu.Value()
+			}
+			if mem := container.Resources.Requests.Memory(); mem != nil {
+				totalMemory += mem.Value()
+			}
+		}
+	}
+
+	// Build quota check request
+	req := &quotaModel.QuotaCheckRequest{
+		Namespace:   namespace,
+		CPURequest:  resource.NewQuantity(totalCPU, resource.DecimalSI).String(),
+		MemoryRequest: resource.NewQuantity(totalMemory, resource.BinarySI).String(),
+		PodDelta:    1,
+	}
+
+	// Check quota
+	result, err := r.quotaUC.CheckQuota(context.Background(), req)
+	if err != nil {
+		// On error, allow the pod (fail-open)
+		return true, ""
+	}
+
+	if !result.Allowed {
+		reason := "would exceed resource quota"
+		if len(result.Reasons) > 0 {
+			reason = fmt.Sprintf("would exceed resource quota: %s", result.Reasons[0].ResourceType)
+		}
+		return false, reason
+	}
+
+	return true, ""
 }
 
 // Validator validates Kubernetes resources against policies
@@ -23,6 +100,18 @@ func NewValidator() *Validator {
 			&TeamIDLabelRule{},
 			&NoPrivilegedContainersRule{},
 			&ResourceLimitsRule{},
+		},
+	}
+}
+
+// NewValidatorWithQuota creates a new Validator with quota checking
+func NewValidatorWithQuota(quotaUC quotaUsecase.Usecase) *Validator {
+	return &Validator{
+		rules: []PolicyRule{
+			&TeamIDLabelRule{},
+			&NoPrivilegedContainersRule{},
+			&ResourceLimitsRule{},
+			NewQuotaRule(quotaUC),
 		},
 	}
 }

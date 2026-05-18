@@ -14,6 +14,7 @@ import (
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
+	quotaUC "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -35,6 +36,7 @@ type Server struct {
 	budgetUseCase      budgetUC.Usecase
 	costUseCase        costUC.Usecase
 	rightsizingUseCase rightsizingUC.Usecase
+	quotaUseCase       quotaUC.Usecase
 }
 
 type Dependencies struct {
@@ -47,6 +49,7 @@ type Dependencies struct {
 	BudgetUseCase      budgetUC.Usecase
 	CostUseCase        costUC.Usecase
 	RightsizingUseCase rightsizingUC.Usecase
+	QuotaUseCase       quotaUC.Usecase
 	Config             *config.Config
 	WebhookValidator   *webhook.Validator
 }
@@ -59,6 +62,7 @@ func New(deps Dependencies) *Server {
 		budgetUseCase:      deps.BudgetUseCase,
 		costUseCase:        deps.CostUseCase,
 		rightsizingUseCase: deps.RightsizingUseCase,
+		quotaUseCase:       deps.QuotaUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
@@ -69,6 +73,7 @@ func New(deps Dependencies) *Server {
 			BudgetUseCase:      deps.BudgetUseCase,
 			CostUseCase:        deps.CostUseCase,
 			RightsizingUseCase: deps.RightsizingUseCase,
+			QuotaUseCase:       deps.QuotaUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),
@@ -185,6 +190,28 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	budgets.PATCH("/:id", s.handler.UpdateBudget)
 	budgets.DELETE("/:id", s.handler.DeleteBudget)
 	budgets.GET("/:id/alerts", s.handler.ListBudgetAlerts)
+
+	// Rightsizing routes (protected with JWT)
+	rightsizing := v1.Group("/rightsizing")
+	rightsizing.Use(middleware.JWT(&s.config.Auth))
+	rightsizing.GET("/recommendations", s.handler.ListRightsizingRecommendations)
+	rightsizing.GET("/recommendations/:id", s.handler.GetRightsizingRecommendation)
+	rightsizing.POST("/recommendations/:id/apply", s.handler.ApplyRightsizingRecommendation)
+	rightsizing.POST("/recommendations/:id/rollback", s.handler.RollbackRightsizingRecommendation)
+	rightsizing.POST("/recommendations/:id/dismiss", s.handler.DismissRightsizingRecommendation)
+
+	// Quota routes (protected with JWT)
+	quotas := v1.Group("/quotas")
+	quotas.Use(middleware.JWT(&s.config.Auth))
+	quotas.GET("", s.handler.ListResourceQuotas)
+	quotas.POST("", s.handler.CreateResourceQuota)
+	quotas.GET("/:id", s.handler.GetResourceQuota)
+	quotas.PATCH("/:id", s.handler.UpdateResourceQuota)
+	quotas.DELETE("/:id", s.handler.DeleteResourceQuota)
+	quotas.GET("/namespace/:namespace", s.handler.GetResourceQuotaByNamespace)
+	quotas.GET("/namespace/:namespace/usage", s.handler.GetNamespaceUsage)
+	quotas.POST("/namespace/:namespace/usage/refresh", s.handler.RefreshNamespaceUsage)
+	quotas.POST("/check", s.handler.CheckQuota)
 }
 
 func (s *Server) Run(port string) error {

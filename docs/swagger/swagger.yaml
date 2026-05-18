@@ -419,6 +419,211 @@ definitions:
       total:
         type: integer
     type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.CreateResourceQuotaRequest:
+    properties:
+      configmap_count_limit:
+        type: integer
+      cpu_limit_limit:
+        type: string
+      cpu_request_limit:
+        type: string
+      description:
+        type: string
+      enforce:
+        type: boolean
+      environment_id:
+        type: string
+      grace_period_hours:
+        type: integer
+      memory_limit_limit:
+        type: string
+      memory_request_limit:
+        type: string
+      namespace:
+        type: string
+      pod_count_limit:
+        type: integer
+      pvc_count_limit:
+        type: integer
+      secret_count_limit:
+        type: integer
+      storage_request_limit:
+        type: string
+      team_id:
+        type: string
+    required:
+    - namespace
+    - team_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckRequest:
+    properties:
+      configmap_delta:
+        type: integer
+      cpu_limit:
+        type: string
+      cpu_request:
+        type: string
+      memory_limit:
+        type: string
+      memory_request:
+        type: string
+      namespace:
+        type: string
+      pod_delta:
+        description: +1 for create, -1 for delete
+        type: integer
+      pvc_delta:
+        type: integer
+      secret_delta:
+        type: integer
+      storage_request:
+        type: string
+    required:
+    - namespace
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckResponse:
+    properties:
+      allowed:
+        type: boolean
+      reasons:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaExceededReason'
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaExceededReason:
+    properties:
+      current:
+        type: string
+      limit:
+        type: string
+      requested:
+        type: string
+      resource_type:
+        type: string
+      utilization:
+        type: number
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaListResponse:
+    properties:
+      quotas:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse:
+    properties:
+      configmap_count_limit:
+        type: integer
+      cpu_limit_limit:
+        type: string
+      cpu_request_limit:
+        type: string
+      cpu_request_utilization:
+        description: Computed utilization percentages
+        type: number
+      created_at:
+        type: string
+      current_cpu_limit:
+        type: string
+      current_cpu_request:
+        type: string
+      current_memory_limit:
+        type: string
+      current_memory_request:
+        type: string
+      current_pod_count:
+        type: integer
+      current_storage_request:
+        type: string
+      description:
+        type: string
+      enforce:
+        type: boolean
+      environment_id:
+        type: string
+      grace_period_hours:
+        type: integer
+      id:
+        type: string
+      memory_limit_limit:
+        type: string
+      memory_request_limit:
+        type: string
+      memory_request_utilization:
+        type: number
+      namespace:
+        type: string
+      pod_count_limit:
+        type: integer
+      pod_count_utilization:
+        type: number
+      pvc_count_limit:
+        type: integer
+      secret_count_limit:
+        type: integer
+      status:
+        type: string
+      storage_request_limit:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.UpdateResourceQuotaRequest:
+    properties:
+      configmap_count_limit:
+        type: integer
+      cpu_limit_limit:
+        type: string
+      cpu_request_limit:
+        type: string
+      description:
+        type: string
+      enforce:
+        type: boolean
+      grace_period_hours:
+        type: integer
+      memory_limit_limit:
+        type: string
+      memory_request_limit:
+        type: string
+      pod_count_limit:
+        type: integer
+      pvc_count_limit:
+        type: integer
+      secret_count_limit:
+        type: integer
+      storage_request_limit:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_resourcequota.UsageResponse:
+    properties:
+      configmap_count:
+        type: integer
+      cpu_limit:
+        type: string
+      cpu_request:
+        type: string
+      last_updated:
+        type: string
+      memory_limit:
+        type: string
+      memory_request:
+        type: string
+      namespace:
+        type: string
+      pod_count:
+        type: integer
+      pvc_count:
+        type: integer
+      secret_count:
+        type: integer
+      storage_request:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_rightsizing.DismissRecommendationRequest:
     properties:
       reason:
@@ -1814,6 +2019,287 @@ paths:
       summary: Get workload details
       tags:
       - environments
+  /v1/quotas:
+    get:
+      description: List all resource quotas with optional filters
+      parameters:
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by environment ID
+        in: query
+        name: environment_id
+        type: string
+      - description: Filter by namespace
+        in: query
+        name: namespace
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List resource quotas
+      tags:
+      - quota
+    post:
+      consumes:
+      - application/json
+      description: Create a new resource quota for a namespace
+      parameters:
+      - description: Quota configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.CreateResourceQuotaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a resource quota
+      tags:
+      - quota
+  /v1/quotas/{id}:
+    delete:
+      description: Delete a resource quota
+      parameters:
+      - description: Quota ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a resource quota
+      tags:
+      - quota
+    get:
+      description: Get detailed information about a specific quota
+      parameters:
+      - description: Quota ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a resource quota
+      tags:
+      - quota
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing resource quota
+      parameters:
+      - description: Quota ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Quota updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.UpdateResourceQuotaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a resource quota
+      tags:
+      - quota
+  /v1/quotas/check:
+    post:
+      consumes:
+      - application/json
+      description: Check if a resource request would exceed quota limits
+      parameters:
+      - description: Resource check request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Check quota
+      tags:
+      - quota
+  /v1/quotas/namespace/{namespace}:
+    get:
+      description: Get resource quota for a specific namespace
+      parameters:
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get quota by namespace
+      tags:
+      - quota
+  /v1/quotas/namespace/{namespace}/usage:
+    get:
+      description: Get current resource usage for a namespace
+      parameters:
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.UsageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get namespace resource usage
+      tags:
+      - quota
+  /v1/quotas/namespace/{namespace}/usage/refresh:
+    post:
+      description: Refresh cached resource usage for a namespace
+      parameters:
+      - description: Namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh namespace usage
+      tags:
+      - quota
   /v1/rightsizing/recommendations:
     get:
       description: List all rightsizing recommendations with optional filters

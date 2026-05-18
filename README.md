@@ -17,6 +17,7 @@
 - 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
 - 💸 **Budget Management** — Set spend limits with Slack alerts at configurable thresholds
 - ⚖️ **Rightsizing** — CPU/memory optimization recommendations based on Prometheus usage data
+- 📦 **Resource Quotas** — Namespace-scoped resource limits with admission webhook enforcement
 
 **Use Cases:**
 
@@ -42,6 +43,7 @@
 | 💰 **Cost Tracking**          | Real-time K8s cost visibility via OpenCost (open source)          |
 | 💸 **Budget Management**      | Spend limits with Slack alerts at configurable thresholds         |
 | ⚖️ **Rightsizing**            | CPU/memory optimization recommendations with apply/rollback       |
+| 📦 **Resource Quotas**        | Namespace-scoped resource limits with admission webhook enforcement |
 | 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
@@ -167,6 +169,20 @@ make test
 | POST   | `/v1/rightsizing/recommendations/:id/apply`   | Apply recommendation to workload   |
 | POST   | `/v1/rightsizing/recommendations/:id/rollback`| Rollback to previous resources     |
 | POST   | `/v1/rightsizing/recommendations/:id/dismiss` | Dismiss recommendation             |
+
+### Resource Quotas
+
+| Method | Endpoint                                        | Description                         |
+| ------ | ----------------------------------------------- | ----------------------------------- |
+| GET    | `/v1/quotas`                                    | List resource quotas (filterable)   |
+| POST   | `/v1/quotas`                                    | Create resource quota               |
+| GET    | `/v1/quotas/:id`                                | Get quota details                   |
+| PATCH  | `/v1/quotas/:id`                                | Update quota                        |
+| DELETE | `/v1/quotas/:id`                                | Delete quota                        |
+| GET    | `/v1/quotas/namespace/:namespace`               | Get quota by namespace              |
+| GET    | `/v1/quotas/namespace/:namespace/usage`         | Get namespace resource usage        |
+| POST   | `/v1/quotas/namespace/:namespace/usage/refresh` | Refresh cached usage                |
+| POST   | `/v1/quotas/check`                              | Check if request exceeds quota      |
 
 ## Architecture
 
