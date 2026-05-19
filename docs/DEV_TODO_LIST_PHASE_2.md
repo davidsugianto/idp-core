@@ -14,7 +14,7 @@
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
 | M2: FinOps           | ✅ Complete    | 100%     |
 | M3: Rightsizing      | ✅ Complete    | 100%     |
-| M4: Service Catalog  | 🔄 In Progress | 50%      |
+| M4: Service Catalog  | ✅ Complete    | 100%     |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
 
 ***
@@ -374,37 +374,37 @@
 
 ***
 
-### Week 9: Dependencies & Environments
+### Week 9: Dependencies & Environments ✅ COMPLETED
 
 #### Dependency Model
 
-- [ ] Create migration: `service_dependencies` table
-- [ ] Create model: `internal/model/service_dependency/type.go`
+- [x] Create migration: `service_dependencies` table
+- [x] Create model: `internal/model/service_dependency/type.go`
 
 #### Service Environment Model
 
-- [ ] Create migration: `service_environments` table
-- [ ] Create model: `internal/model/service_environment/type.go`
+- [x] Create migration: `service_environments` table
+- [x] Create model: `internal/model/service_environment/type.go`
 
 #### Repository Extensions
 
-- [ ] Add dependency methods to service repository
-- [ ] Add environment methods to service repository
+- [x] Add dependency methods to service repository
+- [x] Add environment methods to service repository
 
 #### Usecase Extensions
 
-- [ ] Add dependency management methods
-- [ ] Add environment deployment tracking
+- [x] Add dependency management methods
+- [x] Add environment deployment tracking
 
 #### Handler Extensions
 
-- [ ] Add dependency routes
-- [ ] Add service environment routes
+- [x] Add dependency routes
+- [x] Add service environment routes
 
 #### Dependency Visualization
 
-- [ ] Create endpoint for dependency graph
-- [ ] Format for frontend consumption
+- [x] Create endpoint for dependency graph
+- [x] Format for frontend consumption
 
 #### Tests
 
@@ -1102,7 +1102,60 @@ Each task is considered complete when:
 
 - Unit tests: service repository, service usecase
 - Integration tests: service API
-- Begin M4 Week 9: Dependencies & Environments
+
+***
+
+### M4 Week 9: Dependencies & Environments (May 2026)
+
+**Files Created:**
+
+- `migrations/20260519000003_create_service_dependencies_table.sql`
+- `migrations/20260519000004_create_service_environments_table.sql`
+- `internal/model/service_dependency/type.go` (ServiceDependency, DTOs, helpers, graph types)
+- `internal/model/service_environment/type.go` (ServiceEnvironment, DTOs, helpers, deployment types)
+- `internal/repository/service/dependency.go` (dependency repository methods)
+- `internal/repository/service/environment.go` (deployment repository methods)
+
+**Existing Files Modified:**
+
+- `internal/repository/service/init.go` — added dependency and environment methods to interface
+- `internal/usecase/service/init.go` — added methods + EnvironmentRepo dependency
+- `internal/usecase/service/service.go` — implemented dependency & deployment logic with circular dependency detection
+- `internal/handler/http/service.go` — added dependency & environment handlers
+- `cmd/http/server.go` — added dependency, deployment, and environment services routes
+- `cmd/http/main.go` — wired EnvironmentRepo, added AutoMigrate for new models
+
+**API Endpoints Added:**
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/v1/services/:id/dependencies` | List service dependencies |
+| POST | `/v1/services/:id/dependencies` | Add dependency |
+| GET | `/v1/services/:id/dependencies/graph` | Get dependency graph |
+| GET | `/v1/services/:id/dependencies/:depId` | Get dependency details |
+| PATCH | `/v1/services/:id/dependencies/:depId` | Update dependency |
+| DELETE | `/v1/services/:id/dependencies/:depId` | Remove dependency |
+| GET | `/v1/services/:id/dependents` | List services that depend on this service |
+| GET | `/v1/services/:id/environments` | List deployments for service |
+| POST | `/v1/services/:id/versions/:versionId/deploy` | Deploy version to environment |
+| GET | `/v1/services/:id/versions/:versionId/deployments` | List deployments for version |
+| PATCH | `/v1/services/:id/versions/:versionId/deployments/:deploymentId` | Update deployment status |
+| GET | `/v1/environments/:id/services` | List services deployed to environment |
+
+**Key Features:**
+
+- Dependency types: runtime, build, data, api
+- Circular dependency detection using BFS algorithm
+- Dependency graph visualization endpoint returning nodes and edges
+- Deployment tracking with status (deployed, deploying, failed, rolled_back)
+- Automatic roll-back of existing deployment when deploying new version
+- Deployment metadata stored as JSONB for flexibility
+- Environment existence validation before deployment
+
+**Next Steps:**
+
+- Unit tests: dependency logic
+- Integration tests: dependency API, deployment API
 
 ***
 

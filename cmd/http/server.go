@@ -124,6 +124,7 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("", s.handler.CreateEnvironment)
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
+	envs.GET("/:id/services", s.handler.ListEnvironmentServices)
 
 	// User routes (protected with JWT)
 	users := v1.Group("/users")
@@ -236,6 +237,19 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	services.GET("/:id/versions/:versionId/endpoints/:endpointId", s.handler.GetServiceEndpoint)
 	services.PATCH("/:id/versions/:versionId/endpoints/:endpointId", s.handler.UpdateServiceEndpoint)
 	services.DELETE("/:id/versions/:versionId/endpoints/:endpointId", s.handler.DeleteServiceEndpoint)
+	// Dependency routes
+	services.GET("/:id/dependencies", s.handler.ListServiceDependencies)
+	services.POST("/:id/dependencies", s.handler.CreateServiceDependency)
+	services.GET("/:id/dependencies/graph", s.handler.GetServiceDependencyGraph)
+	services.GET("/:id/dependencies/:depId", s.handler.GetServiceDependency)
+	services.PATCH("/:id/dependencies/:depId", s.handler.UpdateServiceDependency)
+	services.DELETE("/:id/dependencies/:depId", s.handler.DeleteServiceDependency)
+	services.GET("/:id/dependents", s.handler.ListServiceDependents)
+	// Deployment routes
+	services.GET("/:id/environments", s.handler.ListServiceEnvironments)
+	services.POST("/:id/versions/:versionId/deploy", s.handler.DeployServiceVersion)
+	services.GET("/:id/versions/:versionId/deployments", s.handler.ListVersionDeployments)
+	services.PATCH("/:id/versions/:versionId/deployments/:deploymentId", s.handler.UpdateDeployment)
 }
 
 func (s *Server) Run(port string) error {

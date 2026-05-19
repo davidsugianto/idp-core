@@ -18,6 +18,9 @@
 - 💸 **Budget Management** — Set spend limits with Slack alerts at configurable thresholds
 - ⚖️ **Rightsizing** — CPU/memory optimization recommendations based on Prometheus usage data
 - 📦 **Resource Quotas** — Namespace-scoped resource limits with admission webhook enforcement
+- 📚 **Service Catalog** — Register and discover services with versions, endpoints, dependencies, and deployment tracking
+- 🔗 **Dependency Management** — Track service dependencies with circular dependency detection and visualization
+- 🚢 **Deployment Tracking** — Track service version deployments across environments
 
 **Use Cases:**
 
@@ -44,7 +47,7 @@
 | 💸 **Budget Management**      | Spend limits with Slack alerts at configurable thresholds         |
 | ⚖️ **Rightsizing**            | CPU/memory optimization recommendations with apply/rollback       |
 | 📦 **Resource Quotas**        | Namespace-scoped resource limits with admission webhook enforcement |
-| 📚 **Service Catalog**        | Register and discover services with versions and endpoints        |
+| 📚 **Service Catalog**        | Register and discover services with versions, endpoints, dependencies, and deployment tracking |
 | 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
@@ -203,6 +206,18 @@ make test
 | POST   | `/v1/services/:id/versions/:versionId/endpoints`             | Add endpoint                   |
 | PATCH  | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Update endpoint                |
 | DELETE | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Remove endpoint                |
+| GET    | `/v1/services/:id/dependencies`                              | List service dependencies      |
+| POST   | `/v1/services/:id/dependencies`                              | Add dependency                 |
+| GET    | `/v1/services/:id/dependencies/graph`                        | Get dependency graph           |
+| GET    | `/v1/services/:id/dependencies/:depId`                       | Get dependency details         |
+| PATCH  | `/v1/services/:id/dependencies/:depId`                       | Update dependency              |
+| DELETE | `/v1/services/:id/dependencies/:depId`                       | Remove dependency              |
+| GET    | `/v1/services/:id/dependents`                                | List services that depend on this |
+| GET    | `/v1/services/:id/environments`                              | List deployments for service   |
+| POST   | `/v1/services/:id/versions/:versionId/deploy`                | Deploy version to environment  |
+| GET    | `/v1/services/:id/versions/:versionId/deployments`           | List deployments for version   |
+| PATCH  | `/v1/services/:id/versions/:versionId/deployments/:deploymentId` | Update deployment status   |
+| GET    | `/v1/environments/:id/services`                              | List services in environment   |
 
 ## Architecture
 
