@@ -11,7 +11,9 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
 	"github.com/davidsugianto/idp-core/internal/model/resourcequota"
 	"github.com/davidsugianto/idp-core/internal/model/service"
+	"github.com/davidsugianto/idp-core/internal/model/service_dependency"
 	"github.com/davidsugianto/idp-core/internal/model/service_endpoint"
+	"github.com/davidsugianto/idp-core/internal/model/service_environment"
 	"github.com/davidsugianto/idp-core/internal/model/service_version"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
@@ -110,7 +112,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -217,7 +219,8 @@ func main() {
 		ProvisionerRepo: provisionerRepo,
 	})
 	serviceUC := serviceUsecase.New(serviceUsecase.Dependencies{
-		ServiceRepo: serviceRepo,
+		ServiceRepo:   serviceRepo,
+		EnvironmentRepo: envRepo,
 	})
 
 	// Webhook validator

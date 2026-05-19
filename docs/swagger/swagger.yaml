@@ -881,6 +881,85 @@ definitions:
       visibility:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.CreateDependencyRequest:
+    properties:
+      dependency_type:
+        type: string
+      depends_on_service_id:
+        type: string
+      description:
+        type: string
+    required:
+    - depends_on_service_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyGraphResponse:
+    properties:
+      edges:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.GraphEdge'
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.GraphNode'
+        type: array
+      service_id:
+        type: string
+      service_name:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyListResponse:
+    properties:
+      dependencies:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyResponse:
+    properties:
+      created_at:
+        type: string
+      dependency_type:
+        type: string
+      depends_on_service_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      service_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.GraphEdge:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+      type:
+        description: 'dependency type: "runtime", "build", "data", "api"'
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.GraphNode:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        description: '"root", "dependency", "dependent"'
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_dependency.UpdateDependencyRequest:
+    properties:
+      dependency_type:
+        type: string
+      description:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_service_endpoint.CreateServiceEndpointRequest:
     properties:
       type:
@@ -923,6 +1002,81 @@ definitions:
       type:
         type: string
       url:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.DeployRequest:
+    properties:
+      deployment_metadata:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.Metadata'
+      environment_id:
+        type: string
+    required:
+    - environment_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.EnvironmentServiceListResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.EnvironmentServiceResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.EnvironmentServiceResponse:
+    properties:
+      deployed_at:
+        type: string
+      deployment_id:
+        type: string
+      deployment_status:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      version:
+        type: string
+      version_id:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.Metadata:
+    additionalProperties: true
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentListResponse:
+    properties:
+      deployments:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentResponse:
+    properties:
+      created_at:
+        type: string
+      deployed_at:
+        type: string
+      deployed_by:
+        type: string
+      deployment_metadata:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.Metadata'
+      environment_id:
+        type: string
+      id:
+        type: string
+      service_version_id:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_environment.UpdateDeploymentRequest:
+    properties:
+      deployment_metadata:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.Metadata'
+      status:
         type: string
     type: object
   github_com_davidsugianto_idp-core_internal_model_service_version.CreateServiceVersionRequest:
@@ -1998,6 +2152,44 @@ paths:
       summary: Get GitOps status
       tags:
       - environments
+  /v1/environments/{id}/services:
+    get:
+      description: List all services deployed to an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.EnvironmentServiceListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List services in environment
+      tags:
+      - environment
   /v1/environments/{id}/status:
     get:
       description: Get live status of an environment including pod and ArgoCD sync
@@ -3039,6 +3231,293 @@ paths:
       summary: Update a service
       tags:
       - service
+  /v1/services/{id}/dependencies:
+    get:
+      description: List all dependencies for a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by dependency type
+        in: query
+        name: dependency_type
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service dependencies
+      tags:
+      - service
+    post:
+      consumes:
+      - application/json
+      description: Add a new dependency for a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dependency configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.CreateDependencyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a service dependency
+      tags:
+      - service
+  /v1/services/{id}/dependencies/{depId}:
+    delete:
+      description: Remove a dependency
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dependency ID
+        in: path
+        name: depId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a dependency
+      tags:
+      - service
+    get:
+      description: Get detailed information about a specific dependency
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dependency ID
+        in: path
+        name: depId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a dependency
+      tags:
+      - service
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing dependency
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dependency ID
+        in: path
+        name: depId
+        required: true
+        type: string
+      - description: Dependency updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.UpdateDependencyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a dependency
+      tags:
+      - service
+  /v1/services/{id}/dependencies/graph:
+    get:
+      description: Get the dependency graph for visualization
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyGraphResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get dependency graph
+      tags:
+      - service
+  /v1/services/{id}/dependents:
+    get:
+      description: List all services that depend on this service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by dependency type
+        in: query
+        name: dependency_type
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_dependency.DependencyListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service dependents
+      tags:
+      - service
+  /v1/services/{id}/environments:
+    get:
+      description: List all deployments for a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by environment ID
+        in: query
+        name: environment_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service deployments
+      tags:
+      - service
   /v1/services/{id}/versions:
     get:
       description: List all versions for a service
@@ -3187,6 +3666,146 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a service version
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}/deploy:
+    post:
+      consumes:
+      - application/json
+      description: Deploy a service version to an environment
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Deployment configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.DeployRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Deploy version to environment
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}/deployments:
+    get:
+      description: List all deployments for a version
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Filter by environment ID
+        in: query
+        name: environment_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List version deployments
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}/deployments/{deploymentId}:
+    patch:
+      consumes:
+      - application/json
+      description: Update deployment status or metadata
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: string
+      - description: Deployment updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.UpdateDeploymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_environment.ServiceEnvironmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a deployment
       tags:
       - service
   /v1/services/{id}/versions/{versionId}/endpoints:

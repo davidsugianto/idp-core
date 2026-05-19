@@ -4,7 +4,10 @@ import (
 	"github.com/davidsugianto/go-pkgs/response"
 	endpointModel "github.com/davidsugianto/idp-core/internal/model/service_endpoint"
 	serviceModel "github.com/davidsugianto/idp-core/internal/model/service"
+	depModel "github.com/davidsugianto/idp-core/internal/model/service_dependency"
+	svcEnvModel "github.com/davidsugianto/idp-core/internal/model/service_environment"
 	versionModel "github.com/davidsugianto/idp-core/internal/model/service_version"
+	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -426,4 +429,364 @@ func (h *Handler) DeleteServiceEndpoint(c *gin.Context) {
 	}
 
 	response.GinSuccess(c, gin.H{"message": "endpoint removed"})
+}
+
+// ========== Dependency Handlers ==========
+
+// ListServiceDependencies godoc
+// @Summary List service dependencies
+// @Description List all dependencies for a service
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param dependency_type query string false "Filter by dependency type"
+// @Param limit query int false "Limit results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} depModel.DependencyListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies [get]
+// @Security ApiKeyAuth
+func (h *Handler) ListServiceDependencies(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	var req depModel.ListDependenciesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.ListDependencies(c.Request.Context(), serviceID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// CreateServiceDependency godoc
+// @Summary Add a service dependency
+// @Description Add a new dependency for a service
+// @Tags service
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param body body depModel.CreateDependencyRequest true "Dependency configuration"
+// @Success 200 {object} depModel.DependencyResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies [post]
+// @Security ApiKeyAuth
+func (h *Handler) CreateServiceDependency(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	var req depModel.CreateDependencyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.AddDependency(c.Request.Context(), serviceID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// GetServiceDependencyGraph godoc
+// @Summary Get dependency graph
+// @Description Get the dependency graph for visualization
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Success 200 {object} depModel.DependencyGraphResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies/graph [get]
+// @Security ApiKeyAuth
+func (h *Handler) GetServiceDependencyGraph(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	result, err := h.serviceUseCase.GetDependencyGraph(c.Request.Context(), serviceID)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// GetServiceDependency godoc
+// @Summary Get a dependency
+// @Description Get detailed information about a specific dependency
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param depId path string true "Dependency ID"
+// @Success 200 {object} depModel.DependencyResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies/{depId} [get]
+// @Security ApiKeyAuth
+func (h *Handler) GetServiceDependency(c *gin.Context) {
+	depID := c.Param("depId")
+
+	result, err := h.serviceUseCase.GetDependency(c.Request.Context(), depID)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// UpdateServiceDependency godoc
+// @Summary Update a dependency
+// @Description Update an existing dependency
+// @Tags service
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param depId path string true "Dependency ID"
+// @Param body body depModel.UpdateDependencyRequest true "Dependency updates"
+// @Success 200 {object} depModel.DependencyResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies/{depId} [patch]
+// @Security ApiKeyAuth
+func (h *Handler) UpdateServiceDependency(c *gin.Context) {
+	depID := c.Param("depId")
+
+	var req depModel.UpdateDependencyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.UpdateDependency(c.Request.Context(), depID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// DeleteServiceDependency godoc
+// @Summary Delete a dependency
+// @Description Remove a dependency
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param depId path string true "Dependency ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependencies/{depId} [delete]
+// @Security ApiKeyAuth
+func (h *Handler) DeleteServiceDependency(c *gin.Context) {
+	depID := c.Param("depId")
+
+	if err := h.serviceUseCase.RemoveDependency(c.Request.Context(), depID); err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, gin.H{"message": "dependency removed"})
+}
+
+// ListServiceDependents godoc
+// @Summary List service dependents
+// @Description List all services that depend on this service
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param dependency_type query string false "Filter by dependency type"
+// @Param limit query int false "Limit results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} depModel.DependencyListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/dependents [get]
+// @Security ApiKeyAuth
+func (h *Handler) ListServiceDependents(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	var req depModel.ListDependenciesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.ListDependents(c.Request.Context(), serviceID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// ========== Deployment Handlers ==========
+
+// ListServiceEnvironments godoc
+// @Summary List service deployments
+// @Description List all deployments for a service
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param environment_id query string false "Filter by environment ID"
+// @Param status query string false "Filter by status"
+// @Param limit query int false "Limit results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} svcEnvModel.ServiceEnvironmentListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/environments [get]
+// @Security ApiKeyAuth
+func (h *Handler) ListServiceEnvironments(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	var req svcEnvModel.ListDeploymentsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.ListDeploymentsByService(c.Request.Context(), serviceID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// DeployServiceVersion godoc
+// @Summary Deploy version to environment
+// @Description Deploy a service version to an environment
+// @Tags service
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param versionId path string true "Version ID"
+// @Param body body svcEnvModel.DeployRequest true "Deployment configuration"
+// @Success 200 {object} svcEnvModel.ServiceEnvironmentResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/versions/{versionId}/deploy [post]
+// @Security ApiKeyAuth
+func (h *Handler) DeployServiceVersion(c *gin.Context) {
+	versionID := c.Param("versionId")
+
+	var req svcEnvModel.DeployRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	// Get user ID from context for deployed_by
+	deployedBy := middleware.GetUserID(c)
+
+	result, err := h.serviceUseCase.DeployToEnvironment(c.Request.Context(), versionID, &req, deployedBy)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// ListVersionDeployments godoc
+// @Summary List version deployments
+// @Description List all deployments for a version
+// @Tags service
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param versionId path string true "Version ID"
+// @Param environment_id query string false "Filter by environment ID"
+// @Param status query string false "Filter by status"
+// @Param limit query int false "Limit results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} svcEnvModel.ServiceEnvironmentListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/versions/{versionId}/deployments [get]
+// @Security ApiKeyAuth
+func (h *Handler) ListVersionDeployments(c *gin.Context) {
+	versionID := c.Param("versionId")
+
+	var req svcEnvModel.ListDeploymentsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.ListDeploymentsByVersion(c.Request.Context(), versionID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// UpdateDeployment godoc
+// @Summary Update a deployment
+// @Description Update deployment status or metadata
+// @Tags service
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID"
+// @Param versionId path string true "Version ID"
+// @Param deploymentId path string true "Deployment ID"
+// @Param body body svcEnvModel.UpdateDeploymentRequest true "Deployment updates"
+// @Success 200 {object} svcEnvModel.ServiceEnvironmentResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/services/{id}/versions/{versionId}/deployments/{deploymentId} [patch]
+// @Security ApiKeyAuth
+func (h *Handler) UpdateDeployment(c *gin.Context) {
+	deploymentID := c.Param("deploymentId")
+
+	var req svcEnvModel.UpdateDeploymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.UpdateDeployment(c.Request.Context(), deploymentID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+// ListEnvironmentServices godoc
+// @Summary List services in environment
+// @Description List all services deployed to an environment
+// @Tags environment
+// @Produce json
+// @Param id path string true "Environment ID"
+// @Param status query string false "Filter by status"
+// @Param limit query int false "Limit results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} svcEnvModel.EnvironmentServiceListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/environments/{id}/services [get]
+// @Security ApiKeyAuth
+func (h *Handler) ListEnvironmentServices(c *gin.Context) {
+	environmentID := c.Param("id")
+
+	var req svcEnvModel.ListDeploymentsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.serviceUseCase.ListEnvironmentServices(c.Request.Context(), environmentID, &req)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
 }
