@@ -12,9 +12,9 @@
 | Milestone            | Status         | Progress |
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
-| M2: FinOps           | 🔄 In Progress | 50%      |
+| M2: FinOps           | ✅ Complete    | 100%     |
 | M3: Rightsizing      | ✅ Complete    | 100%     |
-| M4: Service Catalog  | 🔲 Not Started | 0%       |
+| M4: Service Catalog  | 🔄 In Progress | 50%      |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
 
 ***
@@ -339,32 +339,32 @@
 
 ## 🗓️ M4: Service Catalog (Week 8-9)
 
-### Week 8: Service Registration & Discovery
+### Week 8: Service Registration & Discovery ✅ COMPLETED
 
 #### Service Models
 
-- [ ] Create migration: `services` table
-- [ ] Create migration: `service_versions` table
-- [ ] Create migration: `service_endpoints` table
-- [ ] Create model: `internal/model/service/type.go`
-- [ ] Create model: `internal/model/service_version/type.go`
-- [ ] Create model: `internal/model/service_endpoint/type.go`
+- [x] Create migration: `services` table
+- [x] Create migration: `service_versions` table
+- [x] Create migration: `service_endpoints` table
+- [x] Create model: `internal/model/service/type.go`
+- [x] Create model: `internal/model/service_version/type.go`
+- [x] Create model: `internal/model/service_endpoint/type.go`
 
 #### Service Repository
 
-- [ ] Create `internal/repository/service/init.go`
-- [ ] Create `internal/repository/service/service.go`
-- [ ] Create `internal/repository/service/version.go`
+- [x] Create `internal/repository/service/init.go`
+- [x] Create `internal/repository/service/service.go`
+- [x] Create `internal/repository/service/version.go`
 
 #### Service Usecase
 
-- [ ] Create `internal/usecase/service/init.go`
-- [ ] Create `internal/usecase/service/service.go`
+- [x] Create `internal/usecase/service/init.go`
+- [x] Create `internal/usecase/service/service.go`
 
 #### Service Handler
 
-- [ ] Create `internal/handler/http/service.go`
-- [ ] Add service routes
+- [x] Create `internal/handler/http/service.go`
+- [x] Add service routes
 
 #### Tests
 
@@ -1043,7 +1043,66 @@ Each task is considered complete when:
 - Unit tests: quota repository, quota enforcement
 - Integration tests: quota API
 - E2E test: quota enforcement
-- Begin M4: Service Catalog
+
+***
+
+### M4 Week 8: Service Registration & Discovery (May 2026)
+
+**Files Created:**
+
+- `migrations/20260519000000_create_services_table.sql`
+- `migrations/20260519000001_create_service_versions_table.sql`
+- `migrations/20260519000002_create_service_endpoints_table.sql`
+- `internal/model/service/type.go` (Service, request/response types, converters, helpers)
+- `internal/model/service_version/type.go` (ServiceVersion, request/response types, helpers)
+- `internal/model/service_endpoint/type.go` (ServiceEndpoint, request/response types, helpers)
+- `internal/repository/service/init.go` (interface + implementation)
+- `internal/repository/service/service.go` (Service CRUD methods)
+- `internal/repository/service/version.go` (Version & endpoint methods)
+- `internal/usecase/service/init.go` (interface + Dependencies)
+- `internal/usecase/service/service.go` (Register, Discover, version/endpoint management)
+- `internal/handler/http/service.go` (HTTP handlers with Swagger annotations)
+
+**Existing Files Modified:**
+
+- `internal/handler/http/init.go` — added serviceUseCase
+- `cmd/http/server.go` — added ServiceUseCase, service routes
+- `cmd/http/main.go` — wired service repo, usecase, AutoMigrate
+
+**API Endpoints Added:**
+
+| Method | Endpoint                                        | Description                         |
+| ------ | ----------------------------------------------- | ----------------------------------- |
+| GET    | `/v1/services`                                  | List services (filterable)          |
+| POST   | `/v1/services`                                  | Register a new service              |
+| GET    | `/v1/services/discover`                         | Discover services by query          |
+| GET    | `/v1/services/:id`                              | Get service details                 |
+| PATCH  | `/v1/services/:id`                              | Update service                      |
+| DELETE | `/v1/services/:id`                              | Deregister service                  |
+| GET    | `/v1/services/:id/versions`                     | List service versions               |
+| POST   | `/v1/services/:id/versions`                     | Create service version              |
+| GET    | `/v1/services/:id/versions/:versionId`          | Get version details                 |
+| PATCH  | `/v1/services/:id/versions/:versionId`          | Update version                      |
+| GET    | `/v1/services/:id/versions/:versionId/endpoints`| List endpoints                      |
+| POST   | `/v1/services/:id/versions/:versionId/endpoints`| Add endpoint                        |
+| PATCH  | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Update endpoint       |
+| DELETE | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Remove endpoint      |
+
+**Key Features:**
+
+- Service model with visibility (public/team/private) for access control
+- ServiceVersion tracks git_ref for deployment traceability
+- ServiceEndpoint supports HTTP and gRPC protocols
+- Unique constraint on (service_id, version) prevents duplicate versions
+- Soft delete for services (recoverable), hard delete for endpoints (ephemeral)
+- Discover endpoint searches across service names and descriptions
+- DiscoverByType filters endpoints by protocol (http/grpc)
+
+**Next Steps:**
+
+- Unit tests: service repository, service usecase
+- Integration tests: service API
+- Begin M4 Week 9: Dependencies & Environments
 
 ***
 

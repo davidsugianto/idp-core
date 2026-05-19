@@ -828,6 +828,149 @@ definitions:
       user_id:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_service.CreateServiceRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      team_id:
+        type: string
+      visibility:
+        type: string
+    required:
+    - name
+    - team_id
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+      visibility:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service.UpdateServiceRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      visibility:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_endpoint.CreateServiceEndpointRequest:
+    properties:
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointListResponse:
+    properties:
+      endpoints:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      service_version_id:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_endpoint.UpdateServiceEndpointRequest:
+    properties:
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_version.CreateServiceVersionRequest:
+    properties:
+      changelog:
+        type: string
+      git_ref:
+        type: string
+      version:
+        type: string
+    required:
+    - version
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionListResponse:
+    properties:
+      total:
+        type: integer
+      versions:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse'
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse:
+    properties:
+      changelog:
+        type: string
+      created_at:
+        type: string
+      git_ref:
+        type: string
+      id:
+        type: string
+      service_id:
+        type: string
+      status:
+        type: string
+      version:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_service_version.UpdateServiceVersionRequest:
+    properties:
+      changelog:
+        type: string
+      git_ref:
+        type: string
+      status:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_team.AddTeamMemberRequest:
     properties:
       role:
@@ -2728,6 +2871,544 @@ paths:
       summary: Revoke a role from a user
       tags:
       - roles
+  /v1/services:
+    get:
+      description: List all services with optional filters
+      parameters:
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by visibility
+        in: query
+        name: visibility
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name or description
+        in: query
+        name: search
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List services
+      tags:
+      - service
+    post:
+      consumes:
+      - application/json
+      description: Register a new service in the catalog
+      parameters:
+      - description: Service configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.CreateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Register a service
+      tags:
+      - service
+  /v1/services/{id}:
+    delete:
+      description: Deregister (soft delete) a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Deregister a service
+      tags:
+      - service
+    get:
+      description: Get detailed information about a specific service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a service
+      tags:
+      - service
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.UpdateServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a service
+      tags:
+      - service
+  /v1/services/{id}/versions:
+    get:
+      description: List all versions for a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service versions
+      tags:
+      - service
+    post:
+      consumes:
+      - application/json
+      description: Create a new version for a service
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.CreateServiceVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a service version
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}:
+    get:
+      description: Get detailed information about a specific version
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a service version
+      tags:
+      - service
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing version
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Version updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.UpdateServiceVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a service version
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}/endpoints:
+    get:
+      description: List all endpoints for a version
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service endpoints
+      tags:
+      - service
+    post:
+      consumes:
+      - application/json
+      description: Add a new endpoint for a version
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Endpoint configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.CreateServiceEndpointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a service endpoint
+      tags:
+      - service
+  /v1/services/{id}/versions/{versionId}/endpoints/{endpointId}:
+    delete:
+      description: Delete an endpoint
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a service endpoint
+      tags:
+      - service
+    get:
+      description: Get detailed information about a specific endpoint
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a service endpoint
+      tags:
+      - service
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing endpoint
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointId
+        required: true
+        type: string
+      - description: Endpoint updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.UpdateServiceEndpointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a service endpoint
+      tags:
+      - service
+  /v1/services/discover:
+    get:
+      description: Search for services by name or description
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Discover services
+      tags:
+      - service
   /v1/teams:
     get:
       description: List all teams with pagination
