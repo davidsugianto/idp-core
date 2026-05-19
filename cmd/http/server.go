@@ -15,6 +15,7 @@ import (
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	quotaUC "github.com/davidsugianto/idp-core/internal/usecase/quota"
+	serviceUC "github.com/davidsugianto/idp-core/internal/usecase/service"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -37,6 +38,7 @@ type Server struct {
 	costUseCase        costUC.Usecase
 	rightsizingUseCase rightsizingUC.Usecase
 	quotaUseCase       quotaUC.Usecase
+	serviceUseCase     serviceUC.Usecase
 }
 
 type Dependencies struct {
@@ -50,6 +52,7 @@ type Dependencies struct {
 	CostUseCase        costUC.Usecase
 	RightsizingUseCase rightsizingUC.Usecase
 	QuotaUseCase       quotaUC.Usecase
+	ServiceUseCase     serviceUC.Usecase
 	Config             *config.Config
 	WebhookValidator   *webhook.Validator
 }
@@ -63,6 +66,7 @@ func New(deps Dependencies) *Server {
 		costUseCase:        deps.CostUseCase,
 		rightsizingUseCase: deps.RightsizingUseCase,
 		quotaUseCase:       deps.QuotaUseCase,
+		serviceUseCase:     deps.ServiceUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
@@ -74,6 +78,7 @@ func New(deps Dependencies) *Server {
 			CostUseCase:        deps.CostUseCase,
 			RightsizingUseCase: deps.RightsizingUseCase,
 			QuotaUseCase:       deps.QuotaUseCase,
+			ServiceUseCase:     deps.ServiceUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 		}),
@@ -212,6 +217,25 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	quotas.GET("/namespace/:namespace/usage", s.handler.GetNamespaceUsage)
 	quotas.POST("/namespace/:namespace/usage/refresh", s.handler.RefreshNamespaceUsage)
 	quotas.POST("/check", s.handler.CheckQuota)
+
+	// Service routes (protected with JWT)
+	services := v1.Group("/services")
+	services.Use(middleware.JWT(&s.config.Auth))
+	services.GET("", s.handler.ListServices)
+	services.POST("", s.handler.CreateService)
+	services.GET("/discover", s.handler.DiscoverServices)
+	services.GET("/:id", s.handler.GetService)
+	services.PATCH("/:id", s.handler.UpdateService)
+	services.DELETE("/:id", s.handler.DeleteService)
+	services.GET("/:id/versions", s.handler.ListServiceVersions)
+	services.POST("/:id/versions", s.handler.CreateServiceVersion)
+	services.GET("/:id/versions/:versionId", s.handler.GetServiceVersion)
+	services.PATCH("/:id/versions/:versionId", s.handler.UpdateServiceVersion)
+	services.GET("/:id/versions/:versionId/endpoints", s.handler.ListServiceEndpoints)
+	services.POST("/:id/versions/:versionId/endpoints", s.handler.CreateServiceEndpoint)
+	services.GET("/:id/versions/:versionId/endpoints/:endpointId", s.handler.GetServiceEndpoint)
+	services.PATCH("/:id/versions/:versionId/endpoints/:endpointId", s.handler.UpdateServiceEndpoint)
+	services.DELETE("/:id/versions/:versionId/endpoints/:endpointId", s.handler.DeleteServiceEndpoint)
 }
 
 func (s *Server) Run(port string) error {

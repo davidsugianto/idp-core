@@ -44,6 +44,7 @@
 | 💸 **Budget Management**      | Spend limits with Slack alerts at configurable thresholds         |
 | ⚖️ **Rightsizing**            | CPU/memory optimization recommendations with apply/rollback       |
 | 📦 **Resource Quotas**        | Namespace-scoped resource limits with admission webhook enforcement |
+| 📚 **Service Catalog**        | Register and discover services with versions and endpoints        |
 | 🛡️ **Policy Enforcement**    | Admission webhook for resource validation                         |
 
 ## Tech Stack
@@ -183,6 +184,25 @@ make test
 | GET    | `/v1/quotas/namespace/:namespace/usage`         | Get namespace resource usage        |
 | POST   | `/v1/quotas/namespace/:namespace/usage/refresh` | Refresh cached usage                |
 | POST   | `/v1/quotas/check`                              | Check if request exceeds quota      |
+
+### Service Catalog
+
+| Method | Endpoint                                                     | Description                    |
+| ------ | ------------------------------------------------------------ | ------------------------------ |
+| GET    | `/v1/services`                                               | List services (filterable)     |
+| POST   | `/v1/services`                                               | Register a new service         |
+| GET    | `/v1/services/discover`                                      | Discover services by query     |
+| GET    | `/v1/services/:id`                                           | Get service details            |
+| PATCH  | `/v1/services/:id`                                           | Update service                 |
+| DELETE | `/v1/services/:id`                                           | Deregister service             |
+| GET    | `/v1/services/:id/versions`                                  | List service versions          |
+| POST   | `/v1/services/:id/versions`                                  | Create service version         |
+| GET    | `/v1/services/:id/versions/:versionId`                       | Get version details            |
+| PATCH  | `/v1/services/:id/versions/:versionId`                       | Update version                 |
+| GET    | `/v1/services/:id/versions/:versionId/endpoints`             | List endpoints                 |
+| POST   | `/v1/services/:id/versions/:versionId/endpoints`             | Add endpoint                   |
+| PATCH  | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Update endpoint                |
+| DELETE | `/v1/services/:id/versions/:versionId/endpoints/:endpointId` | Remove endpoint                |
 
 ## Architecture
 

@@ -2589,6 +2589,831 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/services": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all services with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "List services",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by team ID",
+                        "name": "team_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by visibility",
+                        "name": "visibility",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by name or description",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Register a new service in the catalog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Register a service",
+                "parameters": [
+                    {
+                        "description": "Service configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.CreateServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/discover": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Search for services by name or description",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Discover services",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Get a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deregister (soft delete) a service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Deregister a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Update a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service updates",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.UpdateServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/{id}/versions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all versions for a service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "List service versions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new version for a service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Create a service version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Version configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.CreateServiceVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/{id}/versions/{versionId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific version",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Get a service version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Update a service version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Version updates",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.UpdateServiceVersionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/{id}/versions/{versionId}/endpoints": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all endpoints for a version",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "List service endpoints",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add a new endpoint for a version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Add a service endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Endpoint configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.CreateServiceEndpointRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/services/{id}/versions/{versionId}/endpoints/{endpointId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Get a service endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Endpoint ID",
+                        "name": "endpointId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Delete a service endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Endpoint ID",
+                        "name": "endpointId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing endpoint",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Update a service endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Version ID",
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Endpoint ID",
+                        "name": "endpointId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Endpoint updates",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.UpdateServiceEndpointRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/v1/teams": {
             "get": {
                 "security": [
@@ -4991,6 +5816,226 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service.CreateServiceRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "team_id"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service.ServiceListResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service.ServiceResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service.UpdateServiceRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_endpoint.CreateServiceEndpointRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointListResponse": {
+            "type": "object",
+            "properties": {
+                "endpoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_endpoint.ServiceEndpointResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "service_version_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_endpoint.UpdateServiceEndpointRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_version.CreateServiceVersionRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "changelog": {
+                    "type": "string"
+                },
+                "git_ref": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionListResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse"
+                    }
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_version.ServiceVersionResponse": {
+            "type": "object",
+            "properties": {
+                "changelog": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "git_ref": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_service_version.UpdateServiceVersionRequest": {
+            "type": "object",
+            "properties": {
+                "changelog": {
+                    "type": "string"
+                },
+                "git_ref": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
