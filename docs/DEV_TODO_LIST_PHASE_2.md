@@ -12,7 +12,7 @@
 | Milestone            | Status         | Progress |
 | -------------------- | -------------- | -------- |
 | M1: Auth & RBAC      | 🔄 In Progress | 85%      |
-| M2: FinOps           | 🔄 In Progress | 50%      |
+| M2: FinOps           | ✅ Complete    | 100%     |
 | M3: Rightsizing      | ✅ Complete    | 100%     |
 | M4: Service Catalog  | 🔄 In Progress | 50%      |
 | M5: Testing & Polish | 🔲 Not Started | 0%       |
