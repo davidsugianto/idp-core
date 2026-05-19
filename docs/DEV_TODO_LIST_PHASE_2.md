@@ -15,7 +15,7 @@
 | M2: FinOps           | ✅ Complete    | 100%     |
 | M3: Rightsizing      | ✅ Complete    | 100%     |
 | M4: Service Catalog  | ✅ Complete    | 100%     |
-| M5: Testing & Polish | 🔲 Not Started | 0%       |
+| M5: Testing & Polish | 🔄 In Progress | 80%      |
 
 ***
 
@@ -292,8 +292,8 @@
 
 #### Tests
 
-- [ ] Unit tests: usage analyzer
-- [ ] Unit tests: recommendation generator
+- [x] Unit tests: usage analyzer
+- [x] Unit tests: recommendation generator
 - [ ] Integration tests: rightsizing API
 - [ ] E2E test: apply recommendation
 
@@ -330,8 +330,8 @@
 
 #### Tests
 
-- [ ] Unit tests: quota repository
-- [ ] Unit tests: quota enforcement
+- [x] Unit tests: quota repository
+- [x] Unit tests: quota enforcement
 - [ ] Integration tests: quota API
 - [ ] E2E test: quota enforcement
 
@@ -368,9 +368,9 @@
 
 #### Tests
 
-- [ ] Unit tests: service repository
-- [ ] Unit tests: service usecase
-- [ ] Integration tests: service API
+- [x] Unit tests: service repository
+- [x] Unit tests: service usecase
+- [x] Integration tests: service API
 
 ***
 
@@ -408,7 +408,7 @@
 
 #### Tests
 
-- [ ] Unit tests: dependency logic
+- [x] Unit tests: dependency logic
 - [ ] Integration tests: dependency API
 - [ ] Integration tests: environment tracking
 
@@ -418,7 +418,7 @@
 
 ### Integration Testing
 
-- [ ] Create comprehensive integration test suite
+- [x] Create comprehensive integration test suite
 - [ ] Test all Phase 2 API endpoints
 - [ ] Test OIDC flow end-to-end
 - [ ] Test RBAC enforcement across features
@@ -439,9 +439,9 @@
 
 ### Documentation
 
-- [ ] Update Swagger/OpenAPI specs
-- [ ] Update `README.md` with Phase 2 features
-- [ ] Update `DEV_GUIDELINE.md` with new patterns
+- [x] Update Swagger/OpenAPI specs
+- [x] Update `README.md` with Phase 2 features
+- [x] Update `DEV_GUIDELINE.md` with new patterns
 - [ ] Create Phase 2 deployment guide
 - [ ] Update `TEST.md` with new test scenarios
 
@@ -454,7 +454,7 @@
 
 ### Final Checks
 
-- [ ] Run all tests: `go test ./...`
+- [x] Run all tests: `go test ./...`
 - [ ] Run linter: `golangci-lint run`
 - [ ] Check test coverage: `go test -cover ./...`
 - [ ] Verify Swagger docs render correctly
@@ -566,7 +566,7 @@ internal/
 │   ├── budget.go            # ✅ CREATED
 │   ├── rightsizing.go       # ✅ CREATED
 │   ├── quota.go             # ✅ CREATED
-│   └── service.go           # TODO
+│   └── service.go           # ✅ CREATED
 │
 ├── handler/cron/
 │   ├── init.go              # ✅ CREATED
@@ -585,7 +585,7 @@ internal/
 │   ├── budget/              # ✅ CREATED
 │   ├── rightsizing/         # ✅ CREATED
 │   ├── quota/               # ✅ CREATED
-│   └── service/             # TODO
+│   └── service/             # ✅ CREATED
 │
 ├── repository/
 │   ├── user/                # ✅ CREATED
@@ -599,7 +599,7 @@ internal/
 │   ├── rightsizing/         # ✅ CREATED
 │   ├── monitoring/          # ✅ CREATED (Prometheus wrapper)
 │   ├── quota/               # ✅ CREATED
-│   └── service/             # TODO
+│   └── service/             # ✅ CREATED
 │
 ├── model/
 │   ├── user/                # ✅ CREATED
@@ -612,7 +612,7 @@ internal/
 │   ├── budget/              # ✅ CREATED
 │   ├── rightsizing/         # ✅ CREATED
 │   ├── resourcequota/       # ✅ CREATED
-│   └── service/             # TODO
+│   └── service/             # ✅ CREATED
 │
 ├── pkg/
 │   ├── oidc/                # ✅ CREATED
@@ -631,6 +631,10 @@ internal/
     ├── auditlog_repository.go   # ✅ CREATED
     ├── cost_repository.go       # ✅ CREATED
     ├── budget_repository.go     # ✅ CREATED
+    ├── rightsizing_repository.go # ✅ CREATED
+    ├── quota_repository.go      # ✅ CREATED
+    ├── monitoring_repository.go # ✅ CREATED
+    ├── service_repository.go    # ✅ CREATED
     ├── provisioner_repository.go # ✅ CREATED (for rightsizing)
     ├── slack_notifier.go        # ✅ CREATED
     └── opencost_client.go       # ✅ CREATED
@@ -660,7 +664,12 @@ migrations/
 ├── 20260514000000_create_budgets_table.sql      # ✅ CREATED
 ├── 20260514000001_create_budget_alerts_table.sql # ✅ CREATED
 ├── 20260515000000_create_rightsizing_recommendations_table.sql # ✅ CREATED
-└── 20260516000000_create_resource_quotas_table.sql # ✅ CREATED
+├── 20260516000000_create_resource_quotas_table.sql # ✅ CREATED
+├── 20260519000000_create_services_table.sql # ✅ CREATED
+├── 20260519000001_create_service_versions_table.sql # ✅ CREATED
+├── 20260519000002_create_service_endpoints_table.sql # ✅ CREATED
+├── 20260519000003_create_service_dependencies_table.sql # ✅ CREATED
+└── 20260519000004_create_service_environments_table.sql # ✅ CREATED
 ```
 
 ***
@@ -1156,6 +1165,49 @@ Each task is considered complete when:
 
 - Unit tests: dependency logic
 - Integration tests: dependency API, deployment API
+
+***
+
+### M5 Week 10: Testing & Polish (May 2026)
+
+**Files Created:**
+
+- `internal/mocks/rightsizing_repository.go` — Mock for rightsizing repository
+- `internal/mocks/quota_repository.go` — Mock for quota repository
+- `internal/mocks/monitoring_repository.go` — Mock for Prometheus monitoring repository
+- `internal/mocks/service_repository.go` — Mock for service catalog repository
+- `internal/usecase/rightsizing/rightsizing_test.go` — 18 test cases
+- `internal/usecase/quota/quota_test.go` — 16 test cases
+- `internal/usecase/service/service_test.go` — 14 test cases
+
+**Existing Files Modified:**
+
+- `tests/integration/service_test.go` — Added 19 integration test cases for service catalog
+
+**Test Coverage Added:**
+
+| Package | Tests | Coverage |
+| ------- | ----- | -------- |
+| `rightsizing` | 18 | List/Get recommendations, Apply/Rollback/Dismiss, Generate, Helper functions, Confidence calculation |
+| `quota` | 16 | Create/Get/List/Update/Delete quota, CheckQuota, IsQuotaExceeded, GetUsage/RefreshUsage |
+| `service` | 14 | Register/Get service, AddDependency, Circular dependency detection, GetDependencyGraph, DeployToEnvironment, ListDependents, RemoveDependency |
+
+**Key Test Scenarios:**
+
+- Circular dependency detection (direct and indirect cycles)
+- Self-dependency prevention
+- Kubernetes update failure handling for apply/rollback
+- Confidence score calculation with missing data
+- Quota enforcement logic (allow/reject based on limits)
+- Pod count and resource limit checking
+- Previous state storage for rollback capability
+
+**Next Steps:**
+
+- Integration tests: budget API, rightsizing API, quota API
+- Documentation updates
+- Security review
+- Test coverage report
 
 ***
 
