@@ -9,6 +9,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
 	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
+	"github.com/davidsugianto/idp-core/internal/model/resourcequota"
 	"github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
@@ -28,6 +29,7 @@ import (
 	monitoringRepository "github.com/davidsugianto/idp-core/internal/repository/monitoring"
 	permissionRepository "github.com/davidsugianto/idp-core/internal/repository/permission"
 	provisionerRepository "github.com/davidsugianto/idp-core/internal/repository/provisioner"
+	quotaRepository "github.com/davidsugianto/idp-core/internal/repository/quota"
 	rightsizingRepository "github.com/davidsugianto/idp-core/internal/repository/rightsizing"
 	roleRepository "github.com/davidsugianto/idp-core/internal/repository/role"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
@@ -37,6 +39,7 @@ import (
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
@@ -102,7 +105,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -160,6 +163,9 @@ func main() {
 	monitoringRepo := monitoringRepository.New(monitoringRepository.Dependencies{
 		PromClient: promClient,
 	})
+	quotaRepo := quotaRepository.New(quotaRepository.Dependencies{
+		Database: dbClient,
+	})
 
 	// UseCases
 	envUC := envUsecase.New(envUsecase.Dependencies{
@@ -198,9 +204,13 @@ func main() {
 		ProvisionerRepo: provisionerRepo,
 		MonitoringRepo:  monitoringRepo,
 	})
+	quotaUC := quotaUsecase.New(quotaUsecase.Dependencies{
+		QuotaRepo:       quotaRepo,
+		ProvisionerRepo: provisionerRepo,
+	})
 
 	// Webhook validator
-	webhookValidator := webhook.NewValidator()
+	webhookValidator := webhook.NewValidatorWithQuota(quotaUC)
 
 	server := New(Dependencies{
 		EnvironmentUseCase: envUC,
@@ -212,6 +222,7 @@ func main() {
 		BudgetUseCase:      budgetUC,
 		CostUseCase:        costUC,
 		RightsizingUseCase: rightsizingUC,
+		QuotaUseCase:       quotaUC,
 		Config:             cfg,
 		WebhookValidator:   webhookValidator,
 	})

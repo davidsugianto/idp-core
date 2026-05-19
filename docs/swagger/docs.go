@@ -1494,6 +1494,443 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/quotas": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all resource quotas with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "List resource quotas",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by team ID",
+                        "name": "team_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by environment ID",
+                        "name": "environment_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by namespace",
+                        "name": "namespace",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new resource quota for a namespace",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Create a resource quota",
+                "parameters": [
+                    {
+                        "description": "Quota configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.CreateResourceQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/quotas/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Check if a resource request would exceed quota limits",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Check quota",
+                "parameters": [
+                    {
+                        "description": "Resource check request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/quotas/namespace/{namespace}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get resource quota for a specific namespace",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Get quota by namespace",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Namespace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/quotas/namespace/{namespace}/usage": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get current resource usage for a namespace",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Get namespace resource usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Namespace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.UsageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/quotas/namespace/{namespace}/usage/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Refresh cached resource usage for a namespace",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Refresh namespace usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Namespace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/quotas/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific quota",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Get a resource quota",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quota ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a resource quota",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Delete a resource quota",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quota ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing resource quota",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quota"
+                ],
+                "summary": "Update a resource quota",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quota ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Quota updates",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.UpdateResourceQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/v1/rightsizing/recommendations": {
             "get": {
                 "security": [
@@ -3940,6 +4377,316 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.CreateResourceQuotaRequest": {
+            "type": "object",
+            "required": [
+                "namespace",
+                "team_id"
+            ],
+            "properties": {
+                "configmap_count_limit": {
+                    "type": "integer"
+                },
+                "cpu_limit_limit": {
+                    "type": "string"
+                },
+                "cpu_request_limit": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enforce": {
+                    "type": "boolean"
+                },
+                "environment_id": {
+                    "type": "string"
+                },
+                "grace_period_hours": {
+                    "type": "integer"
+                },
+                "memory_limit_limit": {
+                    "type": "string"
+                },
+                "memory_request_limit": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "pod_count_limit": {
+                    "type": "integer"
+                },
+                "pvc_count_limit": {
+                    "type": "integer"
+                },
+                "secret_count_limit": {
+                    "type": "integer"
+                },
+                "storage_request_limit": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckRequest": {
+            "type": "object",
+            "required": [
+                "namespace"
+            ],
+            "properties": {
+                "configmap_delta": {
+                    "type": "integer"
+                },
+                "cpu_limit": {
+                    "type": "string"
+                },
+                "cpu_request": {
+                    "type": "string"
+                },
+                "memory_limit": {
+                    "type": "string"
+                },
+                "memory_request": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "pod_delta": {
+                    "description": "+1 for create, -1 for delete",
+                    "type": "integer"
+                },
+                "pvc_delta": {
+                    "type": "integer"
+                },
+                "secret_delta": {
+                    "type": "integer"
+                },
+                "storage_request": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaCheckResponse": {
+            "type": "object",
+            "properties": {
+                "allowed": {
+                    "type": "boolean"
+                },
+                "reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaExceededReason"
+                    }
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.QuotaExceededReason": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "string"
+                },
+                "requested": {
+                    "type": "string"
+                },
+                "resource_type": {
+                    "type": "string"
+                },
+                "utilization": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaListResponse": {
+            "type": "object",
+            "properties": {
+                "quotas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.ResourceQuotaResponse": {
+            "type": "object",
+            "properties": {
+                "configmap_count_limit": {
+                    "type": "integer"
+                },
+                "cpu_limit_limit": {
+                    "type": "string"
+                },
+                "cpu_request_limit": {
+                    "type": "string"
+                },
+                "cpu_request_utilization": {
+                    "description": "Computed utilization percentages",
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_cpu_limit": {
+                    "type": "string"
+                },
+                "current_cpu_request": {
+                    "type": "string"
+                },
+                "current_memory_limit": {
+                    "type": "string"
+                },
+                "current_memory_request": {
+                    "type": "string"
+                },
+                "current_pod_count": {
+                    "type": "integer"
+                },
+                "current_storage_request": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enforce": {
+                    "type": "boolean"
+                },
+                "environment_id": {
+                    "type": "string"
+                },
+                "grace_period_hours": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "memory_limit_limit": {
+                    "type": "string"
+                },
+                "memory_request_limit": {
+                    "type": "string"
+                },
+                "memory_request_utilization": {
+                    "type": "number"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "pod_count_limit": {
+                    "type": "integer"
+                },
+                "pod_count_utilization": {
+                    "type": "number"
+                },
+                "pvc_count_limit": {
+                    "type": "integer"
+                },
+                "secret_count_limit": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storage_request_limit": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.UpdateResourceQuotaRequest": {
+            "type": "object",
+            "properties": {
+                "configmap_count_limit": {
+                    "type": "integer"
+                },
+                "cpu_limit_limit": {
+                    "type": "string"
+                },
+                "cpu_request_limit": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enforce": {
+                    "type": "boolean"
+                },
+                "grace_period_hours": {
+                    "type": "integer"
+                },
+                "memory_limit_limit": {
+                    "type": "string"
+                },
+                "memory_request_limit": {
+                    "type": "string"
+                },
+                "pod_count_limit": {
+                    "type": "integer"
+                },
+                "pvc_count_limit": {
+                    "type": "integer"
+                },
+                "secret_count_limit": {
+                    "type": "integer"
+                },
+                "storage_request_limit": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_resourcequota.UsageResponse": {
+            "type": "object",
+            "properties": {
+                "configmap_count": {
+                    "type": "integer"
+                },
+                "cpu_limit": {
+                    "type": "string"
+                },
+                "cpu_request": {
+                    "type": "string"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "memory_limit": {
+                    "type": "string"
+                },
+                "memory_request": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "pod_count": {
+                    "type": "integer"
+                },
+                "pvc_count": {
+                    "type": "integer"
+                },
+                "secret_count": {
+                    "type": "integer"
+                },
+                "storage_request": {
+                    "type": "string"
                 }
             }
         },
