@@ -911,3 +911,303 @@ Tests automatically skip if dependencies are not available:
 - Tests skip if kubeconfig not found
 - Tests skip if ArgoCD not installed
 
+## Phase 2 Patterns
+
+### Service Catalog
+
+The service catalog follows the standard clean architecture pattern with extended domain relationships:
+
+```
+Service → ServiceVersion → ServiceEndpoint
+Service → ServiceDependency → Service (depends on)
+ServiceVersion → ServiceEnvironment (deployments)
+```
+
+**Key Model Relationships:**
+
+```go
+// Service has many versions
+type Service struct {
+    ID          string
+    Name        string
+    TeamID      string
+    Visibility  string  // public, team, private
+    Status      string  // active, inactive
+}
+
+// Version belongs to service
+type ServiceVersion struct {
+    ID        string
+    ServiceID string
+    Version   string  // semver
+    GitRef    string  // git commit/branch/tag
+    Status    string
+}
+
+// Dependency between services
+type ServiceDependency struct {
+    ServiceID          string  // source service
+    DependsOnServiceID string  // target service
+    DependencyType     string  // runtime, build, data, api
+}
+```
+
+### Dependency Management
+
+**Circular Dependency Detection:**
+
+Use BFS to detect cycles before adding dependencies:
+
+```go
+func (u *usecase) checkCircularDependency(ctx context.Context, serviceID, dependsOnServiceID string) error {
+    visited := make(map[string]bool)
+    queue := []string{dependsOnServiceID}
+
+    for len(queue) > 0 {
+        currentID := queue[0]
+        queue = queue[1:]
+
+        if currentID == serviceID {
+            return ErrCircularDependency
+        }
+
+        if visited[currentID] {
+            continue
+        }
+        visited[currentID] = true
+
+        // Get dependencies of current service
+        deps, _, _ := u.serviceRepo.ListDependenciesByService(ctx, currentID, nil)
+        for _, dep := range deps {
+            if !visited[dep.DependsOnServiceID] {
+                queue = append(queue, dep.DependsOnServiceID)
+            }
+        }
+    }
+    return nil
+}
+```
+
+**Dependency Graph Response:**
+
+```go
+type DependencyGraphResponse struct {
+    ServiceID   string
+    ServiceName string
+    Nodes       []GraphNode  // All services in the graph
+    Edges       []GraphEdge  // All dependency relationships
+}
+
+type GraphNode struct {
+    ID   string
+    Name string
+    Type string  // root, dependency, dependent
+}
+
+type GraphEdge struct {
+    From string
+    To   string
+    Type string  // runtime, build, data, api
+}
+```
+
+### Rightsizing Recommendations
+
+**Usage Analysis Pattern:**
+
+Query Prometheus for resource metrics:
+
+```go
+func (u *usecase) getCPUUsage(ctx context.Context, namespace, container string, start, end time.Time) (avg, max float64, err error) {
+    avgQuery := fmt.Sprintf(
+        `avg_over_time(rate(container_cpu_usage_seconds_total{namespace="%s",container="%s"}[5m])[%dd])`,
+        namespace, container, lookbackDays,
+    )
+    results, err := u.monitoringRepo.Query(ctx, avgQuery)
+    // ...
+}
+```
+
+**Recommendation Types:**
+
+- `scale_down`: utilization < 50% of request
+- `scale_up`: utilization > 90% of request
+- `optimal`: no recommendation needed
+
+**Apply/Rollback Pattern:**
+
+Store previous state as JSONB for rollback:
+
+```go
+type PreviousResourceState struct {
+    CPURequest    string `json:"cpu_request"`
+    CPULimit      string `json:"cpu_limit"`
+    MemoryRequest string `json:"memory_request"`
+    MemoryLimit   string `json:"memory_limit"`
+}
+
+// Store before applying
+previousState := &PreviousResourceState{
+    CPURequest: rec.CurrentCPURequest,
+    // ...
+}
+rec.SetPreviousState(previousState)
+
+// Apply to Kubernetes
+u.provisionerRepo.UpdateDeploymentResources(ctx, namespace, name, container, ...)
+```
+
+### Resource Quotas
+
+**Usage Calculation:**
+
+Calculate from Kubernetes pods via informer cache:
+
+```go
+func (u *usecase) calculateUsage(ctx context.Context, namespace string) (*UsageResponse, error) {
+    pods, err := u.provisionerRepo.GetPods(namespace)
+    // Sum resources from all containers
+    for _, pod := range pods {
+        for _, container := range pod.Spec.Containers {
+            totalCPURequest += container.Resources.Requests.Cpu().Value()
+            totalMemRequest += container.Resources.Requests.Memory().Value()
+        }
+    }
+    return &UsageResponse{...}, nil
+}
+```
+
+**Quota Enforcement:**
+
+Via admission webhook:
+
+```go
+func (v *Validator) checkQuota(req *admissionv1.AdmissionRequest) admission.Response {
+    quota, err := v.quotaRepo.GetActiveByNamespace(ctx, namespace)
+    if err != nil {
+        return admission.Allowed("no quota defined")
+    }
+
+    if !quota.Enforce {
+        return admission.Allowed("quota not enforced")
+    }
+
+    // Check limits
+    if exceedsLimit(quota, requested) {
+        return admission.Denied("quota exceeded")
+    }
+    return admission.Allowed("")
+}
+```
+
+### Budget Alerts
+
+**Period Window Calculation:**
+
+```go
+func getPeriodWindow(period string, now time.Time) (start, end time.Time) {
+    switch period {
+    case "daily":
+        start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+    case "weekly":
+        daysSinceMonday := int(now.Weekday() - time.Monday)
+        start = time.Date(now.Year(), now.Month(), now.Day()-daysSinceMonday, 0, 0, 0, 0, time.UTC)
+    case "monthly":
+        start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+    }
+    return start, now
+}
+```
+
+**Alert Deduplication:**
+
+Check for existing alert before sending:
+
+```go
+existing, _ := u.budgetRepo.GetLatestAlertForThreshold(ctx, budget.ID, threshold, periodStart)
+if existing != nil {
+    continue  // Already alerted for this threshold in this period
+}
+```
+
+### Cron Job Pattern
+
+**Distributed Locking:**
+
+Use Redis Sentinel for exactly-once execution:
+
+```go
+func (h *Handler) RunWithLock(ctx context.Context, jobName string, fn func() error) error {
+    lock, err := h.redisLock.Acquire(ctx, jobName, 120*time.Second)
+    if err != nil {
+        return nil  // Another instance is running
+    }
+    defer lock.Release(ctx)
+
+    return fn()
+}
+```
+
+**Job Registration:**
+
+```go
+// In cmd/cron/server.go
+c.AddFunc("0 * * * *", func() {
+    h.RunWithLock(ctx, "cost-sync", func() error {
+        return h.costSync.Sync(ctx)
+    })
+})
+```
+
+### Testing Patterns for Phase 2
+
+**Mocking Multi-Repo Dependencies:**
+
+```go
+func TestAddDependency(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockSvcRepo := mocks.NewMockServiceRepository(ctrl)
+    uc := New(Dependencies{ServiceRepo: mockSvcRepo})
+
+    // Expect service lookups
+    mockSvcRepo.EXPECT().GetByID(gomock.Any(), "svc-1").Return(&service.Service{...}, nil)
+    mockSvcRepo.EXPECT().GetByID(gomock.Any(), "svc-2").Return(&service.Service{...}, nil)
+
+    // Expect dependency check
+    mockSvcRepo.EXPECT().ExistsDependency(gomock.Any(), "svc-1", "svc-2").Return(false, nil)
+
+    // Expect circular dependency check
+    mockSvcRepo.EXPECT().ListDependenciesByService(gomock.Any(), "svc-2", gomock.Any()).
+        Return([]depModel.ServiceDependency{}, int64(0), nil)
+
+    // Expect create
+    mockSvcRepo.EXPECT().CreateDependency(gomock.Any(), gomock.Any()).Return(nil)
+
+    resp, err := uc.AddDependency(ctx, "svc-1", &depModel.CreateDependencyRequest{...})
+    assert.NoError(t, err)
+}
+```
+
+**Testing Kubernetes Resource Updates:**
+
+```go
+func TestApplyRecommendation(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := mocks.NewMockRightsizingRepository(ctrl)
+    mockProvisioner := mocks.NewMockProvisionerRepository(ctrl)
+
+    // Expect Kubernetes update
+    mockProvisioner.EXPECT().
+        UpdateDeploymentResources(gomock.Any(), "default", "api-server", "main",
+            "50m", "100m", "64Mi", "128Mi").
+        Return(nil)
+
+    err := uc.ApplyRecommendation(ctx, "rec-1", "user-1")
+    assert.NoError(t, err)
+}
+```
+
