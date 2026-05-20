@@ -117,6 +117,11 @@ Mocks follow the gomock manual pattern. Each repository interface has a correspo
 | `internal/mocks/auditlog_repository.go` | `auditlog.Repository` |
 | `internal/mocks/cost_repository.go` | `cost.Repository` |
 | `internal/mocks/opencost_client.go` | `cost.OpenCostClient` |
+| `internal/mocks/budget_repository.go` | `budget.Repository` |
+| `internal/mocks/rightsizing_repository.go` | `rightsizing.Repository` |
+| `internal/mocks/quota_repository.go` | `quota.Repository` |
+| `internal/mocks/service_repository.go` | `service.Repository` |
+| `internal/mocks/monitoring_repository.go` | `monitoring.Repository` |
 
 Usage pattern:
 
@@ -169,6 +174,69 @@ Located in `internal/usecase/cost/cost_test.go`. Covers:
 | `TestSyncCosts` | Successful sync with data, empty data, OpenCost API error, batch create error |
 | `TestList` | With filters, enforces default limit (50), caps max limit (200), empty result, repo error |
 | `TestGetTeamCosts` | Returns team costs with time range, empty result for unknown team |
+
+### Budget Usecase Unit Tests
+
+Located in `internal/usecase/budget/budget_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestCreate` | Success with defaults, validation (name, limit, period), repo error |
+| `TestGet` | Found, not found |
+| `TestList` | By team, empty result |
+| `TestUpdate` | Update name/limit/thresholds/channels/status, not found |
+| `TestDelete` | Success, not found |
+| `TestGetAlerts` | Returns alerts for budget, empty list |
+
+### Rightsizing Usecase Unit Tests
+
+Located in `internal/usecase/rightsizing/rightsizing_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestListRecommendations` | Returns recommendations, empty list, repo error |
+| `TestGetRecommendation` | Found by ID, repo error |
+| `TestApplyRecommendation` | Apply deployment/statefulset, reject non-pending, handle K8s failure, unsupported workload |
+| `TestRollbackRecommendation` | Rollback to previous, reject non-applied, no previous state, K8s failure |
+| `TestDismissRecommendation` | Dismiss pending, reject non-pending |
+| `TestGenerateRecommendations` | Generate for underutilized, skip existing pending, no workloads, get workloads error |
+| `TestHelperFunctions` | formatCPU, formatMemory, parseCPU, parseMemory |
+| `TestCalculateConfidence` | High confidence complete data, missing CPU avg, missing data, high variance |
+
+### Quota Usecase Unit Tests
+
+Located in `internal/usecase/quota/quota_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestCreateQuota` | Create with all fields, duplicate rejected, exists check error, create error |
+| `TestGetQuota` | Found by ID, repo error |
+| `TestGetQuotaByNamespace` | Found by namespace, repo error |
+| `TestListQuotas` | Returns quotas, empty list, repo error |
+| `TestUpdateQuota` | Update CPU limit, update enforce flag, not found |
+| `TestDeleteQuota` | Success, repo error |
+| `TestCheckQuota` | Allow no quota, allow not enforced, allow within limit, reject exceeds limit, check pod count |
+| `TestIsQuotaExceeded` | False no quota, false within limits, true exceeds limit |
+| `TestGetUsage` | Calculate from pods, empty for no pods, provisioner error |
+| `TestRefreshUsage` | Refresh and update usage |
+| `TestRefreshAllUsage` | Refresh all quotas, continue on list error |
+
+### Service Catalog Usecase Unit Tests
+
+Located in `internal/usecase/service/service_test.go`. Covers:
+
+| Test | Scenarios |
+|------|-----------|
+| `TestRegister` | Create with required fields, reject empty name, reject duplicate, reject invalid visibility |
+| `TestGet` | Found by ID, not found |
+| `TestAddDependency` | Create dependency, reject self-dependency, reject duplicate, detect circular, reject invalid type |
+| `TestGetDependencyGraph` | Returns graph, not found for nonexistent service |
+| `TestDeployToEnvironment` | Deploy version, error for nonexistent version |
+| `TestCheckCircularDependency` | No cycle, direct cycle, indirect cycle |
+| `TestListDependencies` | Returns dependencies |
+| `TestListDependents` | Returns dependents |
+| `TestRemoveDependency` | Delete dependency, not found |
+| `TestUpdateDependency` | Update type, reject invalid type |
 
 ### OpenCost Client Unit Tests
 
@@ -481,6 +549,64 @@ make dev-finops-status
 go test ./internal/usecase/cost/... -v
 go test ./internal/pkg/opencost/... -v
 ```
+
+### Phase 2 Integration Tests
+
+Located in `tests/integration/`. Tests Phase 2 API endpoints with mock handlers.
+
+| File | Tests |
+|------|-------|
+| `tests/integration/service_test.go` | Service catalog CRUD, versions, endpoints, dependencies, deployments |
+| `tests/integration/budget_test.go` | Budget CRUD, alert threshold validation |
+| `tests/integration/rightsizing_test.go` | Recommendation CRUD, apply/rollback |
+| `tests/integration/quota_test.go` | Quota CRUD, usage calculation, check |
+
+Running Phase 2 integration tests:
+
+```bash
+# Run all integration tests
+go test ./tests/integration/... -v
+
+# Skip in short mode
+go test -short ./tests/integration/...
+```
+
+#### Service Catalog Integration Tests
+
+| Test | Description |
+|------|-------------|
+| `TestIntegration_ServiceCatalog` | Full CRUD operations for services, versions, endpoints, dependencies, deployments |
+| `TestIntegration_ServiceCatalog_DependencyTypes` | Validate runtime, build, data, api dependency types |
+| `TestIntegration_ServiceCatalog_Visibility` | Validate public, team, private visibility levels |
+| `TestIntegration_ServiceCatalog_DeploymentStatus` | Validate deployed, deploying, failed, rolled_back statuses |
+
+#### Budget Integration Tests
+
+| Test | Description |
+|------|-------------|
+| `TestIntegration_Budget` | Full CRUD operations, list with team_id filter, alert history |
+| `TestIntegration_Budget_Periods` | Validate daily, weekly, monthly periods |
+| `TestIntegration_Budget_AlertThresholds` | Format and parse threshold strings |
+| `TestIntegration_Budget_AlertChannels` | Format and parse channel JSON arrays |
+
+#### Rightsizing Integration Tests
+
+| Test | Description |
+|------|-------------|
+| `TestIntegration_Rightsizing` | List/get recommendations, apply/rollback/dismiss operations |
+| `TestIntegration_Rightsizing_WorkloadTypes` | Validate Deployment, StatefulSet types |
+| `TestIntegration_Rightsizing_RecommendationTypes` | Validate scale_down, scale_up, optimal types |
+| `TestIntegration_Rightsizing_Status` | Validate pending, applied, dismissed, failed statuses |
+| `TestIntegration_Rightsizing_PreviousState` | Set/get previous resource state for rollback |
+
+#### Quota Integration Tests
+
+| Test | Description |
+|------|-------------|
+| `TestIntegration_Quota` | Full CRUD, get by namespace, usage, refresh, check |
+| `TestIntegration_Quota_Status` | Validate active, inactive, exceeded statuses |
+| `TestIntegration_Quota_ResourceLimits` | Create with all resource limits (CPU, memory, storage, pod count, etc.) |
+| `TestIntegration_Quota_PodDelta` | Check quota with pod delta (create, delete, scale up) |
 
 ---
 
