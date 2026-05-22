@@ -4,6 +4,7 @@
 
 # Documentation
 docs/
+!docs/swagger/
 *.md
 !README.md
 
