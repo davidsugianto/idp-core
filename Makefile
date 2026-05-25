@@ -1,4 +1,5 @@
-.PHONY: all bootstrap dev-up dev-run test build docker-build docker-push lint fmt clean help
+.PHONY: all bootstrap dev-up dev-run test build docker-build docker-push lint fmt clean help \
+	dev-oidc-up dev-oidc-down dev-oidc-logs oidc-status oidc-setup oidc-reset
 
 # Variables
 APP_NAME := idp-core
@@ -210,6 +211,73 @@ dev-redis-down:
 ## dev-redis-logs: Show Redis logs
 dev-redis-logs:
 	docker-compose logs -f redis-master redis-slave redis-sentinel
+
+# =============================================================================
+# Development Environment (OIDC - Keycloak)
+# =============================================================================
+
+## dev-oidc-up: Start Keycloak OIDC provider in Docker
+dev-oidc-up:
+	@echo "==> Starting Keycloak OIDC provider..."
+	docker-compose up -d keycloak
+	@echo "==> Waiting for Keycloak to be ready..."
+	@for i in $$(seq 1 30); do \
+		if curl -sf http://localhost:8081/realms/master >/dev/null 2>&1; then \
+			echo "✅ Keycloak ready at http://localhost:8081"; \
+			exit 0; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "❌ Keycloak failed to start"; \
+	exit 1
+	@echo ""
+	@echo "Keycloak Admin Console: http://localhost:8081"
+	@echo "  Username: admin"
+	@echo "  Password: admin"
+
+## dev-oidc-down: Stop Keycloak container
+dev-oidc-down:
+	@echo "==> Stopping Keycloak..."
+	docker-compose stop keycloak
+	@echo "✅ Keycloak stopped!"
+
+## dev-oidc-logs: Show Keycloak logs
+dev-oidc-logs:
+	docker-compose logs -f keycloak
+
+## oidc-status: Check Keycloak OIDC provider status
+oidc-status:
+	@echo "=== Keycloak OIDC Status ==="
+	@echo ""
+	@docker-compose ps keycloak 2>/dev/null || echo "  Keycloak not configured in docker-compose"
+	@echo ""
+	@echo "Health check:"
+	@curl -sf http://localhost:8081/realms/master >/dev/null 2>&1 && echo "  ✅ Keycloak is healthy" || echo "  ❌ Keycloak is not responding"
+	@echo ""
+	@echo "Realm info:"
+	@curl -sf http://localhost:8081/realms/idp-core/.well-known/openid-configuration >/dev/null 2>&1 && echo "  ✅ idp-core realm configured" || echo "  ❌ idp-core realm not found (run: make oidc-setup)"
+	@echo ""
+
+## oidc-setup: Configure Keycloak with idp-core realm, client, and test users
+oidc-setup:
+	@./dev/oidc-setup.sh
+
+## oidc-reset: Reset Keycloak configuration (restart fresh)
+oidc-reset:
+	@echo "==> Resetting Keycloak configuration..."
+	docker-compose stop keycloak
+	docker-compose rm -f keycloak
+	@echo "==> Starting fresh Keycloak..."
+	docker-compose up -d keycloak
+	@echo "==> Waiting for Keycloak to be ready..."
+	@for i in $$(seq 1 30); do \
+		if curl -sf http://localhost:8081/realms/master >/dev/null 2>&1; then \
+			echo "✅ Keycloak ready"; \
+			exit 0; \
+		fi; \
+		sleep 2; \
+	done
+	@echo "Run 'make oidc-setup' to configure realm and clients"
 
 # =============================================================================
 # Development Environment (Cron Server)

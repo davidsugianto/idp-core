@@ -419,7 +419,7 @@
 
 - [x] Create comprehensive integration test suite
 - [x] Test all Phase 2 API endpoints
-- [ ] Test OIDC flow end-to-end
+- [x] Test OIDC flow end-to-end
 - [x] Test RBAC enforcement across features
 - [ ] Test cost sync and budget alerts
 - [x] Test rightsizing recommendations
