@@ -1,8 +1,8 @@
 # 📋 idp-core — Product Requirements Document (PRD) Overview
 
-> **Project**: `idp-core`  
-> **Owner**: Platform Engineering Team  
-> **Last Updated**: April 2026  
+> **Project**: `idp-core`
+> **Owner**: Platform Engineering Team
+> **Last Updated**: May 21, 2026
 > **Status**: In Development
 
 ---
@@ -83,10 +83,10 @@ timeline
 
 ---
 
-## 🚀 Phase 1: MVP (Current)
+## 🚀 Phase 1: MVP (Complete)
 
-**Status**: ✅ Approved for Development  
-**Timeline**: May - June 2026  
+**Status**: ✅ Complete
+**Timeline**: May - June 2026
 **Document**: [PRD_PHASE_1.md](./PRD_PHASE_1.md)
 
 ### Goals
@@ -128,55 +128,62 @@ timeline
 
 ---
 
-## 🔐 Phase 2: Enhancement (Planned)
+## 🔐 Phase 2: Enhancement (Complete)
 
-**Status**: 📋 Planning  
-**Timeline**: Q3 2026  
-**Document**: PRD_PHASE_2.md (To be created)
+**Status**: ✅ Complete
+**Timeline**: Q3 2026 (May 2026)
+**Document**: [PRD_PHASE_2.md](./PRD_PHASE_2.md)
 
 ### Goals
 
-| Goal | Metric | Target |
-|------|--------|--------|
-| Secure multi-tenant access | RBAC implementation | 100% role coverage |
-| Cost visibility | Cost per environment tracking | Real-time |
-| Resource optimization | Right-sizing recommendations | Auto-generated |
+| Goal | Metric | Target | Achieved |
+|------|--------|--------|----------|
+| Secure multi-tenant access | RBAC implementation | 100% role coverage | ✅ |
+| Cost visibility | Cost per environment tracking | Real-time | ✅ |
+| Resource optimization | Right-sizing recommendations | Auto-generated | ✅ |
 
 ### Key Features
 
-- 🔐 **RBAC & Authentication**
-  - OIDC/JWT authentication
+- ✅ **RBAC & Authentication**
+  - OIDC/JWT authentication (Keycloak integration)
   - Role-based access control
   - Team-level permissions
   - Audit logging
+  - API keys for automation
 
-- 💰 **FinOps & Cost Analysis**
-  - Multi-cluster cost tracking
+- ✅ **FinOps & Cost Analysis**
+  - OpenCost integration
   - Cost allocation by team/environment
-  - Budget alerts
+  - Budget alerts (Slack notifications)
   - Resource utilization reports
 
-- ⚙️ **Resource Rightsizing**
+- ✅ **Resource Rightsizing**
   - CPU/Memory recommendations
-  - Automated scaling suggestions
+  - Apply/rollback support
   - Resource quota management
-  - Performance metrics integration
+  - Prometheus metrics integration
 
-- 📚 **Service Catalog**
-  - Template discovery
-  - Service registration
+- ✅ **Service Catalog**
+  - Service registration & discovery
   - Dependency management
   - Version tracking
+  - Deployment tracking
 
-### Planned API Endpoints
+### Implemented API Endpoints
 
 | Category | Endpoints |
 |----------|-----------|
-| Authentication | `POST /auth/login`, `POST /auth/refresh`, `GET /users/me` |
-| Authorization | `GET /roles`, `GET /permissions`, `POST /roles/:id/permissions` |
-| Cost Analysis | `GET /environments/:id/costs`, `GET /teams/:id/costs` |
-| Rightsizing | `GET /environments/:id/recommendations`, `POST /environments/:id/rightsize` |
-| Service Catalog | `GET /services`, `GET /services/:id`, `POST /services` |
+| Authentication | `POST /auth/login`, `POST /auth/callback`, `POST /auth/refresh`, `GET /auth/me` |
+| User Management | `GET /users`, `GET /users/:id`, `PATCH /users/:id`, `DELETE /users/:id` |
+| Team Management | `GET /teams`, `POST /teams`, `GET /teams/:id`, `PATCH /teams/:id`, `DELETE /teams/:id` |
+| Role Management | `GET /roles`, `POST /roles`, `GET /roles/:id`, `POST /roles/assign`, `POST /roles/revoke` |
+| API Keys | `GET /api-keys`, `POST /api-keys`, `DELETE /api-keys/:id` |
+| Audit Logs | `GET /audit-logs`, `GET /audit-logs/:id` |
+| Cost Analysis | `GET /costs`, `GET /costs/team` |
+| Budgets | `GET /budgets`, `POST /budgets`, `GET /budgets/:id`, `PATCH /budgets/:id`, `DELETE /budgets/:id` |
+| Rightsizing | `GET /rightsizing/recommendations`, `POST /rightsizing/recommendations/:id/apply`, `POST /rightsizing/recommendations/:id/rollback` |
+| Quotas | `GET /quotas`, `POST /quotas`, `GET /quotas/:id`, `POST /quotas/check` |
+| Service Catalog | `GET /services`, `POST /services`, `GET /services/:id`, `GET /services/:id/dependencies`, `POST /services/:id/versions` |
 
 ---
 
@@ -320,8 +327,8 @@ timeline
 
 | Phase | Timeline | Status | Key Deliverables |
 |-------|----------|--------|------------------|
-| Phase 1 - MVP | May - June 2026 | ✅ In Development | Core API, K8s/ArgoCD integration |
-| Phase 2 - Enhancement | Q3 2026 | 📋 Planning | RBAC, FinOps, Rightsizing |
+| Phase 1 - MVP | May - June 2026 | ✅ Complete | Core API, K8s/ArgoCD integration |
+| Phase 2 - Enhancement | May 2026 | ✅ Complete | RBAC, FinOps, Rightsizing, Service Catalog |
 | Phase 3 - Platform | Q4 2026 | 📋 Planning | UI, Templates, Multi-cluster |
 | Phase 4 - Advanced | Q1 2027+ | 🔮 Roadmap | AI/ML, Analytics, Policy |
 
@@ -342,7 +349,9 @@ timeline
 ## 📎 References
 
 - [PRD Phase 1 - MVP](./PRD_PHASE_1.md)
-- [Development TODO List](../DEV_TODO_LIST_PHASE_1.md)
+- [PRD Phase 2 - Enhancement](./PRD_PHASE_2.md)
+- [Development TODO List Phase 1](../DEV_TODO_LIST_PHASE_1.md)
+- [Development TODO List Phase 2](../DEV_TODO_LIST_PHASE_2.md)
 - [Development Guidelines](../DEV_GUIDELINE.md)
 - [Test Documentation](../TEST.md)
 - [ArgoCD REST API Documentation](https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/)
@@ -358,3 +367,4 @@ timeline
 |---------|------|--------|---------|
 | 0.1.0 | April 2026 | Platform Engineering | Initial PRD overview |
 | 1.0.0 | April 2026 | Platform Engineering | Phase 1 approved, roadmap finalized |
+| 2.0.0 | May 21, 2026 | Platform Engineering | Phase 2 complete |
