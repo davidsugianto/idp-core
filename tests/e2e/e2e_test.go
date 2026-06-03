@@ -173,7 +173,7 @@ func TestE2E_AuthFlow(t *testing.T) {
 	}
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err, "Failed to generate token")
 	assert.NotEmpty(t, token, "Token should not be empty")
 
@@ -220,7 +220,7 @@ func TestE2E_APIAuthentication(t *testing.T) {
 
 	// Test with valid token
 	t.Run("valid_token", func(t *testing.T) {
-		token, _ := middleware.GenerateToken(authConfig, "test-user", "test-team")
+		token, _ := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 		req := httptest.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()

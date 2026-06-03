@@ -29,7 +29,7 @@ func TestIntegration_Rightsizing(t *testing.T) {
 	}
 
 	// Generate test token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	// Create test router

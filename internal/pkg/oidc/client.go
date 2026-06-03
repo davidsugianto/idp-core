@@ -88,3 +88,9 @@ func (c *Client) GetVerifier() *oidc.IDTokenVerifier {
 func (c *Client) GetOAuth2Config() *oauth2.Config {
 	return c.oauth2Conf
 }
+
+// Refresh exchanges a refresh token for a new token set
+func (c *Client) Refresh(ctx context.Context, refreshToken string) (*oauth2.Token, error) {
+	token := &oauth2.Token{RefreshToken: refreshToken}
+	return c.oauth2Conf.TokenSource(ctx, token).Token()
+}

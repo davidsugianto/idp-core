@@ -7,19 +7,22 @@ import (
 	permissionModel "github.com/davidsugianto/idp-core/internal/model/permission"
 	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
 	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
+	userRepo "github.com/davidsugianto/idp-core/internal/repository/user"
 )
 
 // Seeder handles database seeding
 type Seeder struct {
 	roleRepo       roleRepo.Repository
 	permissionRepo permissionRepo.Repository
+	userRepo       userRepo.Repository
 }
 
 // NewSeeder creates a new seeder
-func NewSeeder(roleRepo roleRepo.Repository, permissionRepo permissionRepo.Repository) *Seeder {
+func NewSeeder(roleRepo roleRepo.Repository, permissionRepo permissionRepo.Repository, userRepo userRepo.Repository) *Seeder {
 	return &Seeder{
 		roleRepo:       roleRepo,
 		permissionRepo: permissionRepo,
+		userRepo:       userRepo,
 	}
 }
 

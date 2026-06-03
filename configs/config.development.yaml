@@ -57,10 +57,10 @@ argocd:
 
 oidc:
   enabled: true
-  issuer_url: "http://localhost:8081/realms/idp-core"
+  issuer_url: "http://keycloak:8080/realms/idp-core"
   client_id: "idp-core"
   client_secret: "idp-core-secret-key"
-  redirect_url: "http://localhost:8080/auth/callback"
+  redirect_url: "http://localhost:8989/auth/oidc/callback"
   scopes:
     - openid
     - profile

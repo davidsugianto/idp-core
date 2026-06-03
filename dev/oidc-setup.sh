@@ -105,6 +105,43 @@ else
 fi
 echo ""
 
+# Step 4b: Add group membership mapper to client
+echo "Step 4b: Adding group membership mapper to idp-core client..."
+CLIENT_UUID=$(curl -s "${KEYCLOAK_URL}/admin/realms/idp-core/clients?clientId=idp-core" \
+    -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id' 2>/dev/null)
+
+if [ -n "$CLIENT_UUID" ] && [ "$CLIENT_UUID" != "null" ]; then
+    MAPPER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+        "${KEYCLOAK_URL}/admin/realms/idp-core/clients/${CLIENT_UUID}/protocol-mappers/models" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "name": "group-membership",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-group-membership-mapper",
+            "consentRequired": false,
+            "config": {
+                "full.path": "false",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "claim.name": "groups"
+            }
+        }' 2>&1)
+
+    MAPPER_HTTP_CODE=$(echo "$MAPPER_RESPONSE" | tail -1)
+    if [ "$MAPPER_HTTP_CODE" = "201" ]; then
+        echo "✅ Group membership mapper added"
+    elif [ "$MAPPER_HTTP_CODE" = "409" ]; then
+        echo "   (mapper already exists)"
+    else
+        echo "   Warning: Unexpected response code $MAPPER_HTTP_CODE"
+        echo "   Response: $(echo "$MAPPER_RESPONSE" | head -1)"
+    fi
+else
+    echo "   Warning: Could not find client UUID for idp-core"
+fi
+echo ""
+
 # Step 5: Create platform-admins group
 echo "Step 5: Creating platform-admins group..."
 GROUP_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KEYCLOAK_URL}/admin/realms/idp-core/groups" \

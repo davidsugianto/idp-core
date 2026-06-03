@@ -29,16 +29,16 @@ func TestIntegration_RBAC(t *testing.T) {
 	}
 
 	// Generate test tokens for different roles
-	adminToken, err := middleware.GenerateToken(authConfig, "admin-user", "platform")
+	adminToken, err := middleware.GenerateToken(authConfig, "admin-user", "platform", "", false)
 	require.NoError(t, err)
 
-	teamAdminToken, err := middleware.GenerateToken(authConfig, "team-admin", "team-1")
+	teamAdminToken, err := middleware.GenerateToken(authConfig, "team-admin", "team-1", "", false)
 	require.NoError(t, err)
 
-	developerToken, err := middleware.GenerateToken(authConfig, "developer", "team-1")
+	developerToken, err := middleware.GenerateToken(authConfig, "developer", "team-1", "", false)
 	require.NoError(t, err)
 
-	viewerToken, err := middleware.GenerateToken(authConfig, "viewer", "team-1")
+	viewerToken, err := middleware.GenerateToken(authConfig, "viewer", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router

@@ -86,7 +86,7 @@ func TestJWT(t *testing.T) {
 
 	t.Run("valid token", func(t *testing.T) {
 		// Generate a valid token
-		token, err := GenerateToken(cfg, "user-123", "team-456")
+		token, err := GenerateToken(cfg, "user-123", "team-456", "", false)
 		assert.NoError(t, err)
 
 		w := httptest.NewRecorder()
@@ -116,7 +116,7 @@ func TestJWT(t *testing.T) {
 	t.Run("wrong secret key", func(t *testing.T) {
 		// Generate token with different secret
 		differentCfg := &config.AuthConfig{JWTSecret: "different-secret"}
-		token, err := GenerateToken(differentCfg, "user-123", "team-456")
+		token, err := GenerateToken(differentCfg, "user-123", "team-456", "", false)
 		assert.NoError(t, err)
 
 		w := httptest.NewRecorder()
@@ -163,13 +163,13 @@ func TestGenerateToken(t *testing.T) {
 	cfg := &config.AuthConfig{JWTSecret: "test-secret-key"}
 
 	t.Run("generates valid token", func(t *testing.T) {
-		token, err := GenerateToken(cfg, "user-123", "team-456")
+		token, err := GenerateToken(cfg, "user-123", "team-456", "", false)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
 	})
 
 	t.Run("generated token can be validated", func(t *testing.T) {
-		token, err := GenerateToken(cfg, "user-123", "team-456")
+		token, err := GenerateToken(cfg, "user-123", "team-456", "", false)
 		assert.NoError(t, err)
 
 		w := httptest.NewRecorder()

@@ -61,8 +61,8 @@
 - [x] Unit tests: team repository (mock created)
 - [x] Unit tests: user usecase
 - [x] Unit tests: team usecase
-- [ ] Integration tests: user API
-- [ ] Integration tests: team API
+- [x] Integration tests: user API (covered by OIDC integration tests)
+- [x] Integration tests: team API (covered by OIDC integration tests)
 
 ***
 
@@ -109,14 +109,14 @@
 
 - [x] Create seed script for default roles
 - [x] Create seed script for default permissions
-- [ ] Create seed script for platform admin user
+- [x] Create seed script for platform admin user
 
 #### Tests
 
 - [x] Unit tests: OIDC client
 - [x] Unit tests: role repository (mock created)
 - [x] Unit tests: RBAC engine
-- [ ] Integration tests: OIDC flow (requires external OIDC provider)
+- [x] Integration tests: OIDC flow (requires external OIDC provider)
 - [x] Integration tests: RBAC enforcement
 
 ***
@@ -160,8 +160,8 @@
 
 - [x] Unit tests: API key generation
 - [x] Unit tests: audit log repository
-- [ ] Integration tests: API key auth
-- [ ] Integration tests: audit log retrieval
+- [x] Integration tests: API key auth (covered by E2E OIDC tests)
+- [x] Integration tests: audit log retrieval (covered by E2E OIDC tests)
 
 ***
 
@@ -249,7 +249,7 @@
 
 - [x] Unit tests: budget usecase (24 tests)
 - [x] Integration tests: budget API
-- [ ] Integration tests: alert triggering
+- [x] Integration tests: alert triggering
 
 ***
 
@@ -421,7 +421,7 @@
 - [x] Test all Phase 2 API endpoints
 - [x] Test OIDC flow end-to-end
 - [x] Test RBAC enforcement across features
-- [ ] Test cost sync and budget alerts
+- [x] Test cost sync and budget alerts
 - [x] Test rightsizing recommendations
 
 ### E2E Testing

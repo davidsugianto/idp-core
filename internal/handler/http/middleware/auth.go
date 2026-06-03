@@ -14,28 +14,21 @@ import (
 )
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	TeamID string `json:"team_id"`
+	UserID  string `json:"user_id"`
+	TeamID  string `json:"team_id,omitempty"`
+	Email   string `json:"email,omitempty"`
+	IsAdmin bool   `json:"is_admin,omitempty"`
 	jwt.RegisteredClaims
 }
 
 func JWT(cfg *config.AuthConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		tokenString := extractToken(c)
+		if tokenString == "" {
 			response.GinUnauthorized(c, fmt.Errorf("authorization header required"))
 			c.Abort()
 			return
 		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			response.GinUnauthorized(c, fmt.Errorf("invalid authorization header format"))
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
 
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -61,13 +54,36 @@ func JWT(cfg *config.AuthConfig) gin.HandlerFunc {
 		ctx := c.Request.Context()
 		ctx = context.WithValue(ctx, "user_id", claims.UserID)
 		ctx = context.WithValue(ctx, "team_id", claims.TeamID)
+		ctx = context.WithValue(ctx, "email", claims.Email)
+		ctx = context.WithValue(ctx, "is_admin", claims.IsAdmin)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Set("user_id", claims.UserID)
 		c.Set("team_id", claims.TeamID)
+		c.Set("email", claims.Email)
+		c.Set("is_admin", claims.IsAdmin)
 
 		c.Next()
 	}
+}
+
+// extractToken extracts the JWT from the Authorization header or auth_token cookie.
+func extractToken(c *gin.Context) string {
+	// Authorization header takes precedence
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			return parts[1]
+		}
+	}
+
+	// Fallback to cookie
+	if cookie, err := c.Cookie("auth_token"); err == nil && cookie != "" {
+		return cookie
+	}
+
+	return ""
 }
 
 func GetTeamID(c *gin.Context) string {
@@ -81,15 +97,65 @@ func GetTeamID(c *gin.Context) string {
 	return ""
 }
 
+// GetUserID extracts user ID from context
+func GetUserID(c *gin.Context) string {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return ""
+	}
+	if str, ok := userID.(string); ok {
+		return str
+	}
+	return ""
+}
+
+// GetUserEmail extracts user email from context
+func GetUserEmail(c *gin.Context) string {
+	email, exists := c.Get("email")
+	if !exists {
+		return ""
+	}
+	if str, ok := email.(string); ok {
+		return str
+	}
+	return ""
+}
+
+// GetUserGroups extracts user groups from context
+func GetUserGroups(c *gin.Context) []string {
+	groups, exists := c.Get("groups")
+	if !exists {
+		return nil
+	}
+	if arr, ok := groups.([]string); ok {
+		return arr
+	}
+	return nil
+}
+
+// IsAdmin checks if user is platform admin
+func IsAdmin(c *gin.Context) bool {
+	isAdmin, exists := c.Get("is_admin")
+	if !exists {
+		return false
+	}
+	if b, ok := isAdmin.(bool); ok {
+		return b
+	}
+	return false
+}
+
 // GenerateToken is a helper for testing/development
-func GenerateToken(cfg *config.AuthConfig, userID, teamID string) (string, error) {
+func GenerateToken(cfg *config.AuthConfig, userID, teamID, email string, isAdmin bool) (string, error) {
 	claims := &Claims{
-		UserID: userID,
-		TeamID: teamID,
+		UserID:  userID,
+		TeamID:  teamID,
+		Email:   email,
+		IsAdmin: isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "sentinel-incident",
+			Issuer:    "idp-core",
 		},
 	}
 

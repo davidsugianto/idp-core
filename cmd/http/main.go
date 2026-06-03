@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/davidsugianto/idp-core/internal/model/apikey"
+	"github.com/davidsugianto/idp-core/internal/model/auditlog"
 	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
-	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
+	"github.com/davidsugianto/idp-core/internal/model/permission"
 	"github.com/davidsugianto/idp-core/internal/model/resourcequota"
+	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
+	"github.com/davidsugianto/idp-core/internal/model/role"
 	"github.com/davidsugianto/idp-core/internal/model/service"
 	"github.com/davidsugianto/idp-core/internal/model/service_dependency"
 	"github.com/davidsugianto/idp-core/internal/model/service_endpoint"
@@ -19,6 +23,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
+	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
 	"github.com/davidsugianto/idp-core/internal/pkg/prometheus"
 	"github.com/davidsugianto/idp-core/internal/pkg/slack"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
@@ -53,6 +58,7 @@ import (
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 
 	"github.com/davidsugianto/go-pkgs/logs"
+	"github.com/davidsugianto/idp-core/internal/seed"
 )
 
 // @title IDP Core API
@@ -112,7 +118,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -223,8 +229,37 @@ func main() {
 		EnvironmentRepo: envRepo,
 	})
 
+	// Seed default data (roles, permissions, platform admin user)
+	seeder := seed.NewSeeder(roleRepo, permRepo, userRepo)
+	if err := seeder.SeedAll(ctx); err != nil {
+		logs.Fatalf("cannot seed database: %v", err)
+	}
+
 	// Webhook validator
 	webhookValidator := webhook.NewValidatorWithQuota(quotaUC)
+
+	// OIDC client initialization
+	var oidcClient *oidcPkg.Client
+	var oidcVerifier *oidcPkg.Verifier
+	if cfg.OIDC.Enabled {
+		oidcClient, err = oidcPkg.NewClient(ctx, &oidcPkg.Config{
+			IssuerURL:    cfg.OIDC.IssuerURL,
+			ClientID:     cfg.OIDC.ClientID,
+			ClientSecret: cfg.OIDC.ClientSecret,
+			RedirectURL:  cfg.OIDC.RedirectURL,
+			Scopes:       cfg.OIDC.Scopes,
+		})
+		if err != nil {
+			logs.Fatalf("cannot initialize OIDC client: %v", err)
+		}
+
+		oidcVerifier = oidcPkg.NewVerifier(oidcClient, &oidcPkg.VerifierConfig{
+			GroupsClaim: cfg.OIDC.GroupsClaim,
+			AdminGroup:  cfg.OIDC.AdminGroup,
+		})
+
+		logs.Info("OIDC authentication enabled")
+	}
 
 	server := New(Dependencies{
 		EnvironmentUseCase: envUC,
@@ -240,6 +275,8 @@ func main() {
 		ServiceUseCase:     serviceUC,
 		Config:             cfg,
 		WebhookValidator:   webhookValidator,
+		OIDCClient:         oidcClient,
+		OIDCVerifier:       oidcVerifier,
 	})
 
 	logs.Info("listening on port")

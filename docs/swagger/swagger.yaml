@@ -1349,6 +1349,35 @@ definitions:
     - team_id
     - user_id
     type: object
+  internal_handler_http.OIDCLoginResponse:
+    properties:
+      auth_url:
+        type: string
+    type: object
+  internal_handler_http.OIDCRefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_handler_http.OIDCTokenResponse:
+    properties:
+      access_token:
+        type: string
+      email:
+        type: string
+      expires_in:
+        type: integer
+      is_admin:
+        type: boolean
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      user_id:
+        type: string
+    type: object
 host: localhost:8989
 info:
   contact:
@@ -1396,6 +1425,82 @@ paths:
               type: string
             type: object
       summary: User login
+      tags:
+      - auth
+  /auth/oidc/callback:
+    get:
+      description: Handles the OIDC provider callback, exchanges code for tokens,
+        and issues a JWT
+      parameters:
+      - description: Authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth2 state
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler_http.OIDCTokenResponse'
+      summary: OIDC callback
+      tags:
+      - auth
+  /auth/oidc/login:
+    get:
+      description: Redirects to the OIDC provider for authentication
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler_http.OIDCLoginResponse'
+      summary: Initiate OIDC login
+      tags:
+      - auth
+  /auth/oidc/logout:
+    post:
+      description: Clears auth cookies and redirects to OIDC provider end session
+        endpoint
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout from OIDC session
+      tags:
+      - auth
+  /auth/oidc/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a refresh token for new tokens
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.OIDCRefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler_http.OIDCTokenResponse'
+      summary: Refresh OIDC token
       tags:
       - auth
   /ping:
