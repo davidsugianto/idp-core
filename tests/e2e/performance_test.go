@@ -29,7 +29,7 @@ func TestPerformance_TokenGeneration(t *testing.T) {
 	start := time.Now()
 
 	for i := 0; i < iterations; i++ {
-		_, err := middleware.GenerateToken(authConfig, fmt.Sprintf("user-%d", i), fmt.Sprintf("team-%d", i%10))
+		_, err := middleware.GenerateToken(authConfig, fmt.Sprintf("user-%d", i), fmt.Sprintf("team-%d", i%10), "", false)
 		require.NoError(t, err)
 	}
 
@@ -51,7 +51,7 @@ func TestPerformance_TokenValidation(t *testing.T) {
 	}
 
 	// Generate a single token to validate repeatedly
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	iterations := 1000
@@ -89,7 +89,7 @@ func TestPerformance_AuthMiddleware(t *testing.T) {
 	})
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	iterations := 1000
@@ -144,7 +144,7 @@ func TestPerformance_CostQuery(t *testing.T) {
 	})
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	iterations := 500
@@ -184,7 +184,7 @@ func TestPerformance_ConcurrentRequests(t *testing.T) {
 	})
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	concurrency := 10
@@ -254,7 +254,7 @@ func TestPerformance_BudgetQuery(t *testing.T) {
 	})
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	iterations := 500
@@ -312,7 +312,7 @@ func TestPerformance_RightsizingQuery(t *testing.T) {
 	})
 
 	// Generate token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	iterations := 500

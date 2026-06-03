@@ -29,7 +29,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(h.authConfig, req.UserID, req.TeamID)
+	token, err := middleware.GenerateToken(h.authConfig, req.UserID, req.TeamID, "", false)
 	if err != nil {
 		response.GinInternalServerError(c, err)
 		return

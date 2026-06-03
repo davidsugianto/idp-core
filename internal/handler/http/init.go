@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/davidsugianto/go-pkgs/response"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
@@ -32,6 +33,9 @@ type Handler struct {
 	serviceUseCase     serviceUsecase.Usecase
 	authConfig         *config.AuthConfig
 	webhookValidator   *webhook.Validator
+	oidcClient         *oidcPkg.Client
+	oidcVerifier       *oidcPkg.Verifier
+	oidcEndSessionURL  string
 }
 
 type Dependencies struct {
@@ -48,6 +52,9 @@ type Dependencies struct {
 	ServiceUseCase     serviceUsecase.Usecase
 	AuthConfig         *config.AuthConfig
 	WebhookValidator   *webhook.Validator
+	OIDCClient         *oidcPkg.Client
+	OIDCVerifier       *oidcPkg.Verifier
+	OIDCEndSessionURL  string
 }
 
 func New(deps Dependencies) *Handler {
@@ -65,6 +72,9 @@ func New(deps Dependencies) *Handler {
 		serviceUseCase:     deps.ServiceUseCase,
 		authConfig:         deps.AuthConfig,
 		webhookValidator:   deps.WebhookValidator,
+		oidcClient:         deps.OIDCClient,
+		oidcVerifier:       deps.OIDCVerifier,
+		oidcEndSessionURL:  deps.OIDCEndSessionURL,
 	}
 }
 

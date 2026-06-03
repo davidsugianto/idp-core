@@ -29,7 +29,7 @@ func TestIntegration_Quota(t *testing.T) {
 	}
 
 	// Generate test token
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	// Create test router
@@ -457,7 +457,7 @@ func TestIntegration_Quota_ResourceLimits(t *testing.T) {
 		JWTSecret: "test-secret-key",
 	}
 
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	router := gin.New()
@@ -553,7 +553,7 @@ func TestIntegration_Quota_PodDelta(t *testing.T) {
 		JWTSecret: "test-secret-key",
 	}
 
-	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team")
+	token, err := middleware.GenerateToken(authConfig, "test-user", "test-team", "", false)
 	require.NoError(t, err)
 
 	router := gin.New()

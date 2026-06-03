@@ -7,6 +7,7 @@ import (
 	httpHandler "github.com/davidsugianto/idp-core/internal/handler/http"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
+	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	apikeyUC "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUC "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
@@ -55,6 +56,8 @@ type Dependencies struct {
 	ServiceUseCase     serviceUC.Usecase
 	Config             *config.Config
 	WebhookValidator   *webhook.Validator
+	OIDCClient         *oidcPkg.Client
+	OIDCVerifier       *oidcPkg.Verifier
 }
 
 func New(deps Dependencies) *Server {
@@ -81,6 +84,9 @@ func New(deps Dependencies) *Server {
 			ServiceUseCase:     deps.ServiceUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
+			OIDCClient:         deps.OIDCClient,
+			OIDCVerifier:       deps.OIDCVerifier,
+			OIDCEndSessionURL:  deps.Config.OIDC.IssuerURL + "/protocol/openid-connect/logout",
 		}),
 		config: deps.Config,
 	}
@@ -101,6 +107,13 @@ func (s *Server) setupPublicRoutes(r *gin.Engine) {
 	// Auth routes (public)
 	auth := r.Group("/auth")
 	auth.POST("/login", s.handler.Login)
+
+	// OIDC auth routes (public)
+	oidcAuth := auth.Group("/oidc")
+	oidcAuth.GET("/login", s.handler.OIDCLogin)
+	oidcAuth.GET("/callback", s.handler.OIDCCallback)
+	oidcAuth.POST("/refresh", s.handler.OIDCRefresh)
+	oidcAuth.POST("/logout", s.handler.OIDCLogout)
 
 	// Admission webhook endpoint (public)
 	admission := r.Group("/admission")

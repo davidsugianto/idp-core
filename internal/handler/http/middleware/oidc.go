@@ -63,54 +63,6 @@ func OIDCAuth(cfg *OIDCConfig) gin.HandlerFunc {
 	}
 }
 
-// GetUserID extracts user ID from context
-func GetUserID(c *gin.Context) string {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return ""
-	}
-	if str, ok := userID.(string); ok {
-		return str
-	}
-	return ""
-}
-
-// GetUserEmail extracts user email from context
-func GetUserEmail(c *gin.Context) string {
-	email, exists := c.Get("email")
-	if !exists {
-		return ""
-	}
-	if str, ok := email.(string); ok {
-		return str
-	}
-	return ""
-}
-
-// GetUserGroups extracts user groups from context
-func GetUserGroups(c *gin.Context) []string {
-	groups, exists := c.Get("groups")
-	if !exists {
-		return nil
-	}
-	if arr, ok := groups.([]string); ok {
-		return arr
-	}
-	return nil
-}
-
-// IsAdmin checks if user is platform admin
-func IsAdmin(c *gin.Context) bool {
-	isAdmin, exists := c.Get("is_admin")
-	if !exists {
-		return false
-	}
-	if b, ok := isAdmin.(bool); ok {
-		return b
-	}
-	return false
-}
-
 // RequirePermission creates a middleware that checks for specific permission
 func RequirePermission(rbac *authUsecase.RBACEngine, resource, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {

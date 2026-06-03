@@ -72,6 +72,119 @@
                 }
             }
         },
+        "/auth/oidc/callback": {
+            "get": {
+                "description": "Handles the OIDC provider callback, exchanges code for tokens, and issues a JWT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "OIDC callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OAuth2 state",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_http.OIDCTokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oidc/login": {
+            "get": {
+                "description": "Redirects to the OIDC provider for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Initiate OIDC login",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_http.OIDCLoginResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oidc/logout": {
+            "post": {
+                "description": "Clears auth cookies and redirects to OIDC provider end session endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout from OIDC session",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oidc/refresh": {
+            "post": {
+                "description": "Exchanges a refresh token for new tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh OIDC token",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_http.OIDCRefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_http.OIDCTokenResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Check if the API is running",
@@ -7316,6 +7429,51 @@
             ],
             "properties": {
                 "team_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_http.OIDCLoginResponse": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_http.OIDCRefreshRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_http.OIDCTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
                     "type": "string"
                 },
                 "user_id": {

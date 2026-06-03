@@ -24,10 +24,22 @@
 ## 🗓️ M1: Frontend Foundation (Week 1-3)
 
 > **Status**: ⬜ Not Started
-> **Repo**: [idp-ui](https://github.com/davidsugianto/idp-ui)
+> **Repos**: [idp-core](https://github.com/davidsugianto/idp-core) + [idp-ui](https://github.com/davidsugianto/idp-ui)
 > **TODO**: [idp-ui DEV_TODO_LIST_PHASE_1](https://github.com/davidsugianto/idp-ui/blob/main/docs/DEV_TODO_LIST_PHASE_1.md)
 
-### Scope
+### Week 1: API — Auth Session Management
+
+#### Session Management
+
+- [ ] Implement Redis-backed session store for OIDC sessions
+- [ ] Replace state cookie with server-side state storage (Redis)
+- [ ] Add CSRF token generation and validation
+- [ ] Implement RP-Initiated Logout with OIDC provider end_session_endpoint
+- [ ] Add session TTL and auto-refresh on activity
+- [ ] Add `session_id` cookie alongside `auth_token` for session tracking
+- [ ] Create session cleanup job for expired sessions
+
+### Week 1-3: Frontend
 
 Frontend project setup, Ant Design theme integration, routing, layout components, API client, state management, and OIDC authentication flow. All tasks are tracked in the [idp-ui TODO list](https://github.com/davidsugianto/idp-ui/blob/main/docs/DEV_TODO_LIST_PHASE_1.md#-m1-project-setup--auth-week-1-2).
 

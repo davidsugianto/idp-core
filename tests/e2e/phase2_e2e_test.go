@@ -30,11 +30,11 @@ func TestE2E_Phase2_UserJourney(t *testing.T) {
 	}
 
 	// Generate token for developer
-	developerToken, err := middleware.GenerateToken(authConfig, "developer-1", "team-1")
+	developerToken, err := middleware.GenerateToken(authConfig, "developer-1", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Generate token for team admin
-	adminToken, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1")
+	adminToken, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router
@@ -186,10 +186,10 @@ func TestE2E_Phase2_AdminJourney(t *testing.T) {
 	}
 
 	// Generate tokens for different roles
-	platformAdminToken, err := middleware.GenerateToken(authConfig, "platform-admin", "platform")
+	platformAdminToken, err := middleware.GenerateToken(authConfig, "platform-admin", "platform", "", false)
 	require.NoError(t, err)
 
-	teamAdminToken, err := middleware.GenerateToken(authConfig, "team-admin", "team-1")
+	teamAdminToken, err := middleware.GenerateToken(authConfig, "team-admin", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router
@@ -356,7 +356,7 @@ func TestE2E_Phase2_ServiceCatalogJourney(t *testing.T) {
 		JWTSecret: "test-secret-key",
 	}
 
-	token, err := middleware.GenerateToken(authConfig, "developer-1", "team-1")
+	token, err := middleware.GenerateToken(authConfig, "developer-1", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router
@@ -493,7 +493,7 @@ func TestE2E_Phase2_RightsizingJourney(t *testing.T) {
 		JWTSecret: "test-secret-key",
 	}
 
-	token, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1")
+	token, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router
@@ -592,7 +592,7 @@ func TestE2E_Phase2_QuotaEnforcementJourney(t *testing.T) {
 		JWTSecret: "test-secret-key",
 	}
 
-	token, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1")
+	token, err := middleware.GenerateToken(authConfig, "team-admin-1", "team-1", "", false)
 	require.NoError(t, err)
 
 	// Create test router

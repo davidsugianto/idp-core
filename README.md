@@ -38,7 +38,7 @@
 | 🚀 **Environment Management** | Create, list, get, delete isolated K8s namespaces                 |
 | 🎯 **GitOps Integration**     | Automatic ArgoCD Application creation and sync                    |
 | 📊 **Live Status**            | Real-time workload status via Kubernetes informers                |
-| 🔐 **Authentication**         | JWT + API Key auth with team context                              |
+| 🔐 **Authentication**         | JWT + OIDC (Keycloak) + API Key auth with team context          |
 | 👥 **User & Team Management** | Multi-tenant with team-scoped resources                           |
 | 🔑 **RBAC**                   | Role-based access control with permissions                        |
 | 🔑 **API Keys**               | Service-to-service auth with scoped permissions and rate limiting |
@@ -92,11 +92,15 @@ make test
 
 ### Core
 
-| Method | Endpoint        | Description       |
-| ------ | --------------- | ----------------- |
-| GET    | `/ping`         | Health check      |
-| POST   | `/auth/login`   | Authenticate user |
-| GET    | `/swagger/*any` | API documentation |
+| Method | Endpoint              | Description                  |
+| ------ | --------------------- | ---------------------------- |
+| GET    | `/ping`               | Health check                 |
+| POST   | `/auth/login`         | Authenticate user (local JWT)|
+| GET    | `/auth/oidc/login`    | Initiate OIDC login          |
+| GET    | `/auth/oidc/callback` | OIDC callback (code exchange)|
+| POST   | `/auth/oidc/refresh`  | Refresh OIDC tokens          |
+| POST   | `/auth/oidc/logout`   | Logout and clear session     |
+| GET    | `/swagger/*any`       | API documentation            |
 
 ### Environments
 
@@ -290,6 +294,10 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=idp_core
 JWT_SECRET=your-secret
+OIDC_ISSUER_URL=http://localhost:8081/realms/idp-core
+OIDC_CLIENT_ID=idp-core
+OIDC_CLIENT_SECRET=idp-core-secret-key
+OIDC_REDIRECT_URL=http://localhost:8989/auth/oidc/callback
 FINOPS_ENABLED=true
 FINOPS_OPENCOST_BASE_URL=http://opencost.opencost.svc.cluster.local:9003
 FINOPS_OPENCOST_POLL_INTERVAL=1h
