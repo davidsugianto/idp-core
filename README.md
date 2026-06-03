@@ -327,19 +327,26 @@ idp-core/
 
 ## Roadmap
 
-| Phase                 | Timeline | Status         | Focus                     |
-| --------------------- | -------- | -------------- | ------------------------- |
-| Phase 1 - MVP         | Q2 2026  | ✅ Complete     | Core API, K8s/ArgoCD      |
-| Phase 2 - Enhancement | Q3 2026  | 🔄 In Progress | RBAC, FinOps, Rightsizing |
-| Phase 3 - Platform    | Q4 2026  | 📋 Planned     | UI, Templates             |
-| Phase 4 - Advanced    | Q1 2027+ | 🔮 Roadmap     | AI/ML, Analytics          |
+| Phase                 | Timeline  | Status      | Focus                                          |
+| --------------------- | --------- | ----------- | ---------------------------------------------- |
+| Phase 1 - MVP         | Q2 2026   | ✅ Complete  | Core API, K8s/ArgoCD                           |
+| Phase 2 - Enhancement | Q3 2026   | ✅ Complete  | RBAC, FinOps, Rightsizing, Service Catalog     |
+| Phase 3 - Platform    | Q4 2026   | 📋 Planned  | Developer Portal UI, Templates, Multi-cluster  |
+| Phase 4 - Advanced    | Q1 2027+  | 🔮 Roadmap  | AI/ML, Analytics, Policy Engine                |
+
+### Related Projects
+
+- **[idp-ui](https://github.com/davidsugianto/idp-ui)** — Developer Portal frontend for Phase 3
 
 ## Documentation
 
 - [PRD Overview](docs/prd/PRD.md) — Product requirements
+- [PRD Phase 1](docs/prd/PRD_PHASE_1.md) — MVP requirements
 - [PRD Phase 2](docs/prd/PRD_PHASE_2.md) — Enhancement requirements
-- [Dev TODO List](docs/DEV_TODO_LIST_PHASE_2.md) — Current progress
+- [PRD Phase 3](docs/prd/PRD_PHASE_3.md) — Platform requirements
+- [Dev TODO Phase 3](docs/DEV_TODO_LIST_PHASE_3.md) — Current progress
 - [Development Guidelines](docs/DEV_GUIDELINE.md) — Coding standards
+- [idp-ui](https://github.com/davidsugianto/idp-ui) — Developer Portal frontend
 
 ## License
 

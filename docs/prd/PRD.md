@@ -189,9 +189,9 @@ timeline
 
 ## 🖥️ Phase 3: Platform (Planned)
 
-**Status**: 📋 Planning  
-**Timeline**: Q4 2026  
-**Document**: PRD_PHASE_3.md (To be created)
+**Status**: 📋 Planning
+**Timeline**: Q4 2026
+**Document**: [PRD_PHASE_3.md](./PRD_PHASE_3.md)
 
 ### Goals
 
@@ -350,8 +350,10 @@ timeline
 
 - [PRD Phase 1 - MVP](./PRD_PHASE_1.md)
 - [PRD Phase 2 - Enhancement](./PRD_PHASE_2.md)
+- [PRD Phase 3 - Platform](./PRD_PHASE_3.md)
 - [Development TODO List Phase 1](../DEV_TODO_LIST_PHASE_1.md)
 - [Development TODO List Phase 2](../DEV_TODO_LIST_PHASE_2.md)
+- [Development TODO List Phase 3](../DEV_TODO_LIST_PHASE_3.md)
 - [Development Guidelines](../DEV_GUIDELINE.md)
 - [Test Documentation](../TEST.md)
 - [ArgoCD REST API Documentation](https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/)
