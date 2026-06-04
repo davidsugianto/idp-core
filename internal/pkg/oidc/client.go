@@ -40,7 +40,8 @@ func NewClient(ctx context.Context, cfg *Config) (*Client, error) {
 	}
 
 	verifier := provider.Verifier(&oidc.Config{
-		ClientID: cfg.ClientID,
+		ClientID:        cfg.ClientID,
+		SkipIssuerCheck: true,
 	})
 
 	scopes := cfg.Scopes
