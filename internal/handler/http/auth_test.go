@@ -95,6 +95,28 @@ func TestHandler_Login(t *testing.T) {
 	})
 }
 
+func TestHandler_ResolveOIDCRedirectURI(t *testing.T) {
+	handler := New(Dependencies{
+		WebhookValidator: webhook.NewValidator(),
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8080"},
+	})
+
+	t.Run("accepts allowed origin with path", func(t *testing.T) {
+		redirectURI := handler.resolveOIDCRedirectURI("http://localhost:3000/dashboard")
+		assert.Equal(t, "http://localhost:3000/dashboard", redirectURI)
+	})
+
+	t.Run("falls back to first allowed origin for invalid redirect uri", func(t *testing.T) {
+		redirectURI := handler.resolveOIDCRedirectURI("http://evil.example.com")
+		assert.Equal(t, "http://localhost:3000", redirectURI)
+	})
+
+	t.Run("falls back to first allowed origin when redirect uri is empty", func(t *testing.T) {
+		redirectURI := handler.resolveOIDCRedirectURI("")
+		assert.Equal(t, "http://localhost:3000", redirectURI)
+	})
+}
+
 func TestHandler_Login_Integration(t *testing.T) {
 	cfg := &config.AuthConfig{JWTSecret: "test-secret-key"}
 	handler := New(Dependencies{

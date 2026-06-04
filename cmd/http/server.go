@@ -14,10 +14,10 @@ import (
 	budgetUC "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
-	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	quotaUC "github.com/davidsugianto/idp-core/internal/usecase/quota"
-	serviceUC "github.com/davidsugianto/idp-core/internal/usecase/service"
+	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
+	serviceUC "github.com/davidsugianto/idp-core/internal/usecase/service"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
@@ -87,6 +87,7 @@ func New(deps Dependencies) *Server {
 			OIDCClient:         deps.OIDCClient,
 			OIDCVerifier:       deps.OIDCVerifier,
 			OIDCEndSessionURL:  deps.Config.OIDC.IssuerURL + "/protocol/openid-connect/logout",
+			AllowedOrigins:     deps.Config.CORS.AllowedOrigins,
 		}),
 		config: deps.Config,
 	}

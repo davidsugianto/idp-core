@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/davidsugianto/go-pkgs/response"
@@ -56,6 +58,9 @@ func (h *Handler) OIDCLogin(c *gin.Context) {
 	// Set state cookie (HttpOnly, 10 min TTL)
 	c.SetCookie("oidc_state", state, 600, "/", "", false, true)
 
+	redirectURI := h.resolveOIDCRedirectURI(c.Query("redirect_uri"))
+	c.SetCookie("oidc_redirect_uri", redirectURI, 600, "/", "", false, true)
+
 	authURL := h.oidcClient.GetAuthURL(state)
 
 	if c.GetHeader("Accept") == "application/json" {
@@ -64,6 +69,36 @@ func (h *Handler) OIDCLogin(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, authURL)
+}
+
+func (h *Handler) resolveOIDCRedirectURI(raw string) string {
+	if raw != "" && h.isAllowedOIDCRedirectURI(raw) {
+		return raw
+	}
+
+	for _, origin := range h.allowedOrigins {
+		if origin != "" {
+			return origin
+		}
+	}
+
+	return "/"
+}
+
+func (h *Handler) isAllowedOIDCRedirectURI(raw string) bool {
+	redirectURL, err := url.Parse(raw)
+	if err != nil || !redirectURL.IsAbs() {
+		return false
+	}
+
+	redirectOrigin := redirectURL.Scheme + "://" + redirectURL.Host
+	for _, allowedOrigin := range h.allowedOrigins {
+		if strings.EqualFold(redirectOrigin, allowedOrigin) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // OIDCCallback godoc
@@ -88,8 +123,14 @@ func (h *Handler) OIDCCallback(c *gin.Context) {
 		return
 	}
 
-	// Clear state cookie
+	redirectURI := h.resolveOIDCRedirectURI("")
+	if redirectCookie, err := c.Cookie("oidc_redirect_uri"); err == nil {
+		redirectURI = h.resolveOIDCRedirectURI(redirectCookie)
+	}
+
+	// Clear state and redirect cookies
 	c.SetCookie("oidc_state", "", -1, "/", "", false, true)
+	c.SetCookie("oidc_redirect_uri", "", -1, "/", "", false, true)
 
 	code := c.Query("code")
 	if code == "" {
@@ -147,18 +188,17 @@ func (h *Handler) OIDCCallback(c *gin.Context) {
 		return
 	}
 
-	// Set JWT as HttpOnly cookie (24h)
-	c.SetCookie("auth_token", jwt, int((24 * time.Hour).Seconds()), "/", "", false, true)
+	authTokenMaxAge := int(middleware.JWTExpiryDuration(h.authConfig).Seconds())
+
+	// Set JWT as HttpOnly cookie
+	c.SetCookie("auth_token", jwt, authTokenMaxAge, "/", "", false, true)
 
 	// Set refresh token as HttpOnly cookie (7 days)
 	if oauth2Token.RefreshToken != "" {
 		c.SetCookie("refresh_token", oauth2Token.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 	}
 
-	expiresIn := int64(24 * time.Hour.Seconds())
-	if !oauth2Token.Expiry.IsZero() {
-		expiresIn = int64(time.Until(oauth2Token.Expiry).Seconds())
-	}
+	expiresIn := int64(middleware.JWTExpiryDuration(h.authConfig).Seconds())
 
 	if c.GetHeader("Accept") == "application/json" {
 		response.GinSuccess(c, OIDCTokenResponse{
@@ -173,10 +213,6 @@ func (h *Handler) OIDCCallback(c *gin.Context) {
 		return
 	}
 
-	redirectURI := c.Query("redirect_uri")
-	if redirectURI == "" {
-		redirectURI = "/"
-	}
 	c.Redirect(http.StatusFound, redirectURI)
 }
 
@@ -230,15 +266,13 @@ func (h *Handler) OIDCRefresh(c *gin.Context) {
 					isAdmin,
 				)
 				if err == nil {
-					c.SetCookie("auth_token", jwt, int((24 * time.Hour).Seconds()), "/", "", false, true)
+					authTokenMaxAge := int(middleware.JWTExpiryDuration(h.authConfig).Seconds())
+					c.SetCookie("auth_token", jwt, authTokenMaxAge, "/", "", false, true)
 					if newToken.RefreshToken != "" {
 						c.SetCookie("refresh_token", newToken.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 					}
 
-					expiresIn := int64(24 * time.Hour.Seconds())
-					if !newToken.Expiry.IsZero() {
-						expiresIn = int64(time.Until(newToken.Expiry).Seconds())
-					}
+					expiresIn := int64(middleware.JWTExpiryDuration(h.authConfig).Seconds())
 
 					response.GinSuccess(c, OIDCTokenResponse{
 						AccessToken:  jwt,
@@ -260,10 +294,7 @@ func (h *Handler) OIDCRefresh(c *gin.Context) {
 		c.SetCookie("refresh_token", newToken.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 	}
 
-	expiresIn := int64(24 * time.Hour.Seconds())
-	if !newToken.Expiry.IsZero() {
-		expiresIn = int64(time.Until(newToken.Expiry).Seconds())
-	}
+	expiresIn := int64(middleware.JWTExpiryDuration(h.authConfig).Seconds())
 
 	response.GinSuccess(c, gin.H{
 		"access_token":  newToken.AccessToken,
@@ -285,6 +316,7 @@ func (h *Handler) OIDCLogout(c *gin.Context) {
 	c.SetCookie("auth_token", "", -1, "/", "", false, true)
 	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
 	c.SetCookie("oidc_state", "", -1, "/", "", false, true)
+	c.SetCookie("oidc_redirect_uri", "", -1, "/", "", false, true)
 
 	if h.oidcEndSessionURL != "" {
 		c.Redirect(http.StatusFound, h.oidcEndSessionURL)

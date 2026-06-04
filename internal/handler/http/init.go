@@ -5,17 +5,17 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
-	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
-	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
-	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
-	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
-	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
-	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
+	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
 	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
+	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
+	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUsecase "github.com/davidsugianto/idp-core/internal/usecase/service"
+	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
+	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,6 +36,7 @@ type Handler struct {
 	oidcClient         *oidcPkg.Client
 	oidcVerifier       *oidcPkg.Verifier
 	oidcEndSessionURL  string
+	allowedOrigins     []string
 }
 
 type Dependencies struct {
@@ -55,6 +56,7 @@ type Dependencies struct {
 	OIDCClient         *oidcPkg.Client
 	OIDCVerifier       *oidcPkg.Verifier
 	OIDCEndSessionURL  string
+	AllowedOrigins     []string
 }
 
 func New(deps Dependencies) *Handler {
@@ -75,6 +77,7 @@ func New(deps Dependencies) *Handler {
 		oidcClient:         deps.OIDCClient,
 		oidcVerifier:       deps.OIDCVerifier,
 		oidcEndSessionURL:  deps.OIDCEndSessionURL,
+		allowedOrigins:     deps.AllowedOrigins,
 	}
 }
 

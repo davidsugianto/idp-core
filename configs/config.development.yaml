@@ -25,11 +25,11 @@ redis:
 
 auth:
   jwt_secret: "dev-secret-key-change-in-production"
-  jwt_expiry: "24h"
+  jwt_expiry: "1h"
 
 cors:
   allowed_origins:
-    - "http://localhost:3000"
+    - "http://localhost:3089"
     - "http://localhost:8080"
     - "http://localhost:8989"
   allowed_methods:
