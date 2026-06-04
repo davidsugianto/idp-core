@@ -65,7 +65,6 @@ oidc:
     - openid
     - profile
     - email
-    - groups
   groups_claim: "groups"
   admin_group: "platform-admins"
 

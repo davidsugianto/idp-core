@@ -70,7 +70,7 @@ func TestIntegration_OIDC_ClientCreation(t *testing.T) {
 			ClientID:     keycloakClientID,
 			ClientSecret: keycloakSecret,
 			RedirectURL:  "http://localhost:8080/auth/callback",
-			Scopes:       []string{"openid", "profile", "email", "groups"},
+			Scopes:       []string{"openid", "profile", "email"},
 		}
 
 		client, err := oidcPkg.NewClient(ctx, cfg)
@@ -155,7 +155,7 @@ func TestIntegration_OIDC_TokenVerification(t *testing.T) {
 		ClientID:     keycloakClientID,
 		ClientSecret: keycloakSecret,
 		RedirectURL:  "http://localhost:8080/auth/callback",
-		Scopes:       []string{"openid", "profile", "email", "groups"},
+		Scopes:       []string{"openid", "profile", "email"},
 	}
 
 	client, err := oidcPkg.NewClient(ctx, cfg)
@@ -203,7 +203,7 @@ func TestIntegration_OIDC_UserInfoExtraction(t *testing.T) {
 		ClientID:     keycloakClientID,
 		ClientSecret: keycloakSecret,
 		RedirectURL:  "http://localhost:8080/auth/callback",
-		Scopes:       []string{"openid", "profile", "email", "groups"},
+		Scopes:       []string{"openid", "profile", "email"},
 	}
 
 	client, err := oidcPkg.NewClient(ctx, cfg)
@@ -270,7 +270,7 @@ func TestIntegration_OIDC_Middleware(t *testing.T) {
 		ClientID:     keycloakClientID,
 		ClientSecret: keycloakSecret,
 		RedirectURL:  "http://localhost:8080/auth/callback",
-		Scopes:       []string{"openid", "profile", "email", "groups"},
+		Scopes:       []string{"openid", "profile", "email"},
 	}
 
 	client, err := oidcPkg.NewClient(ctx, cfg)
@@ -287,7 +287,7 @@ func TestIntegration_OIDC_Middleware(t *testing.T) {
 			ClientID:     keycloakClientID,
 			ClientSecret: keycloakSecret,
 			RedirectURL:  "http://localhost:8080/auth/callback",
-			Scopes:       []string{"openid", "profile", "email", "groups"},
+			Scopes:       []string{"openid", "profile", "email"},
 			GroupsClaim:  "groups",
 			AdminGroup:   "platform-admins",
 		},
@@ -480,7 +480,7 @@ func TestIntegration_OIDC_FullFlow(t *testing.T) {
 		ClientID:     keycloakClientID,
 		ClientSecret: keycloakSecret,
 		RedirectURL:  "http://localhost:8080/auth/callback",
-		Scopes:       []string{"openid", "profile", "email", "groups"},
+		Scopes:       []string{"openid", "profile", "email"},
 	}
 
 	client, err := oidcPkg.NewClient(ctx, cfg)
@@ -528,7 +528,7 @@ func TestIntegration_OIDC_FullFlow(t *testing.T) {
 			ClientID:     keycloakClientID,
 			ClientSecret: keycloakSecret,
 			RedirectURL:  "http://localhost:8080/auth/callback",
-			Scopes:       []string{"openid", "profile", "email", "groups"},
+			Scopes:       []string{"openid", "profile", "email"},
 			GroupsClaim:  "groups",
 			AdminGroup:   "platform-admins",
 		},
