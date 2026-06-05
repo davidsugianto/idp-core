@@ -268,7 +268,7 @@ func TestE2E_OIDC_AuthorizationURL(t *testing.T) {
 	keycloakURL := "http://localhost:8081"
 	realm := "idp-core"
 	clientID := "idp-core"
-	redirectURI := "http://localhost:8080/auth/callback"
+	redirectURI := "http://localhost:8989/auth/oidc/callback"
 
 	t.Run("authorization_url", func(t *testing.T) {
 		authURL := keycloakURL + "/realms/" + realm + "/protocol/openid-connect/auth"

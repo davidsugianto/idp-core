@@ -86,7 +86,7 @@ CLIENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${KEYCLOAK_URL}/admin/rea
         "enabled": true,
         "clientAuthenticatorType": "client-secret",
         "secret": "idp-core-secret-key",
-        "redirectUris": ["http://localhost:8080/auth/callback", "http://localhost:8989/auth/callback"],
+        "redirectUris": ["http://localhost:8080/auth/oidc/callback", "http://localhost:8989/auth/oidc/callback"],
         "webOrigins": ["http://localhost:8080", "http://localhost:8989"],
         "standardFlowEnabled": true,
         "directAccessGrantsEnabled": true,
@@ -99,7 +99,20 @@ CLIENT_HTTP_CODE=$(echo "$CLIENT_RESPONSE" | tail -1)
 if [ "$CLIENT_HTTP_CODE" = "201" ]; then
     echo "✅ Client created"
 elif [ "$CLIENT_HTTP_CODE" = "409" ]; then
-    echo "   (client already exists)"
+    echo "   (client already exists, updating redirect URIs)"
+    CLIENT_UUID=$(curl -s "${KEYCLOAK_URL}/admin/realms/idp-core/clients?clientId=idp-core" \
+        -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id' 2>/dev/null)
+    if [ -n "$CLIENT_UUID" ] && [ "$CLIENT_UUID" != "null" ]; then
+        curl -s -X PUT "${KEYCLOAK_URL}/admin/realms/idp-core/clients/${CLIENT_UUID}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+                "clientId": "idp-core",
+                "redirectUris": ["http://localhost:8080/auth/oidc/callback", "http://localhost:8989/auth/oidc/callback"],
+                "webOrigins": ["http://localhost:8080", "http://localhost:8989"]
+            }' >/dev/null 2>&1
+        echo "   ✅ Redirect URIs updated"
+    fi
 else
     echo "   Warning: Unexpected response code $CLIENT_HTTP_CODE"
 fi
@@ -225,7 +238,7 @@ echo "=== Configuration Summary ==="
 echo "Issuer URL:         ${KEYCLOAK_URL}/realms/idp-core"
 echo "Client ID:          idp-core"
 echo "Client Secret:      idp-core-secret-key"
-echo "Redirect URI:       http://localhost:8080/auth/callback"
+echo "Redirect URI:       http://localhost:8989/auth/oidc/callback"
 echo "Admin Group:        platform-admins"
 echo ""
 echo "Test Users:"
@@ -239,6 +252,10 @@ echo "      enabled: true"
 echo "      issuer_url: ${KEYCLOAK_URL}/realms/idp-core"
 echo "      client_id: idp-core"
 echo "      client_secret: idp-core-secret-key"
-echo "      redirect_url: http://localhost:8080/auth/callback"
+echo "      redirect_url: http://localhost:8989/auth/oidc/callback"
+echo "      scopes:"
+echo "        - openid"
+echo "        - profile"
+echo "        - email"
 echo "      groups_claim: groups"
 echo "      admin_group: platform-admins"

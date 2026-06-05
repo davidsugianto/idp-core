@@ -145,15 +145,27 @@ func IsAdmin(c *gin.Context) bool {
 	return false
 }
 
+func JWTExpiryDuration(cfg *config.AuthConfig) time.Duration {
+	if cfg != nil && cfg.JWTExpiry != "" {
+		if d, err := time.ParseDuration(cfg.JWTExpiry); err == nil {
+			return d
+		}
+	}
+
+	return 24 * time.Hour
+}
+
 // GenerateToken is a helper for testing/development
 func GenerateToken(cfg *config.AuthConfig, userID, teamID, email string, isAdmin bool) (string, error) {
+	expiresAt := time.Now().Add(JWTExpiryDuration(cfg))
+
 	claims := &Claims{
 		UserID:  userID,
 		TeamID:  teamID,
 		Email:   email,
 		IsAdmin: isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "idp-core",
 		},

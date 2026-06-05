@@ -25,7 +25,7 @@ redis:
 
 auth:
   jwt_secret: "dev-secret-key-change-in-production"
-  jwt_expiry: "24h"
+  jwt_expiry: "1h"
 
 cors:
   allowed_origins:

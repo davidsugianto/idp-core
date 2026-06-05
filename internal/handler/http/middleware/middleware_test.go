@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/davidsugianto/go-pkgs/logger"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
@@ -180,6 +181,21 @@ func TestGenerateToken(t *testing.T) {
 		JWT(cfg)(c)
 
 		assert.False(t, c.IsAborted())
+	})
+
+	t.Run("uses configured expiry", func(t *testing.T) {
+		cfg := &config.AuthConfig{JWTSecret: "test-secret-key", JWTExpiry: "1h"}
+		before := time.Now()
+
+		token, err := GenerateToken(cfg, "user-123", "team-456", "", false)
+		assert.NoError(t, err)
+
+		claims, err := ValidateToken(cfg, token)
+		assert.NoError(t, err)
+		assert.NotNil(t, claims.ExpiresAt)
+
+		expected := before.Add(time.Hour)
+		assert.WithinDuration(t, expected, claims.ExpiresAt.Time, 5*time.Second)
 	})
 }
 

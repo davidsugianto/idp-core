@@ -2,6 +2,10 @@
 
 This document provides comprehensive information about testing in idp-core.
 
+## Additional Guides
+
+- [OIDC Login Flow Testing](./TEST_LOGIN_FLOW.md)
+
 ## Test Categories
 
 | Category | Location | Purpose | Dependencies |
