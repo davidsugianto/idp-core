@@ -69,3 +69,8 @@ When adding a new feature (e.g., "project"):
 ## Configuration
 
 Config loaded from `configs/config.yaml` with environment variable overrides. See README.md for full schema.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
