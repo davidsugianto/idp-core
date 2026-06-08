@@ -11,42 +11,23 @@ import (
 	userModel "github.com/davidsugianto/idp-core/internal/model/user"
 )
 
+const (
+	platformAdminName = "Platform Admin"
+	developerName     = "Developer"
+)
+
 // SeedPlatformAdmin ensures the platform admin user exists in the local database
 // and has the platform_admin role assigned.
 // This user must also exist in Keycloak with the platform-admins group membership.
 func (s *Seeder) SeedPlatformAdmin(ctx context.Context) error {
 	log.Println("Seeding platform admin user...")
 
-	adminEmail := "admin@example.com"
-	adminName := "Platform Admin"
-
-	// Check if user already exists
-	existing, err := s.userRepo.GetByEmail(ctx, adminEmail)
+	adminUser, err := s.ensureOIDCUser(ctx, platformAdminEmail, platformAdminName)
 	if err != nil {
 		return err
 	}
+	userID := adminUser.ID
 
-	var userID string
-	if existing != nil {
-		log.Printf("Platform admin user already exists (id=%s), skipping creation", existing.ID)
-		userID = existing.ID
-	} else {
-		u := &userModel.User{
-			ID:       uuid.New().String(),
-			Email:    adminEmail,
-			Name:     adminName,
-			Provider: "oidc",
-			Status:   "active",
-		}
-		if err := s.userRepo.Create(ctx, u); err != nil {
-			log.Printf("Failed to create platform admin user: %v", err)
-			return err
-		}
-		userID = u.ID
-		log.Printf("Created platform admin user (id=%s, email=%s)", userID, adminEmail)
-	}
-
-	// Look up the platform_admin role
 	role, err := s.roleRepo.GetByName(ctx, "platform_admin")
 	if err != nil {
 		return err
@@ -56,7 +37,6 @@ func (s *Seeder) SeedPlatformAdmin(ctx context.Context) error {
 		return nil
 	}
 
-	// Check if role is already assigned
 	userRoles, err := s.roleRepo.GetUserRoles(ctx, userID)
 	if err != nil {
 		return err
@@ -68,7 +48,6 @@ func (s *Seeder) SeedPlatformAdmin(ctx context.Context) error {
 		}
 	}
 
-	// Assign platform_admin role
 	userRole := &roleModel.UserRole{
 		ID:        uuid.New().String(),
 		UserID:    userID,
@@ -82,4 +61,37 @@ func (s *Seeder) SeedPlatformAdmin(ctx context.Context) error {
 
 	log.Printf("Assigned platform_admin role to user (id=%s)", userID)
 	return nil
+}
+
+func (s *Seeder) SeedDeveloperUser(ctx context.Context) error {
+	log.Println("Seeding developer user...")
+
+	_, err := s.ensureOIDCUser(ctx, developerEmail, developerName)
+	return err
+}
+
+func (s *Seeder) ensureOIDCUser(ctx context.Context, email, name string) (*userModel.User, error) {
+	existing, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		log.Printf("OIDC user already exists (id=%s, email=%s)", existing.ID, email)
+		return existing, nil
+	}
+
+	u := &userModel.User{
+		ID:       uuid.New().String(),
+		Email:    email,
+		Name:     name,
+		Provider: "oidc",
+		Status:   "active",
+	}
+	if err := s.userRepo.Create(ctx, u); err != nil {
+		log.Printf("Failed to create OIDC user %s: %v", email, err)
+		return nil, err
+	}
+
+	log.Printf("Created OIDC user (id=%s, email=%s)", u.ID, email)
+	return u, nil
 }

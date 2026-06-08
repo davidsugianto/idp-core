@@ -82,7 +82,13 @@
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
+  Fill them out with testable functional requirements.
+
+  Constitution guardrails:
+  - Describe user-visible platform value and preserved historical records.
+  - State access-control, team-scope, and audit expectations when relevant.
+  - Avoid implementation choices unless they are repo-level constraints already
+    mandated elsewhere.
 -->
 
 ### Functional Requirements
@@ -123,6 +129,10 @@
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right assumptions based on reasonable defaults
   chosen when the feature description did not specify certain details.
+
+  Include assumptions about reused authentication/authorization rules,
+  existing team-scoped access, retained history, or phase boundaries when they
+  influence scope.
 -->
 
 - [Assumption about target users, e.g., "Users have stable internet connectivity"]

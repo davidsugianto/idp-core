@@ -40,7 +40,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Self-service value is explicit: the plan names the user workflow, platform/operator value,
+      and any historical record that must be preserved.
+- [ ] Clean architecture is preserved: planned changes name the concrete `internal/model`,
+      `internal/repository`, `internal/usecase`, `internal/handler/http`, and wiring paths.
+- [ ] Security and tenant isolation are covered: authn/authz boundaries, team scope, and secret
+      handling are addressed for every affected flow.
+- [ ] Contracts and observability are covered: API changes, async progress, notifications, logs,
+      and validation signals are documented where relevant.
+- [ ] Delivery stays incremental: the work remains organized into independently valuable user story
+      slices with clear validation steps.
 
 ## Project Structure
 
@@ -59,49 +68,34 @@ specs/[###-feature]/
 ### Source Code (repository root)
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  for this feature. Use the real idp-core paths that apply to the work and
+  remove unused entries before finalizing the plan.
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+cmd/
+├── http/
+└── cron/
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+internal/
+├── handler/
+│   ├── http/
+│   └── cron/
+├── usecase/
+├── repository/
+├── model/
+├── mocks/
+└── pkg/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+configs/
+migrations/
+deployments/
+tests/            # Create only if the feature introduces a dedicated test tree
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: [Document which concrete repo paths this feature touches,
+which new feature directories will be added, and how they preserve handler →
+usecase → repository → model boundaries]
 
 ## Complexity Tracking
 

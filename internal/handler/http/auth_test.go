@@ -2,15 +2,20 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
+	"github.com/davidsugianto/idp-core/internal/mocks"
+	teamModel "github.com/davidsugianto/idp-core/internal/model/team"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
+	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -166,5 +171,80 @@ func TestHandler_Login_Integration(t *testing.T) {
 		teamID, exists := c2.Get("team_id")
 		assert.True(t, exists)
 		assert.Equal(t, "team-456", teamID)
+	})
+}
+
+func TestHandler_ResolveOIDCTeamID(t *testing.T) {
+	t.Run("returns empty team id when handler has no team usecase", func(t *testing.T) {
+		handler := New(Dependencies{WebhookValidator: webhook.NewValidator()})
+
+		teamID, err := handler.resolveOIDCTeamID(context.Background(), "user-123")
+		assert.NoError(t, err)
+		assert.Empty(t, teamID)
+	})
+
+	t.Run("returns empty team id when user has no team memberships", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockTeamRepo := mocks.NewMockTeamRepository(ctrl)
+		mockUserRepo := mocks.NewMockUserRepository(ctrl)
+		mockTeamRepo.EXPECT().ListTeamsByUser(gomock.Any(), "user-123").Return([]teamModel.TeamMember{}, nil)
+
+		handler := New(Dependencies{
+			TeamUseCase: teamUsecase.New(teamUsecase.Dependencies{
+				TeamRepo: mockTeamRepo,
+				UserRepo: mockUserRepo,
+			}),
+			WebhookValidator: webhook.NewValidator(),
+		})
+
+		teamID, err := handler.resolveOIDCTeamID(context.Background(), "user-123")
+		assert.NoError(t, err)
+		assert.Empty(t, teamID)
+	})
+
+	t.Run("returns first team id from user memberships", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockTeamRepo := mocks.NewMockTeamRepository(ctrl)
+		mockUserRepo := mocks.NewMockUserRepository(ctrl)
+		mockTeamRepo.EXPECT().ListTeamsByUser(gomock.Any(), "user-123").Return([]teamModel.TeamMember{{TeamID: "team-1", UserID: "user-123"}, {TeamID: "team-2", UserID: "user-123"}}, nil)
+		mockTeamRepo.EXPECT().GetByID(gomock.Any(), "team-1").Return(&teamModel.Team{ID: "team-1", Name: "Team One"}, nil)
+		mockTeamRepo.EXPECT().GetByID(gomock.Any(), "team-2").Return(&teamModel.Team{ID: "team-2", Name: "Team Two"}, nil)
+
+		handler := New(Dependencies{
+			TeamUseCase: teamUsecase.New(teamUsecase.Dependencies{
+				TeamRepo: mockTeamRepo,
+				UserRepo: mockUserRepo,
+			}),
+			WebhookValidator: webhook.NewValidator(),
+		})
+
+		teamID, err := handler.resolveOIDCTeamID(context.Background(), "user-123")
+		assert.NoError(t, err)
+		assert.Equal(t, "team-1", teamID)
+	})
+
+	t.Run("returns repository error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockTeamRepo := mocks.NewMockTeamRepository(ctrl)
+		mockUserRepo := mocks.NewMockUserRepository(ctrl)
+		mockTeamRepo.EXPECT().ListTeamsByUser(gomock.Any(), "user-123").Return(nil, assert.AnError)
+
+		handler := New(Dependencies{
+			TeamUseCase: teamUsecase.New(teamUsecase.Dependencies{
+				TeamRepo: mockTeamRepo,
+				UserRepo: mockUserRepo,
+			}),
+			WebhookValidator: webhook.NewValidator(),
+		})
+
+		teamID, err := handler.resolveOIDCTeamID(context.Background(), "user-123")
+		assert.ErrorIs(t, err, assert.AnError)
+		assert.Empty(t, teamID)
 	})
 }

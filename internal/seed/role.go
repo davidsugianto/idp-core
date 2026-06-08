@@ -127,6 +127,14 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 		return err
 	}
 
+	if err := s.SeedDeveloperUser(ctx); err != nil {
+		return err
+	}
+
+	if err := s.SeedDefaultTeam(ctx); err != nil {
+		return err
+	}
+
 	log.Println("Seeding completed successfully")
 	return nil
 }

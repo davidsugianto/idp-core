@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/davidsugianto/go-pkgs/config"
@@ -32,6 +33,18 @@ func GetConfig() *Config {
 		cfg = &Config{}
 	}
 	return cfg
+}
+
+func parseCommaSeparated(raw string) []string {
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			values = append(values, part)
+		}
+	}
+	return values
 }
 
 func (c *Config) applyEnvOverrides() {
@@ -109,6 +122,12 @@ func (c *Config) applyEnvOverrides() {
 	}
 	if v := os.Getenv("OIDC_ISSUER_URL"); v != "" {
 		c.OIDC.IssuerURL = v
+	}
+	if v := os.Getenv("OIDC_DISCOVERY_URL"); v != "" {
+		c.OIDC.DiscoveryURL = v
+	}
+	if v := os.Getenv("OIDC_INSECURE_ISSUER_URLS"); v != "" {
+		c.OIDC.InsecureIssuerURLs = parseCommaSeparated(v)
 	}
 	if v := os.Getenv("OIDC_CLIENT_ID"); v != "" {
 		c.OIDC.ClientID = v
@@ -233,14 +252,16 @@ type ArgoCDConfig struct {
 }
 
 type OIDCConfig struct {
-	Enabled      bool     `json:"enabled" yaml:"enabled"`
-	IssuerURL    string   `json:"issuer_url" yaml:"issuer_url"`
-	ClientID     string   `json:"client_id" yaml:"client_id"`
-	ClientSecret string   `json:"client_secret" yaml:"client_secret"`
-	RedirectURL  string   `json:"redirect_url" yaml:"redirect_url"`
-	Scopes       []string `json:"scopes" yaml:"scopes"`
-	GroupsClaim  string   `json:"groups_claim" yaml:"groups_claim"`
-	AdminGroup   string   `json:"admin_group" yaml:"admin_group"`
+	Enabled            bool     `json:"enabled" yaml:"enabled"`
+	IssuerURL          string   `json:"issuer_url" yaml:"issuer_url"`
+	DiscoveryURL       string   `json:"discovery_url" yaml:"discovery_url"`
+	ClientID           string   `json:"client_id" yaml:"client_id"`
+	ClientSecret       string   `json:"client_secret" yaml:"client_secret"`
+	RedirectURL        string   `json:"redirect_url" yaml:"redirect_url"`
+	Scopes             []string `json:"scopes" yaml:"scopes"`
+	GroupsClaim        string   `json:"groups_claim" yaml:"groups_claim"`
+	AdminGroup         string   `json:"admin_group" yaml:"admin_group"`
+	InsecureIssuerURLs []string `json:"insecure_issuer_urls" yaml:"insecure_issuer_urls"`
 }
 
 type FinOpsConfig struct {

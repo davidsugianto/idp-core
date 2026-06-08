@@ -14,6 +14,7 @@ import (
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUsecase "github.com/davidsugianto/idp-core/internal/usecase/service"
+	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ type Handler struct {
 	rightsizingUseCase rightsizingUsecase.Usecase
 	quotaUseCase       quotaUsecase.Usecase
 	serviceUseCase     serviceUsecase.Usecase
+	templateUseCase    templateUsecase.Usecase
 	authConfig         *config.AuthConfig
 	webhookValidator   *webhook.Validator
 	oidcClient         *oidcPkg.Client
@@ -51,6 +53,7 @@ type Dependencies struct {
 	RightsizingUseCase rightsizingUsecase.Usecase
 	QuotaUseCase       quotaUsecase.Usecase
 	ServiceUseCase     serviceUsecase.Usecase
+	TemplateUseCase    templateUsecase.Usecase
 	AuthConfig         *config.AuthConfig
 	WebhookValidator   *webhook.Validator
 	OIDCClient         *oidcPkg.Client
@@ -72,6 +75,7 @@ func New(deps Dependencies) *Handler {
 		rightsizingUseCase: deps.RightsizingUseCase,
 		quotaUseCase:       deps.QuotaUseCase,
 		serviceUseCase:     deps.ServiceUseCase,
+		templateUseCase:    deps.TemplateUseCase,
 		authConfig:         deps.AuthConfig,
 		webhookValidator:   deps.WebhookValidator,
 		oidcClient:         deps.OIDCClient,

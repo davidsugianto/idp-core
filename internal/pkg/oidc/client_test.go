@@ -28,6 +28,16 @@ func TestNewClient_Validation(t *testing.T) {
 			wantErr: true,
 			errMsg:  "client ID is required",
 		},
+		{
+			name: "mismatched discovery URL requires allowlist",
+			config: &Config{
+				IssuerURL:    "http://localhost:8081/realms/idp-core",
+				DiscoveryURL: "http://keycloak:8080/realms/idp-core",
+				ClientID:     "test-client",
+			},
+			wantErr: true,
+			errMsg:  "must be listed in insecure issuer URLs",
+		},
 	}
 
 	for _, tt := range tests {
@@ -93,4 +103,9 @@ func TestClient_GetAuthURL(t *testing.T) {
 	assert.Contains(t, url, "client_id=test-client")
 	assert.Contains(t, url, "state=test-state")
 	assert.Contains(t, url, "redirect_uri=http%3A%2F%2Flocalhost%2Fcallback")
+}
+
+func TestContainsURL(t *testing.T) {
+	assert.True(t, containsURL([]string{"http://localhost:8081/realms/idp-core/"}, "http://LOCALHOST:8081/realms/idp-core"))
+	assert.False(t, containsURL([]string{"http://localhost:8081/realms/idp-core"}, "http://keycloak:8080/realms/idp-core"))
 }

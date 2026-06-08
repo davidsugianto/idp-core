@@ -20,10 +20,11 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/service_environment"
 	"github.com/davidsugianto/idp-core/internal/model/service_version"
 	"github.com/davidsugianto/idp-core/internal/model/team"
+	"github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/model/user"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
-	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
+	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
 	"github.com/davidsugianto/idp-core/internal/pkg/prometheus"
 	"github.com/davidsugianto/idp-core/internal/pkg/slack"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
@@ -44,6 +45,7 @@ import (
 	roleRepository "github.com/davidsugianto/idp-core/internal/repository/role"
 	serviceRepository "github.com/davidsugianto/idp-core/internal/repository/service"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
+	templateRepository "github.com/davidsugianto/idp-core/internal/repository/template"
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
 	apikeyUsecase "github.com/davidsugianto/idp-core/internal/usecase/apikey"
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
@@ -55,6 +57,7 @@ import (
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUsecase "github.com/davidsugianto/idp-core/internal/usecase/service"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
+	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 
 	"github.com/davidsugianto/go-pkgs/logs"
@@ -118,7 +121,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &template.Template{}, &template.TemplateVersion{}, &template.TemplateParameter{}, &template.TemplateResource{}, &template.TemplateInstance{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -182,6 +185,9 @@ func main() {
 	serviceRepo := serviceRepository.New(serviceRepository.Dependencies{
 		Database: dbClient,
 	})
+	templateRepo := templateRepository.New(templateRepository.Dependencies{
+		Database: dbClient,
+	})
 
 	// UseCases
 	envUC := envUsecase.New(envUsecase.Dependencies{
@@ -225,12 +231,15 @@ func main() {
 		ProvisionerRepo: provisionerRepo,
 	})
 	serviceUC := serviceUsecase.New(serviceUsecase.Dependencies{
-		ServiceRepo:   serviceRepo,
+		ServiceRepo:     serviceRepo,
 		EnvironmentRepo: envRepo,
 	})
+	templateUC := templateUsecase.New(templateUsecase.Dependencies{
+		TemplateRepo: templateRepo,
+	})
 
-	// Seed default data (roles, permissions, platform admin user)
-	seeder := seed.NewSeeder(roleRepo, permRepo, userRepo)
+	// Seed default data (roles, permissions, users, default team)
+	seeder := seed.NewSeeder(roleRepo, permRepo, userRepo, teamRepo)
 	if err := seeder.SeedAll(ctx); err != nil {
 		logs.Fatalf("cannot seed database: %v", err)
 	}
@@ -243,11 +252,13 @@ func main() {
 	var oidcVerifier *oidcPkg.Verifier
 	if cfg.OIDC.Enabled {
 		oidcClient, err = oidcPkg.NewClient(ctx, &oidcPkg.Config{
-			IssuerURL:    cfg.OIDC.IssuerURL,
-			ClientID:     cfg.OIDC.ClientID,
-			ClientSecret: cfg.OIDC.ClientSecret,
-			RedirectURL:  cfg.OIDC.RedirectURL,
-			Scopes:       cfg.OIDC.Scopes,
+			IssuerURL:          cfg.OIDC.IssuerURL,
+			DiscoveryURL:       cfg.OIDC.DiscoveryURL,
+			ClientID:           cfg.OIDC.ClientID,
+			ClientSecret:       cfg.OIDC.ClientSecret,
+			RedirectURL:        cfg.OIDC.RedirectURL,
+			Scopes:             cfg.OIDC.Scopes,
+			InsecureIssuerURLs: cfg.OIDC.InsecureIssuerURLs,
 		})
 		if err != nil {
 			logs.Fatalf("cannot initialize OIDC client: %v", err)
@@ -273,6 +284,7 @@ func main() {
 		RightsizingUseCase: rightsizingUC,
 		QuotaUseCase:       quotaUC,
 		ServiceUseCase:     serviceUC,
+		TemplateUseCase:    templateUC,
 		Config:             cfg,
 		WebhookValidator:   webhookValidator,
 		OIDCClient:         oidcClient,

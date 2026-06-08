@@ -7,6 +7,7 @@ import (
 	permissionModel "github.com/davidsugianto/idp-core/internal/model/permission"
 	permissionRepo "github.com/davidsugianto/idp-core/internal/repository/permission"
 	roleRepo "github.com/davidsugianto/idp-core/internal/repository/role"
+	teamRepo "github.com/davidsugianto/idp-core/internal/repository/team"
 	userRepo "github.com/davidsugianto/idp-core/internal/repository/user"
 )
 
@@ -15,14 +16,16 @@ type Seeder struct {
 	roleRepo       roleRepo.Repository
 	permissionRepo permissionRepo.Repository
 	userRepo       userRepo.Repository
+	teamRepo       teamRepo.Repository
 }
 
 // NewSeeder creates a new seeder
-func NewSeeder(roleRepo roleRepo.Repository, permissionRepo permissionRepo.Repository, userRepo userRepo.Repository) *Seeder {
+func NewSeeder(roleRepo roleRepo.Repository, permissionRepo permissionRepo.Repository, userRepo userRepo.Repository, teamRepo teamRepo.Repository) *Seeder {
 	return &Seeder{
 		roleRepo:       roleRepo,
 		permissionRepo: permissionRepo,
 		userRepo:       userRepo,
+		teamRepo:       teamRepo,
 	}
 }
 

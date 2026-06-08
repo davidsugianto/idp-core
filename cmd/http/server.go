@@ -18,6 +18,7 @@ import (
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUC "github.com/davidsugianto/idp-core/internal/usecase/service"
+	templateUC "github.com/davidsugianto/idp-core/internal/usecase/template"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
@@ -40,6 +41,7 @@ type Server struct {
 	rightsizingUseCase rightsizingUC.Usecase
 	quotaUseCase       quotaUC.Usecase
 	serviceUseCase     serviceUC.Usecase
+	templateUseCase    templateUC.Usecase
 }
 
 type Dependencies struct {
@@ -54,6 +56,7 @@ type Dependencies struct {
 	RightsizingUseCase rightsizingUC.Usecase
 	QuotaUseCase       quotaUC.Usecase
 	ServiceUseCase     serviceUC.Usecase
+	TemplateUseCase    templateUC.Usecase
 	Config             *config.Config
 	WebhookValidator   *webhook.Validator
 	OIDCClient         *oidcPkg.Client
@@ -70,6 +73,7 @@ func New(deps Dependencies) *Server {
 		rightsizingUseCase: deps.RightsizingUseCase,
 		quotaUseCase:       deps.QuotaUseCase,
 		serviceUseCase:     deps.ServiceUseCase,
+		templateUseCase:    deps.TemplateUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase: deps.EnvironmentUseCase,
 			UserUseCase:        deps.UserUseCase,
@@ -82,6 +86,7 @@ func New(deps Dependencies) *Server {
 			RightsizingUseCase: deps.RightsizingUseCase,
 			QuotaUseCase:       deps.QuotaUseCase,
 			ServiceUseCase:     deps.ServiceUseCase,
+			TemplateUseCase:    deps.TemplateUseCase,
 			AuthConfig:         &deps.Config.Auth,
 			WebhookValidator:   deps.WebhookValidator,
 			OIDCClient:         deps.OIDCClient,
@@ -264,6 +269,19 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	services.POST("/:id/versions/:versionId/deploy", s.handler.DeployServiceVersion)
 	services.GET("/:id/versions/:versionId/deployments", s.handler.ListVersionDeployments)
 	services.PATCH("/:id/versions/:versionId/deployments/:deploymentId", s.handler.UpdateDeployment)
+
+	// Template routes (protected with JWT)
+	templates := v1.Group("/templates")
+	templates.Use(middleware.JWT(&s.config.Auth))
+	templates.GET("", s.handler.ListTemplates)
+	templates.POST("", s.handler.CreateTemplate)
+	templates.GET("/:id", s.handler.GetTemplate)
+	templates.PATCH("/:id", s.handler.UpdateTemplate)
+	templates.DELETE("/:id", s.handler.DeleteTemplate)
+	templates.GET("/:id/versions", s.handler.ListTemplateVersions)
+	templates.POST("/:id/versions", s.handler.CreateTemplateVersion)
+	templates.GET("/:id/versions/:versionId", s.handler.GetTemplateVersion)
+	templates.PATCH("/:id/versions/:versionId", s.handler.UpdateTemplateVersion)
 }
 
 func (s *Server) Run(port string) error {
