@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
+	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/model/workload"
 	"github.com/davidsugianto/idp-core/internal/pkg/argocd"
@@ -205,6 +206,16 @@ func (u *usecase) Create(ctx context.Context, teamID string, req environment.Cre
 	}
 
 	env.Status = StatusReady
+	if u.liveUpdateUC != nil {
+		_ = u.liveUpdateUC.PublishStatus(ctx, &notificationModel.StatusEventPayload{EnvironmentID: env.ID, Status: env.Status, ChangedAt: time.Now()})
+	}
+	if u.notificationUC != nil {
+		notification := &notificationModel.Notification{EnvironmentID: env.ID, TeamID: env.TeamID, Kind: notificationModel.KindEnvironment, Severity: notificationModel.SeveritySuccess, Title: "Environment ready", Message: "Environment " + env.Name + " is ready", CreatedAt: time.Now()}
+		_ = u.notificationUC.Create(ctx, notification)
+		if u.liveUpdateUC != nil {
+			_ = u.liveUpdateUC.PublishNotification(ctx, notification)
+		}
+	}
 	return env, nil
 }
 

@@ -3,12 +3,16 @@ package environment_movement
 import (
 	"context"
 	"errors"
+	"time"
 
 	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
+	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	deliveryTargetRepo "github.com/davidsugianto/idp-core/internal/repository/delivery_target"
 	environmentRepo "github.com/davidsugianto/idp-core/internal/repository/environment"
 	environmentMovementRepo "github.com/davidsugianto/idp-core/internal/repository/environment_movement"
+	liveUpdateUsecase "github.com/davidsugianto/idp-core/internal/usecase/live_update"
+	notificationUsecase "github.com/davidsugianto/idp-core/internal/usecase/notification"
 )
 
 var (
@@ -31,12 +35,16 @@ type usecase struct {
 	environmentRepo         environmentRepo.Repository
 	deliveryTargetRepo      deliveryTargetRepo.Repository
 	environmentMovementRepo environmentMovementRepo.Repository
+	notificationUC          notificationUsecase.Usecase
+	liveUpdateUC            liveUpdateUsecase.Usecase
 }
 
 type Dependencies struct {
 	EnvironmentRepo         environmentRepo.Repository
 	DeliveryTargetRepo      deliveryTargetRepo.Repository
 	EnvironmentMovementRepo environmentMovementRepo.Repository
+	NotificationUC          notificationUsecase.Usecase
+	LiveUpdateUC            liveUpdateUsecase.Usecase
 }
 
 func New(deps Dependencies) Usecase {
@@ -44,6 +52,8 @@ func New(deps Dependencies) Usecase {
 		environmentRepo:         deps.EnvironmentRepo,
 		deliveryTargetRepo:      deps.DeliveryTargetRepo,
 		environmentMovementRepo: deps.EnvironmentMovementRepo,
+		notificationUC:          deps.NotificationUC,
+		liveUpdateUC:            deps.LiveUpdateUC,
 	}
 }
 
@@ -58,4 +68,22 @@ func deliveryTargetAllowsMovement(target *deliveryTargetModel.DeliveryTarget, te
 		return true
 	}
 	return target.TeamID == teamID
+}
+
+func (u *usecase) emitMovementNotification(ctx context.Context, environmentID, title, message string) {
+	if u.notificationUC == nil {
+		return
+	}
+	notification := &notificationModel.Notification{
+		EnvironmentID: environmentID,
+		Kind:          notificationModel.KindMovement,
+		Severity:      notificationModel.SeverityInfo,
+		Title:         title,
+		Message:       message,
+		CreatedAt:     time.Now(),
+	}
+	_ = u.notificationUC.Create(ctx, notification)
+	if u.liveUpdateUC != nil {
+		_ = u.liveUpdateUC.PublishNotification(ctx, notification)
+	}
 }

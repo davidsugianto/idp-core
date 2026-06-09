@@ -164,6 +164,8 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
 	envs.GET("/:id/services", s.handler.ListEnvironmentServices)
+	envs.GET("/:id/events/stream", s.handler.StreamEnvironmentEvents)
+	envs.GET("/:id/logs/stream", s.handler.StreamEnvironmentLogs)
 
 	// User routes (protected with JWT)
 	users := v1.Group("/users")
@@ -289,6 +291,10 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	services.POST("/:id/versions/:versionId/deploy", s.handler.DeployServiceVersion)
 	services.GET("/:id/versions/:versionId/deployments", s.handler.ListVersionDeployments)
 	services.PATCH("/:id/versions/:versionId/deployments/:deploymentId", s.handler.UpdateDeployment)
+
+	notifications := v1.Group("/notifications")
+	notifications.Use(middleware.JWT(&s.config.Auth))
+	notifications.GET("", s.handler.ListNotifications)
 
 	// Template routes (protected with JWT)
 	templates := v1.Group("/templates")

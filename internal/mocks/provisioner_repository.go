@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"io"
 	"reflect"
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
@@ -154,6 +155,28 @@ func (m *MockProvisionerRepository) GetPods(namespace string) ([]*corev1.Pod, er
 
 func (mr *MockProvisionerRepositoryMockRecorder) GetPods(namespace interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPods", reflect.TypeOf((*MockProvisionerRepository)(nil).GetPods), namespace)
+}
+
+func (m *MockProvisionerRepository) ResolvePodForWorkload(namespace, workloadName string) (*corev1.Pod, error) {
+	ret := m.ctrl.Call(m, "ResolvePodForWorkload", namespace, workloadName)
+	ret0, _ := ret[0].(*corev1.Pod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) ResolvePodForWorkload(namespace, workloadName interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResolvePodForWorkload", reflect.TypeOf((*MockProvisionerRepository)(nil).ResolvePodForWorkload), namespace, workloadName)
+}
+
+func (m *MockProvisionerRepository) StreamPodLogs(ctx context.Context, namespace, podName, containerName string, tailLines int64) (io.ReadCloser, error) {
+	ret := m.ctrl.Call(m, "StreamPodLogs", ctx, namespace, podName, containerName, tailLines)
+	ret0, _ := ret[0].(io.ReadCloser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockProvisionerRepositoryMockRecorder) StreamPodLogs(ctx, namespace, podName, containerName, tailLines interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamPodLogs", reflect.TypeOf((*MockProvisionerRepository)(nil).StreamPodLogs), ctx, namespace, podName, containerName, tailLines)
 }
 
 func (m *MockProvisionerRepository) StartInformers(ctx context.Context) error {

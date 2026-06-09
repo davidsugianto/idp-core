@@ -323,6 +323,21 @@ func (h *Handler) UpdateTemplateVersion(c *gin.Context) {
 	response.GinSuccess(c, result)
 }
 
+// ReplaceTemplateParameters godoc
+// @Summary Replace template parameter definitions
+// @Description Replace the ordered parameter definition set for a template version
+// @Tags template
+// @Accept json
+// @Produce json
+// @Param id path string true "Template ID"
+// @Param versionId path string true "Version ID"
+// @Param body body templateModel.ReplaceTemplateParametersRequest true "Template parameter replacement payload"
+// @Success 200 {array} templateModel.TemplateParameter
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/templates/{id}/versions/{versionId}/parameters [put]
+// @Security ApiKeyAuth
 func (h *Handler) ReplaceTemplateParameters(c *gin.Context) {
 	templateID := c.Param("id")
 	versionID := c.Param("versionId")
@@ -350,6 +365,21 @@ func (h *Handler) ReplaceTemplateParameters(c *gin.Context) {
 	response.GinSuccess(c, result)
 }
 
+// ReplaceTemplateResources godoc
+// @Summary Replace template resource definitions
+// @Description Replace the ordered resource definition set for a template version
+// @Tags template
+// @Accept json
+// @Produce json
+// @Param id path string true "Template ID"
+// @Param versionId path string true "Version ID"
+// @Param body body templateModel.ReplaceTemplateResourcesRequest true "Template resource replacement payload"
+// @Success 200 {array} templateModel.TemplateResource
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/templates/{id}/versions/{versionId}/resources [put]
+// @Security ApiKeyAuth
 func (h *Handler) ReplaceTemplateResources(c *gin.Context) {
 	templateID := c.Param("id")
 	versionID := c.Param("versionId")
@@ -377,6 +407,21 @@ func (h *Handler) ReplaceTemplateResources(c *gin.Context) {
 	response.GinSuccess(c, result)
 }
 
+// ValidateTemplateVersion godoc
+// @Summary Validate template version inputs
+// @Description Validate prospective template inputs before environment creation
+// @Tags template
+// @Accept json
+// @Produce json
+// @Param id path string true "Template ID"
+// @Param versionId path string true "Version ID"
+// @Param body body templateModel.ValidateTemplateVersionRequest true "Template input validation payload"
+// @Success 200 {object} templateModel.ValidateTemplateVersionResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/templates/{id}/versions/{versionId}/validate [post]
+// @Security ApiKeyAuth
 func (h *Handler) ValidateTemplateVersion(c *gin.Context) {
 	templateID := c.Param("id")
 	versionID := c.Param("versionId")

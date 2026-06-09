@@ -227,7 +227,11 @@ func main() {
 	notificationUC := notificationUsecase.New(notificationUsecase.Dependencies{
 		NotificationRepo: notificationRepo,
 	})
-	liveUpdateUC := liveUpdateUsecase.New(liveUpdateUsecase.Dependencies{})
+	liveUpdateUC := liveUpdateUsecase.New(liveUpdateUsecase.Dependencies{
+		NotificationUC:  notificationUC,
+		EnvironmentRepo: envRepo,
+		ProvisionerRepo: provisionerRepo,
+	})
 	deliveryTargetUC := deliveryTargetUsecase.New(deliveryTargetUsecase.Dependencies{
 		DeliveryTargetRepo:      deliveryTargetRepo,
 		EnvironmentRepo:         envRepo,
@@ -237,6 +241,8 @@ func main() {
 		EnvironmentRepo:         envRepo,
 		DeliveryTargetRepo:      deliveryTargetRepo,
 		EnvironmentMovementRepo: environmentMovementRepo,
+		NotificationUC:          notificationUC,
+		LiveUpdateUC:            liveUpdateUC,
 	})
 	envUC := envUsecase.New(envUsecase.Dependencies{
 		EnvironmentRepo:    envRepo,
@@ -288,7 +294,9 @@ func main() {
 		EnvironmentRepo: envRepo,
 	})
 	templateUC := templateUsecase.New(templateUsecase.Dependencies{
-		TemplateRepo: templateRepo,
+		TemplateRepo:   templateRepo,
+		NotificationUC: notificationUC,
+		LiveUpdateUC:   liveUpdateUC,
 	})
 
 	// Seed default data (roles, permissions, users, default team)

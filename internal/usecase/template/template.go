@@ -54,6 +54,7 @@ func (u *usecase) Create(ctx context.Context, req *templateModel.CreateTemplateR
 		return nil, err
 	}
 
+	u.emitTemplateNotification(ctx, "Template created", "Template "+template.Name+" was created")
 	return templateModel.ToTemplateResponse(template), nil
 }
 
@@ -196,6 +197,7 @@ func (u *usecase) CreateVersion(ctx context.Context, templateID string, req *tem
 		return nil, err
 	}
 
+	u.emitTemplateNotification(ctx, "Template version created", "Template version "+version.Version+" was created")
 	return templateModel.ToTemplateVersionResponse(version), nil
 }
 
@@ -261,6 +263,7 @@ func (u *usecase) UpdateVersion(ctx context.Context, versionID string, req *temp
 		return nil, err
 	}
 
+	u.emitTemplateNotification(ctx, "Template version updated", "Template version "+version.Version+" was updated")
 	return templateModel.ToTemplateVersionResponse(version), nil
 }
 

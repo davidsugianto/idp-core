@@ -23,6 +23,14 @@ func (u *usecase) Get(ctx context.Context, id string) (*notificationModel.Notifi
 	return notification, nil
 }
 
+func (u *usecase) List(ctx context.Context, req *notificationModel.ListNotificationsRequest) (*notificationModel.NotificationListResponse, error) {
+	notifications, total, err := u.notificationRepo.List(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return notificationModel.ToNotificationListResponse(notifications, total), nil
+}
+
 func (u *usecase) ListByEnvironment(ctx context.Context, environmentID string) ([]notificationModel.Notification, error) {
 	return u.notificationRepo.ListByEnvironment(ctx, environmentID)
 }

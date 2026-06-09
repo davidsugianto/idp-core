@@ -6,9 +6,12 @@ import (
 
 	"github.com/davidsugianto/go-pkgs/response"
 	"github.com/davidsugianto/idp-core/internal/handler/http/middleware"
+	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
 	environmentMovementUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
 	"github.com/gin-gonic/gin"
 )
+
+type environmentMovementResponse = environmentMovementModel.EnvironmentMovement
 
 type createEnvironmentMovementRequest struct {
 	DestinationTargetID string `json:"destination_target_id" binding:"required"`
@@ -20,6 +23,22 @@ type updateEnvironmentMovementStatusRequest struct {
 	Message         string `json:"message"`
 }
 
+// CreateEnvironmentMovement godoc
+// @Summary Create an environment movement request
+// @Description Request a move of an environment to another delivery target
+// @Tags environment-movements
+// @Accept json
+// @Produce json
+// @Param id path string true "Environment ID"
+// @Param body body createEnvironmentMovementRequest true "Environment movement request payload"
+// @Success 201 {object} environmentMovementModel.EnvironmentMovement
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/environments/{id}/movements [post]
+// @Security ApiKeyAuth
 func (h *Handler) CreateEnvironmentMovement(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	userID := middleware.GetUserID(c)
@@ -54,6 +73,18 @@ func (h *Handler) CreateEnvironmentMovement(c *gin.Context) {
 	response.GinCreated(c, result)
 }
 
+// ListEnvironmentMovements godoc
+// @Summary List environment movements
+// @Description List the historical movement requests for an environment
+// @Tags environment-movements
+// @Produce json
+// @Param id path string true "Environment ID"
+// @Success 200 {array} environmentMovementModel.EnvironmentMovement
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/environments/{id}/movements [get]
+// @Security ApiKeyAuth
 func (h *Handler) ListEnvironmentMovements(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
@@ -74,6 +105,19 @@ func (h *Handler) ListEnvironmentMovements(c *gin.Context) {
 	response.GinSuccess(c, result)
 }
 
+// GetEnvironmentMovement godoc
+// @Summary Get an environment movement
+// @Description Get the latest state for a specific environment movement request
+// @Tags environment-movements
+// @Produce json
+// @Param id path string true "Environment ID"
+// @Param movementId path string true "Movement ID"
+// @Success 200 {object} environmentMovementModel.EnvironmentMovement
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /v1/environments/{id}/movements/{movementId} [get]
+// @Security ApiKeyAuth
 func (h *Handler) GetEnvironmentMovement(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {

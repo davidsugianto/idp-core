@@ -9,19 +9,21 @@ import (
 	"reflect"
 	"testing"
 
+	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
-	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 type stubTemplateUsecase struct {
-	createVersionResult *templateModel.TemplateVersionResponse
-	createVersionErr    error
-	updateVersionResult *templateModel.TemplateVersionResponse
-	updateVersionErr    error
+	createVersionResult  *templateModel.TemplateVersionResponse
+	createVersionErr     error
+	updateVersionResult  *templateModel.TemplateVersionResponse
+	updateVersionErr     error
+	validateInputsResult *templateModel.ValidateTemplateVersionResponse
+	validateInputsErr    error
 }
 
 func (s *stubTemplateUsecase) Create(ctx context.Context, req *templateModel.CreateTemplateRequest) (*templateModel.TemplateResponse, error) {
@@ -69,6 +71,9 @@ func (s *stubTemplateUsecase) ReplaceResources(ctx context.Context, templateID, 
 }
 
 func (s *stubTemplateUsecase) ValidateVersionInputs(ctx context.Context, templateID, versionID string, req *templateModel.ValidateTemplateVersionRequest) (*templateModel.ValidateTemplateVersionResponse, error) {
+	if s.validateInputsResult != nil || s.validateInputsErr != nil {
+		return s.validateInputsResult, s.validateInputsErr
+	}
 	return &templateModel.ValidateTemplateVersionResponse{Valid: true, Errors: []string{}}, nil
 }
 
@@ -144,4 +149,26 @@ func TestUpdateTemplateVersionReturnsConflictOnInvalidLifecycleTransition(t *tes
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusConflict, w.Code)
+}
+
+func TestValidateTemplateVersionReturnsNotFoundForMissingVersion(t *testing.T) {
+	handler := newTemplateTestHandler(&stubTemplateUsecase{
+		validateInputsErr: templateUsecase.ErrTemplateVersionNotFound,
+	})
+
+	router := gin.New()
+	router.POST("/v1/templates/:id/versions/:versionId/validate", handler.ValidateTemplateVersion)
+
+	body, err := json.Marshal(templateModel.ValidateTemplateVersionRequest{
+		Inputs: map[string]any{"service_name": "payments-api"},
+	})
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/templates/template-1/versions/version-1/validate", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }

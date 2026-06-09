@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"time"
 
+	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	templateRepo "github.com/davidsugianto/idp-core/internal/repository/template"
+	liveUpdateUsecase "github.com/davidsugianto/idp-core/internal/usecase/live_update"
+	notificationUsecase "github.com/davidsugianto/idp-core/internal/usecase/notification"
 )
 
 var (
@@ -27,6 +31,23 @@ var (
 
 var templateParameterNamePattern = regexp.MustCompile(`^[a-z0-9-]+$`)
 
+func (u *usecase) emitTemplateNotification(ctx context.Context, title, message string) {
+	if u.notificationUC == nil {
+		return
+	}
+	notification := &notificationModel.Notification{
+		Kind:      notificationModel.KindTemplate,
+		Severity:  notificationModel.SeverityInfo,
+		Title:     title,
+		Message:   message,
+		CreatedAt: time.Now(),
+	}
+	_ = u.notificationUC.Create(ctx, notification)
+	if u.liveUpdateUC != nil {
+		_ = u.liveUpdateUC.PublishNotification(ctx, notification)
+	}
+}
+
 type Usecase interface {
 	Create(ctx context.Context, req *templateModel.CreateTemplateRequest) (*templateModel.TemplateResponse, error)
 	Get(ctx context.Context, id string) (*templateModel.TemplateResponse, error)
@@ -44,13 +65,17 @@ type Usecase interface {
 }
 
 type usecase struct {
-	templateRepo templateRepo.Repository
+	templateRepo   templateRepo.Repository
+	notificationUC notificationUsecase.Usecase
+	liveUpdateUC   liveUpdateUsecase.Usecase
 }
 
 type Dependencies struct {
-	TemplateRepo templateRepo.Repository
+	TemplateRepo   templateRepo.Repository
+	NotificationUC notificationUsecase.Usecase
+	LiveUpdateUC   liveUpdateUsecase.Usecase
 }
 
 func New(deps Dependencies) Usecase {
-	return &usecase{templateRepo: deps.TemplateRepo}
+	return &usecase{templateRepo: deps.TemplateRepo, notificationUC: deps.NotificationUC, liveUpdateUC: deps.LiveUpdateUC}
 }

@@ -108,20 +108,20 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T028 [P] [US3] Add handler contract coverage for notification history, SSE stream endpoints, and `401`/`403`/`410` failure modes in `internal/handler/http/live_update_test.go`
-- [ ] T029 [P] [US3] Add usecase integration coverage for event streaming, log streaming, notification history retrieval, stream expiry, and access-loss termination in `internal/usecase/live_update/live_update_integration_test.go`
+- [X] T028 [P] [US3] Add handler contract coverage for notification history, SSE stream endpoints, and `401`/`403`/`410` failure modes in `internal/handler/http/live_update_test.go`
+- [X] T029 [P] [US3] Add usecase integration coverage for event streaming, log streaming, notification history retrieval, stream expiry, and access-loss termination in `internal/usecase/live_update/live_update_integration_test.go`
 
 ### Implementation for User Story 3
 
-- [ ] T030 [P] [US3] Finalize notification and live subscription models for event payloads, list filters, and ephemeral stream session state in `internal/model/notification/type.go` and `internal/model/live_subscription/type.go`
-- [ ] T031 [US3] Implement notification persistence and recent-history queries in `internal/repository/notification/init.go` and `internal/repository/notification/notification.go`
-- [ ] T032 [US3] Implement notification history listing and filter handling in `internal/usecase/notification/init.go` and `internal/usecase/notification/notification.go`
-- [ ] T033 [US3] Implement SSE event orchestration for status, progress, and notification channels in `internal/usecase/live_update/init.go` and `internal/usecase/live_update/live_update.go`
-- [ ] T034 [US3] Implement workload log streaming and informer-backed event sourcing in `internal/usecase/live_update/log_stream.go` and `internal/repository/provisioner/informer.go`
-- [ ] T035 [US3] Emit notification and progress events from template, environment, and movement workflows in `internal/usecase/template/template.go`, `internal/usecase/environment/environment.go`, and `internal/usecase/environment_movement/environment_movement.go`
-- [ ] T036 [US3] Implement notification list and SSE handlers in `internal/handler/http/live_update.go`
-- [ ] T037 [US3] Register notification history and live update routes and dependency wiring in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
-- [ ] T038 [US3] Enforce stream authorization, expiry, unsubscribe, access-loss handling, and `410 Gone` invalidation behavior in `internal/handler/http/live_update.go` and `internal/usecase/live_update/live_update.go`
+- [X] T030 [P] [US3] Finalize notification and live subscription models for event payloads, list filters, and ephemeral stream session state in `internal/model/notification/type.go` and `internal/model/live_subscription/type.go`
+- [X] T031 [US3] Implement notification persistence and recent-history queries in `internal/repository/notification/init.go` and `internal/repository/notification/notification.go`
+- [X] T032 [US3] Implement notification history listing and filter handling in `internal/usecase/notification/init.go` and `internal/usecase/notification/notification.go`
+- [X] T033 [US3] Implement SSE event orchestration for status, progress, and notification channels in `internal/usecase/live_update/init.go` and `internal/usecase/live_update/live_update.go`
+- [X] T034 [US3] Implement workload log streaming and informer-backed event sourcing in `internal/usecase/live_update/log_stream.go` and `internal/repository/provisioner/informer.go`
+- [X] T035 [US3] Emit notification and progress events from template, environment, and movement workflows in `internal/usecase/template/template.go`, `internal/usecase/environment/environment.go`, and `internal/usecase/environment_movement/environment_movement.go`
+- [X] T036 [US3] Implement notification list and SSE handlers in `internal/handler/http/live_update.go`
+- [X] T037 [US3] Register notification history and live update routes and dependency wiring in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
+- [X] T038 [US3] Enforce stream authorization, expiry, unsubscribe, access-loss handling, and `410 Gone` invalidation behavior in `internal/handler/http/live_update.go` and `internal/usecase/live_update/live_update.go`
 
 **Checkpoint**: All user stories should now be independently functional.
 
@@ -131,10 +131,10 @@
 
 **Purpose**: Finalize contracts, validation, and documentation across all user stories.
 
-- [ ] T039 [P] Update Swagger annotations and request/response examples for Phase 3 endpoints in `internal/handler/http/template.go`, `internal/handler/http/environment.go`, `internal/handler/http/delivery_target.go`, `internal/handler/http/environment_movement.go`, and `internal/handler/http/live_update.go`
-- [ ] T040 Run the end-to-end validation scenarios from `specs/002-phase3-backend-foundation/quickstart.md` for template flow, delivery target placement, movement history, notification history, and SSE/log streams
-- [ ] T041 [P] Validate Phase 3 performance and failure-mode expectations against `specs/002-phase3-backend-foundation/plan.md` and `specs/002-phase3-backend-foundation/contracts/phase3-backend-api.md` using focused coverage in `internal/handler/http/template_test.go` and `internal/handler/http/live_update_test.go`
-- [ ] T042 [P] Run full regression coverage for Phase 3 touched packages and stabilize failures in `internal/handler/http/template_test.go`, `internal/handler/http/delivery_target_test.go`, `internal/handler/http/environment_movement_test.go`, and `internal/handler/http/live_update_test.go`
+- [X] T039 [P] Update Swagger annotations and request/response examples for Phase 3 endpoints in `internal/handler/http/template.go`, `internal/handler/http/environment.go`, `internal/handler/http/delivery_target.go`, `internal/handler/http/environment_movement.go`, and `internal/handler/http/live_update.go`
+- [X] T040 Run the end-to-end validation scenarios from `specs/002-phase3-backend-foundation/quickstart.md` for template flow, delivery target placement, movement history, notification history, and SSE/log streams
+- [X] T041 [P] Validate Phase 3 performance and failure-mode expectations against `specs/002-phase3-backend-foundation/plan.md` and `specs/002-phase3-backend-foundation/contracts/phase3-backend-api.md` using focused coverage in `internal/handler/http/template_test.go` and `internal/handler/http/live_update_test.go`
+- [X] T042 [P] Run full regression coverage for Phase 3 touched packages and stabilize failures in `internal/handler/http/template_test.go`, `internal/handler/http/delivery_target_test.go`, `internal/handler/http/environment_movement_test.go`, and `internal/handler/http/live_update_test.go`
 
 ---
 

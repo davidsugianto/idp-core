@@ -6,6 +6,7 @@ import (
 	"time"
 
 	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
+	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -51,6 +52,10 @@ func (u *usecase) Create(ctx context.Context, teamID, userID, environmentID, des
 		return nil, err
 	}
 
+	u.emitMovementNotification(ctx, env.ID, "Movement requested", movement.Message)
+	if u.liveUpdateUC != nil {
+		_ = u.liveUpdateUC.PublishProgress(ctx, &notificationModel.ProgressEventPayload{EnvironmentID: env.ID, Operation: "movement", ProgressPercent: movement.ProgressPercent, Message: movement.Message, ChangedAt: movement.UpdatedAt})
+	}
 	return movement, nil
 }
 
@@ -145,5 +150,9 @@ func (u *usecase) UpdateStatus(ctx context.Context, teamID, environmentID, movem
 		env.ClusterServer = target.ClusterServer
 	}
 
+	if u.liveUpdateUC != nil {
+		_ = u.liveUpdateUC.PublishProgress(ctx, &notificationModel.ProgressEventPayload{EnvironmentID: env.ID, Operation: "movement", ProgressPercent: movement.ProgressPercent, Message: movement.Message, ChangedAt: movement.UpdatedAt})
+	}
+	u.emitMovementNotification(ctx, env.ID, "Movement status updated", movement.Message)
 	return movement, nil
 }
