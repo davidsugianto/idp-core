@@ -115,6 +115,37 @@ func (mr *MockEnvironmentRepositoryMockRecorder) Update(ctx, env interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockEnvironmentRepository)(nil).Update), ctx, env)
 }
 
+func (m *MockEnvironmentRepository) UpdateDeliveryTarget(ctx context.Context, id, teamID, deliveryTargetID, clusterName, clusterServer string) error {
+	ret := m.ctrl.Call(m, "UpdateDeliveryTarget", ctx, id, teamID, deliveryTargetID, clusterName, clusterServer)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockEnvironmentRepositoryMockRecorder) UpdateDeliveryTarget(ctx, id, teamID, deliveryTargetID, clusterName, clusterServer interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeliveryTarget", reflect.TypeOf((*MockEnvironmentRepository)(nil).UpdateDeliveryTarget), ctx, id, teamID, deliveryTargetID, clusterName, clusterServer)
+}
+
+func (m *MockEnvironmentRepository) CountByDeliveryTarget(ctx context.Context, deliveryTargetID string) (int64, error) {
+	ret := m.ctrl.Call(m, "CountByDeliveryTarget", ctx, deliveryTargetID)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (mr *MockEnvironmentRepositoryMockRecorder) CountByDeliveryTarget(ctx, deliveryTargetID interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountByDeliveryTarget", reflect.TypeOf((*MockEnvironmentRepository)(nil).CountByDeliveryTarget), ctx, deliveryTargetID)
+}
+
+func (m *MockEnvironmentRepository) UpdateTemplateInstance(ctx context.Context, id, templateInstanceID string) error {
+	ret := m.ctrl.Call(m, "UpdateTemplateInstance", ctx, id, templateInstanceID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockEnvironmentRepositoryMockRecorder) UpdateTemplateInstance(ctx, id, templateInstanceID interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTemplateInstance", reflect.TypeOf((*MockEnvironmentRepository)(nil).UpdateTemplateInstance), ctx, id, templateInstanceID)
+}
+
 func (m *MockEnvironmentRepository) UpdateStatus(ctx context.Context, id, teamID, status, lastError string) error {
 	ret := m.ctrl.Call(m, "UpdateStatus", ctx, id, teamID, status, lastError)
 	ret0, _ := ret[0].(error)

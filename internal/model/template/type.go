@@ -246,6 +246,23 @@ type TemplateVersionListResponse struct {
 	Total    int64                     `json:"total"`
 }
 
+type ReplaceTemplateParametersRequest struct {
+	Parameters []TemplateParameter `json:"parameters" binding:"required"`
+}
+
+type ReplaceTemplateResourcesRequest struct {
+	Resources []TemplateResource `json:"resources" binding:"required"`
+}
+
+type ValidateTemplateVersionRequest struct {
+	Inputs map[string]any `json:"inputs"`
+}
+
+type ValidateTemplateVersionResponse struct {
+	Valid  bool     `json:"valid"`
+	Errors []string `json:"errors"`
+}
+
 func ToTemplateVersionResponse(v *TemplateVersion) *TemplateVersionResponse {
 	return &TemplateVersionResponse{
 		ID:          v.ID,

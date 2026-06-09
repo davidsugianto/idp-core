@@ -312,6 +312,87 @@ func (h *Handler) UpdateTemplateVersion(c *gin.Context) {
 			response.GinBadRequest(c, err)
 			return
 		}
+		if errors.Is(err, templateUsecase.ErrInvalidLifecycleTransition) {
+			response.GinError(c, http.StatusConflict, err)
+			return
+		}
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+func (h *Handler) ReplaceTemplateParameters(c *gin.Context) {
+	templateID := c.Param("id")
+	versionID := c.Param("versionId")
+
+	var req templateModel.ReplaceTemplateParametersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.templateUseCase.ReplaceParameters(c.Request.Context(), templateID, versionID, &req)
+	if err != nil {
+		if errors.Is(err, templateUsecase.ErrTemplateNotFound) || errors.Is(err, templateUsecase.ErrTemplateVersionNotFound) {
+			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, templateUsecase.ErrTemplateParameterRequired) || errors.Is(err, templateUsecase.ErrTemplateParameterDuplicate) {
+			response.GinBadRequest(c, err)
+			return
+		}
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+func (h *Handler) ReplaceTemplateResources(c *gin.Context) {
+	templateID := c.Param("id")
+	versionID := c.Param("versionId")
+
+	var req templateModel.ReplaceTemplateResourcesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.templateUseCase.ReplaceResources(c.Request.Context(), templateID, versionID, &req)
+	if err != nil {
+		if errors.Is(err, templateUsecase.ErrTemplateNotFound) || errors.Is(err, templateUsecase.ErrTemplateVersionNotFound) {
+			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, templateUsecase.ErrTemplateResourceRequired) {
+			response.GinBadRequest(c, err)
+			return
+		}
+		response.GinInternalServerError(c, err)
+		return
+	}
+
+	response.GinSuccess(c, result)
+}
+
+func (h *Handler) ValidateTemplateVersion(c *gin.Context) {
+	templateID := c.Param("id")
+	versionID := c.Param("versionId")
+
+	var req templateModel.ValidateTemplateVersionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinBadRequest(c, err)
+		return
+	}
+
+	result, err := h.templateUseCase.ValidateVersionInputs(c.Request.Context(), templateID, versionID, &req)
+	if err != nil {
+		if errors.Is(err, templateUsecase.ErrTemplateNotFound) || errors.Is(err, templateUsecase.ErrTemplateVersionNotFound) {
+			response.GinNotFound(c, err)
+			return
+		}
 		response.GinInternalServerError(c, err)
 		return
 	}

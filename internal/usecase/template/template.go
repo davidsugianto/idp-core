@@ -2,6 +2,9 @@ package template
 
 import (
 	"context"
+	"encoding/json"
+	"regexp"
+	"strings"
 	"time"
 
 	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
@@ -247,6 +250,9 @@ func (u *usecase) UpdateVersion(ctx context.Context, versionID string, req *temp
 		if !templateModel.ValidStatus(*req.Status) {
 			return nil, ErrInvalidStatus
 		}
+		if !canTransitionTemplateVersion(version.Status, *req.Status) {
+			return nil, ErrInvalidLifecycleTransition
+		}
 		version.Status = *req.Status
 	}
 
@@ -256,4 +262,174 @@ func (u *usecase) UpdateVersion(ctx context.Context, versionID string, req *temp
 	}
 
 	return templateModel.ToTemplateVersionResponse(version), nil
+}
+
+func (u *usecase) ReplaceParameters(ctx context.Context, templateID, versionID string, req *templateModel.ReplaceTemplateParametersRequest) ([]templateModel.TemplateParameter, error) {
+	if _, err := u.ensureVersionBelongsToTemplate(ctx, templateID, versionID); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return []templateModel.TemplateParameter{}, nil
+	}
+
+	parameters := make([]templateModel.TemplateParameter, len(req.Parameters))
+	seenNames := make(map[string]struct{}, len(req.Parameters))
+	now := time.Now()
+
+	for i, parameter := range req.Parameters {
+		name := strings.TrimSpace(parameter.Name)
+		if name == "" {
+			return nil, ErrTemplateParameterRequired
+		}
+		if _, exists := seenNames[name]; exists {
+			return nil, ErrTemplateParameterDuplicate
+		}
+		seenNames[name] = struct{}{}
+
+		if parameter.DisplayName == "" {
+			parameter.DisplayName = name
+		}
+		parameter.ID = uuid.New().String()
+		parameter.TemplateID = templateID
+		parameter.VersionID = versionID
+		parameter.Name = name
+		parameter.Order = i
+		parameter.CreatedAt = now
+		parameters[i] = parameter
+	}
+
+	if err := u.templateRepo.ReplaceParameters(ctx, templateID, versionID, parameters); err != nil {
+		return nil, err
+	}
+
+	return parameters, nil
+}
+
+func (u *usecase) ReplaceResources(ctx context.Context, templateID, versionID string, req *templateModel.ReplaceTemplateResourcesRequest) ([]templateModel.TemplateResource, error) {
+	if _, err := u.ensureVersionBelongsToTemplate(ctx, templateID, versionID); err != nil {
+		return nil, err
+	}
+	if req == nil {
+		return []templateModel.TemplateResource{}, nil
+	}
+
+	resources := make([]templateModel.TemplateResource, len(req.Resources))
+	now := time.Now()
+
+	for i, resource := range req.Resources {
+		resourceName := strings.TrimSpace(resource.Name)
+		if resourceName == "" {
+			return nil, ErrTemplateResourceRequired
+		}
+		resource.ID = uuid.New().String()
+		resource.TemplateID = templateID
+		resource.VersionID = versionID
+		resource.Name = resourceName
+		resource.Order = i
+		resource.CreatedAt = now
+		resource.UpdatedAt = now
+		resources[i] = resource
+	}
+
+	if err := u.templateRepo.ReplaceResources(ctx, templateID, versionID, resources); err != nil {
+		return nil, err
+	}
+
+	return resources, nil
+}
+
+func (u *usecase) ValidateVersionInputs(ctx context.Context, templateID, versionID string, req *templateModel.ValidateTemplateVersionRequest) (*templateModel.ValidateTemplateVersionResponse, error) {
+	if _, err := u.ensureVersionBelongsToTemplate(ctx, templateID, versionID); err != nil {
+		return nil, err
+	}
+
+	parameters, err := u.templateRepo.ListParametersByVersion(ctx, versionID)
+	if err != nil {
+		return nil, err
+	}
+
+	inputMap := map[string]any{}
+	if req != nil && req.Inputs != nil {
+		inputMap = req.Inputs
+	}
+
+	errors := make([]string, 0)
+	for _, parameter := range parameters {
+		value, ok := inputMap[parameter.Name]
+		if !ok || value == nil || strings.TrimSpace(strings.TrimSpace(toString(value))) == "" {
+			if parameter.Required {
+				errors = append(errors, parameter.Name+" is required")
+			}
+			continue
+		}
+
+		if parameter.Validation != "" {
+			var constraints map[string]any
+			if err := json.Unmarshal([]byte(parameter.Validation), &constraints); err == nil {
+				if rawPattern, ok := constraints["pattern"].(string); ok && rawPattern != "" {
+					matcher, compileErr := regexp.Compile(rawPattern)
+					if compileErr == nil && !matcher.MatchString(toString(value)) {
+						errors = append(errors, parameter.Name+" does not match required pattern")
+					}
+				}
+			}
+		}
+	}
+
+	return &templateModel.ValidateTemplateVersionResponse{
+		Valid:  len(errors) == 0,
+		Errors: errors,
+	}, nil
+}
+
+func (u *usecase) ensureVersionBelongsToTemplate(ctx context.Context, templateID, versionID string) (*templateModel.TemplateVersion, error) {
+	if _, err := u.templateRepo.GetByID(ctx, templateID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrTemplateNotFound
+		}
+		return nil, err
+	}
+
+	version, err := u.templateRepo.GetVersionByID(ctx, versionID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrTemplateVersionNotFound
+		}
+		return nil, err
+	}
+	if version.TemplateID != templateID {
+		return nil, ErrTemplateVersionNotFound
+	}
+
+	return version, nil
+}
+
+func toString(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	default:
+		bytes, err := json.Marshal(v)
+		if err != nil {
+			return ""
+		}
+		return string(bytes)
+	}
+}
+
+func canTransitionTemplateVersion(currentStatus, nextStatus string) bool {
+	if currentStatus == nextStatus {
+		return true
+	}
+
+	switch currentStatus {
+	case templateModel.StatusDraft:
+		return nextStatus == templateModel.StatusStable || nextStatus == templateModel.StatusDeprecated
+	case templateModel.StatusStable:
+		return nextStatus == templateModel.StatusDeprecated
+	case templateModel.StatusDeprecated:
+		return false
+	default:
+		return false
+	}
 }

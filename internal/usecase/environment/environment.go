@@ -2,16 +2,21 @@ package environment
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
+	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/model/workload"
 	"github.com/davidsugianto/idp-core/internal/pkg/argocd"
+	templateRepo "github.com/davidsugianto/idp-core/internal/repository/template"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -25,47 +30,134 @@ const (
 
 // Sentinel errors
 var (
-	ErrEnvironmentNotFound = errors.New("environment not found")
-	ErrNoArgoApp           = errors.New("environment has no ArgoCD application")
-	ErrGitOpsNotConfigured = errors.New("GitOps integration not configured")
-	ErrK8sNotConfigured    = errors.New("Kubernetes integration not configured")
-	ErrWorkloadNotFound    = errors.New("workload not found")
+	ErrEnvironmentNotFound     = errors.New("environment not found")
+	ErrNoArgoApp               = errors.New("environment has no ArgoCD application")
+	ErrGitOpsNotConfigured     = errors.New("GitOps integration not configured")
+	ErrK8sNotConfigured        = errors.New("Kubernetes integration not configured")
+	ErrWorkloadNotFound        = errors.New("workload not found")
+	ErrTemplateVersionNotFound = errors.New("template version not found")
+	ErrTemplateInputInvalid    = errors.New("template inputs are invalid")
+	ErrDeliveryTargetNotFound  = errors.New("delivery target not found")
+	ErrDeliveryTargetInvalid   = errors.New("delivery target is not available for placement")
 )
 
 func (u *usecase) Create(ctx context.Context, teamID string, req environment.CreateEnvironmentRequest) (*environment.Environment, error) {
-	// Generate UUID
+	var templateVersion *templateModel.TemplateVersion
+	var templateInstance *templateModel.TemplateInstance
+	var templateInputsPayload string
+
+	if req.DeliveryTargetID != "" {
+		if u.deliveryTargetRepo == nil {
+			return nil, errors.New("delivery target repository not configured")
+		}
+
+		target, err := u.deliveryTargetRepo.GetByID(ctx, req.DeliveryTargetID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrDeliveryTargetNotFound
+			}
+			return nil, fmt.Errorf("failed to get delivery target: %w", err)
+		}
+		if !deliveryTargetAllowsPlacement(target, teamID) {
+			return nil, ErrDeliveryTargetInvalid
+		}
+		if req.ClusterName == "" {
+			req.ClusterName = target.ClusterName
+		}
+		if req.ClusterServer == "" {
+			req.ClusterServer = target.ClusterServer
+		}
+	}
+
+	if req.TemplateVersionID != "" {
+		if u.templateRepo == nil {
+			return nil, errors.New("template repository not configured")
+		}
+
+		version, err := u.templateRepo.GetVersionByID(ctx, req.TemplateVersionID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrTemplateVersionNotFound
+			}
+			return nil, fmt.Errorf("failed to get template version: %w", err)
+		}
+
+		validationResult, err := validateTemplateInputs(ctx, u.templateRepo, version.ID, req.TemplateInputs)
+		if err != nil {
+			return nil, err
+		}
+		if !validationResult.Valid {
+			return nil, fmt.Errorf("%w: %s", ErrTemplateInputInvalid, strings.Join(validationResult.Errors, ", "))
+		}
+
+		resolvedInputs := make(map[string]any, len(req.TemplateInputs))
+		maps.Copy(resolvedInputs, req.TemplateInputs)
+
+		parameters, err := u.templateRepo.ListParametersByVersion(ctx, version.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load template parameters: %w", err)
+		}
+		for _, parameter := range parameters {
+			if _, ok := resolvedInputs[parameter.Name]; !ok && parameter.Default != "" {
+				resolvedInputs[parameter.Name] = parameter.Default
+			}
+		}
+
+		encodedInputs, err := json.Marshal(resolvedInputs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode template inputs: %w", err)
+		}
+
+		templateInputsPayload = string(encodedInputs)
+		templateVersion = version
+	}
+
 	id := uuid.New().String()
-
-	// Generate namespace name (DNS-1123 compliant)
 	namespace := generateNamespace(teamID, req.Name)
-
-	// Generate ArgoCD app name
 	argAppName := fmt.Sprintf("env-%s", id[:8])
 
-	// Set default git revision
 	gitRevision := req.GitRevision
 	if gitRevision == "" {
 		gitRevision = "main"
 	}
 
 	env := &environment.Environment{
-		ID:           id,
-		TeamID:       teamID,
-		Name:         req.Name,
-		Namespace:    namespace,
-		Status:       StatusCreating,
-		GitRepoURL:   req.GitRepoURL,
-		GitRevision:  gitRevision,
-		ManifestPath: req.ManifestPath,
-		ArgoAppName:  argAppName,
+		ID:               id,
+		TeamID:           teamID,
+		Name:             req.Name,
+		Namespace:        namespace,
+		Status:           StatusCreating,
+		GitRepoURL:       req.GitRepoURL,
+		GitRevision:      gitRevision,
+		ManifestPath:     req.ManifestPath,
+		ArgoAppName:      argAppName,
+		ClusterName:      req.ClusterName,
+		ClusterServer:    req.ClusterServer,
+		DeliveryTargetID: req.DeliveryTargetID,
 	}
 
-	// Persist environment record
 	if err := u.environmentRepo.Create(ctx, env); err != nil {
 		return nil, fmt.Errorf("failed to create environment: %w", err)
 	}
 
-	// Create Kubernetes namespace via provisioner repository
+	if templateVersion != nil {
+		templateInstance = &templateModel.TemplateInstance{
+			ID:            uuid.New().String(),
+			TemplateID:    templateVersion.TemplateID,
+			VersionID:     templateVersion.ID,
+			EnvironmentID: env.ID,
+			Parameters:    templateInputsPayload,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.templateRepo.CreateInstance(ctx, templateInstance); err != nil {
+			return nil, fmt.Errorf("failed to create template instance: %w", err)
+		}
+		if err := u.environmentRepo.UpdateTemplateInstance(ctx, env.ID, templateInstance.ID); err != nil {
+			return nil, fmt.Errorf("failed to link template instance: %w", err)
+		}
+		env.TemplateInstanceID = templateInstance.ID
+	}
+
 	if u.provisionerRepo != nil {
 		labels := map[string]string{
 			"idp-core/team-id":        teamID,
@@ -78,28 +170,28 @@ func (u *usecase) Create(ctx context.Context, teamID string, req environment.Cre
 			return nil, fmt.Errorf("failed to create namespace: %w", err)
 		}
 
-		// Create ResourceQuota if specified
 		if req.ResourceQuotaCPU != "" || req.ResourceQuotaMemory != "" {
 			if err := u.provisionerRepo.CreateResourceQuota(ctx, namespace, "idp-quota", req.ResourceQuotaCPU, req.ResourceQuotaMemory); err != nil {
-				// Log but don't fail - quota is optional
 			}
 		}
 
-		// Create NetworkPolicy for namespace isolation
 		if err := u.provisionerRepo.CreateNetworkPolicy(ctx, namespace, "idp-isolation", labels); err != nil {
-			// Log but don't fail - network policy is optional
 		}
 	}
 
-	// Create ArgoCD Application via gitops repository
 	if u.gitopsRepo != nil {
+		serverURL := req.ClusterServer
+		if serverURL == "" {
+			serverURL = "https://kubernetes.default.svc"
+		}
+
 		appSpec := argocd.ApplicationSpec{
 			Name:      argAppName,
 			Namespace: namespace,
 			RepoURL:   req.GitRepoURL,
 			Revision:  gitRevision,
 			Path:      req.ManifestPath,
-			ServerURL: "https://kubernetes.default.svc",
+			ServerURL: serverURL,
 		}
 
 		if err := u.gitopsRepo.CreateApplication(ctx, appSpec); err != nil {
@@ -108,7 +200,6 @@ func (u *usecase) Create(ctx context.Context, teamID string, req environment.Cre
 		}
 	}
 
-	// Mark as ready
 	if err := u.environmentRepo.UpdateStatus(ctx, id, teamID, StatusReady, ""); err != nil {
 		return nil, fmt.Errorf("failed to update environment status: %w", err)
 	}
@@ -118,6 +209,39 @@ func (u *usecase) Create(ctx context.Context, teamID string, req environment.Cre
 }
 
 // generateNamespace creates a DNS-1123 compliant namespace name
+func validateTemplateInputs(ctx context.Context, templateRepo templateRepo.Repository, versionID string, inputs map[string]any) (*templateModel.ValidateTemplateVersionResponse, error) {
+	parameters, err := templateRepo.ListParametersByVersion(ctx, versionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load template parameters: %w", err)
+	}
+
+	validationErrors := make([]string, 0)
+	for _, parameter := range parameters {
+		value, ok := inputs[parameter.Name]
+		if (!ok || value == nil || strings.TrimSpace(toTemplateInputString(value)) == "") && parameter.Required {
+			validationErrors = append(validationErrors, parameter.Name+" is required")
+		}
+	}
+
+	return &templateModel.ValidateTemplateVersionResponse{
+		Valid:  len(validationErrors) == 0,
+		Errors: validationErrors,
+	}, nil
+}
+
+func toTemplateInputString(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	default:
+		payload, err := json.Marshal(v)
+		if err != nil {
+			return ""
+		}
+		return string(payload)
+	}
+}
+
 func generateNamespace(teamID, envName string) string {
 	// Format: idp-{teamSlug}-{envSlug}
 	teamSlug := sanitizeSlug(teamID, 20)
@@ -401,22 +525,22 @@ func convertPodToPodStatus(p *corev1.Pod, envID, namespace string) workload.PodS
 	}
 
 	return workload.PodStatus{
-		ID:                string(p.UID),
-		EnvironmentID:     envID,
-		Namespace:         namespace,
-		Name:              p.Name,
-		OwnerName:         ownerName,
-		OwnerKind:         ownerKind,
-		Phase:             string(p.Status.Phase),
-		PodIP:             p.Status.PodIP,
-		NodeName:          p.Spec.NodeName,
-		Ready:             ready,
-		Initialized:       initialized,
-		ContainersReady:   containersReady,
-		Scheduled:         scheduled,
-		ContainerCount:    len(p.Spec.Containers),
+		ID:                 string(p.UID),
+		EnvironmentID:      envID,
+		Namespace:          namespace,
+		Name:               p.Name,
+		OwnerName:          ownerName,
+		OwnerKind:          ownerKind,
+		Phase:              string(p.Status.Phase),
+		PodIP:              p.Status.PodIP,
+		NodeName:           p.Spec.NodeName,
+		Ready:              ready,
+		Initialized:        initialized,
+		ContainersReady:    containersReady,
+		Scheduled:          scheduled,
+		ContainerCount:     len(p.Spec.Containers),
 		InitContainerCount: len(p.Spec.InitContainers),
-		RestartCount:      restartCount,
+		RestartCount:       restartCount,
 	}
 }
 

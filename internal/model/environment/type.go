@@ -22,8 +22,12 @@ type Environment struct {
 	ArgoAppName  string `gorm:"type:varchar(63)" json:"argo_app_name"`
 
 	// Cluster information
-	ClusterName   string `gorm:"type:varchar(255)" json:"cluster_name,omitempty"`
-	ClusterServer string `gorm:"type:varchar(512)" json:"cluster_server,omitempty"`
+	ClusterName      string `gorm:"type:varchar(255)" json:"cluster_name,omitempty"`
+	ClusterServer    string `gorm:"type:varchar(512)" json:"cluster_server,omitempty"`
+	DeliveryTargetID string `gorm:"type:varchar(36);index" json:"delivery_target_id,omitempty"`
+
+	// Template provenance
+	TemplateInstanceID string `gorm:"type:varchar(36);index" json:"template_instance_id,omitempty"`
 
 	// Resource quotas
 	ResourceQuotaCPU    string `gorm:"type:varchar(32)" json:"resource_quota_cpu,omitempty"`
@@ -60,8 +64,16 @@ type CreateEnvironmentRequest struct {
 	ManifestPath string `json:"manifest_path" binding:"required"`
 	GitRevision  string `json:"git_revision"` // optional, defaults to "main"
 
+	// Optional template provisioning
+	TemplateVersionID string         `json:"template_version_id"`
+	TemplateInputs    map[string]any `json:"template_inputs"`
+
+	// Optional target placement
+	DeliveryTargetID string `json:"delivery_target_id"`
+
 	// Optional cluster override
-	ClusterName string `json:"cluster_name"`
+	ClusterName   string `json:"cluster_name"`
+	ClusterServer string `json:"cluster_server"`
 
 	// Optional resource quotas
 	ResourceQuotaCPU    string `json:"resource_quota_cpu"`
@@ -100,8 +112,10 @@ type EnvironmentResponse struct {
 	ArgoAppName  string `json:"argo_app_name,omitempty"`
 
 	// Cluster info
-	ClusterName   string `json:"cluster_name,omitempty"`
-	ClusterServer string `json:"cluster_server,omitempty"`
+	ClusterName       string `json:"cluster_name,omitempty"`
+	ClusterServer     string `json:"cluster_server,omitempty"`
+	DeliveryTargetID  string `json:"delivery_target_id,omitempty"`
+	TemplateInstanceID string `json:"template_instance_id,omitempty"`
 
 	// Resource quotas
 	ResourceQuotaCPU    string `json:"resource_quota_cpu,omitempty"`
@@ -175,6 +189,8 @@ func ToEnvironmentResponse(env *Environment) *EnvironmentResponse {
 		ArgoAppName:         env.ArgoAppName,
 		ClusterName:         env.ClusterName,
 		ClusterServer:       env.ClusterServer,
+		DeliveryTargetID:    env.DeliveryTargetID,
+		TemplateInstanceID:  env.TemplateInstanceID,
 		ResourceQuotaCPU:    env.ResourceQuotaCPU,
 		ResourceQuotaMemory: env.ResourceQuotaMemory,
 		Labels:              labels,

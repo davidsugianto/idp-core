@@ -91,6 +91,40 @@ func (r *repository) Update(ctx context.Context, env *environment.Environment) e
 	return r.db.WithContext(ctx).Save(env).Error
 }
 
+// UpdateDeliveryTarget updates the delivery target reference and resolved cluster placement for an environment.
+func (r *repository) UpdateDeliveryTarget(ctx context.Context, id, teamID, deliveryTargetID, clusterName, clusterServer string) error {
+	updates := map[string]any{
+		"delivery_target_id": deliveryTargetID,
+		"cluster_name":       clusterName,
+		"cluster_server":     clusterServer,
+	}
+
+	return r.db.WithContext(ctx).
+		Model(&environment.Environment{}).
+		Where("id = ? AND team_id = ?", id, teamID).
+		Updates(updates).Error
+}
+
+func (r *repository) CountByDeliveryTarget(ctx context.Context, deliveryTargetID string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).
+		Model(&environment.Environment{}).
+		Where("delivery_target_id = ?", deliveryTargetID).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// UpdateTemplateInstance updates the template instance reference for an environment.
+func (r *repository) UpdateTemplateInstance(ctx context.Context, id, templateInstanceID string) error {
+	return r.db.WithContext(ctx).
+		Model(&environment.Environment{}).
+		Where("id = ?", id).
+		Update("template_instance_id", templateInstanceID).Error
+}
+
 // UpdateStatus updates the status and last error of an environment
 func (r *repository) UpdateStatus(ctx context.Context, id, teamID, status, lastError string) error {
 	updates := map[string]interface{}{

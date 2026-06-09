@@ -22,9 +22,13 @@ type Repository interface {
 	UpdateVersion(ctx context.Context, version *templateModel.TemplateVersion) error
 	ClearLatestVersion(ctx context.Context, templateID string) error
 
-	CreateParameter(ctx context.Context, parameter *templateModel.TemplateParameter) error
-	CreateResource(ctx context.Context, resource *templateModel.TemplateResource) error
+	ListParametersByVersion(ctx context.Context, versionID string) ([]templateModel.TemplateParameter, error)
+	ReplaceParameters(ctx context.Context, templateID, versionID string, parameters []templateModel.TemplateParameter) error
+	ListResourcesByVersion(ctx context.Context, versionID string) ([]templateModel.TemplateResource, error)
+	ReplaceResources(ctx context.Context, templateID, versionID string, resources []templateModel.TemplateResource) error
 	CreateInstance(ctx context.Context, instance *templateModel.TemplateInstance) error
+	GetInstanceByID(ctx context.Context, id string) (*templateModel.TemplateInstance, error)
+	ListInstancesByEnvironment(ctx context.Context, environmentID string) ([]templateModel.TemplateInstance, error)
 }
 
 type repository struct {

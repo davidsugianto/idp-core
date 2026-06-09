@@ -9,79 +9,95 @@ import (
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	deliveryTargetUsecase "github.com/davidsugianto/idp-core/internal/usecase/delivery_target"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	environmentMovementUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
+	liveUpdateUsecase "github.com/davidsugianto/idp-core/internal/usecase/live_update"
+	notificationUsecase "github.com/davidsugianto/idp-core/internal/usecase/notification"
 	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUsecase "github.com/davidsugianto/idp-core/internal/usecase/service"
-	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
+	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	environmentUseCase envUsecase.Usecase
-	userUseCase        userUsecase.Usecase
-	teamUseCase        teamUsecase.Usecase
-	roleUseCase        roleUsecase.Usecase
-	apiKeyUseCase      apikeyUsecase.Usecase
-	auditLogUseCase    auditlogUsecase.Usecase
-	costUseCase        costUsecase.Usecase
-	budgetUseCase      budgetUsecase.Usecase
-	rightsizingUseCase rightsizingUsecase.Usecase
-	quotaUseCase       quotaUsecase.Usecase
-	serviceUseCase     serviceUsecase.Usecase
-	templateUseCase    templateUsecase.Usecase
-	authConfig         *config.AuthConfig
-	webhookValidator   *webhook.Validator
-	oidcClient         *oidcPkg.Client
-	oidcVerifier       *oidcPkg.Verifier
-	oidcEndSessionURL  string
-	allowedOrigins     []string
+	environmentUseCase         envUsecase.Usecase
+	deliveryTargetUseCase      deliveryTargetUsecase.Usecase
+	environmentMovementUseCase environmentMovementUsecase.Usecase
+	userUseCase                userUsecase.Usecase
+	teamUseCase                teamUsecase.Usecase
+	roleUseCase                roleUsecase.Usecase
+	apiKeyUseCase              apikeyUsecase.Usecase
+	auditLogUseCase            auditlogUsecase.Usecase
+	costUseCase                costUsecase.Usecase
+	budgetUseCase              budgetUsecase.Usecase
+	rightsizingUseCase         rightsizingUsecase.Usecase
+	quotaUseCase               quotaUsecase.Usecase
+	serviceUseCase             serviceUsecase.Usecase
+	templateUseCase            templateUsecase.Usecase
+	notificationUseCase        notificationUsecase.Usecase
+	liveUpdateUseCase          liveUpdateUsecase.Usecase
+	authConfig                 *config.AuthConfig
+	webhookValidator           *webhook.Validator
+	oidcClient                 *oidcPkg.Client
+	oidcVerifier               *oidcPkg.Verifier
+	oidcEndSessionURL          string
+	allowedOrigins             []string
 }
 
 type Dependencies struct {
-	EnvironmentUseCase envUsecase.Usecase
-	UserUseCase        userUsecase.Usecase
-	TeamUseCase        teamUsecase.Usecase
-	RoleUseCase        roleUsecase.Usecase
-	ApiKeyUseCase      apikeyUsecase.Usecase
-	AuditLogUseCase    auditlogUsecase.Usecase
-	CostUseCase        costUsecase.Usecase
-	BudgetUseCase      budgetUsecase.Usecase
-	RightsizingUseCase rightsizingUsecase.Usecase
-	QuotaUseCase       quotaUsecase.Usecase
-	ServiceUseCase     serviceUsecase.Usecase
-	TemplateUseCase    templateUsecase.Usecase
-	AuthConfig         *config.AuthConfig
-	WebhookValidator   *webhook.Validator
-	OIDCClient         *oidcPkg.Client
-	OIDCVerifier       *oidcPkg.Verifier
-	OIDCEndSessionURL  string
-	AllowedOrigins     []string
+	EnvironmentUseCase         envUsecase.Usecase
+	DeliveryTargetUseCase      deliveryTargetUsecase.Usecase
+	EnvironmentMovementUseCase environmentMovementUsecase.Usecase
+	UserUseCase                userUsecase.Usecase
+	TeamUseCase                teamUsecase.Usecase
+	RoleUseCase                roleUsecase.Usecase
+	ApiKeyUseCase              apikeyUsecase.Usecase
+	AuditLogUseCase            auditlogUsecase.Usecase
+	CostUseCase                costUsecase.Usecase
+	BudgetUseCase              budgetUsecase.Usecase
+	RightsizingUseCase         rightsizingUsecase.Usecase
+	QuotaUseCase               quotaUsecase.Usecase
+	ServiceUseCase             serviceUsecase.Usecase
+	TemplateUseCase            templateUsecase.Usecase
+	NotificationUseCase        notificationUsecase.Usecase
+	LiveUpdateUseCase          liveUpdateUsecase.Usecase
+	AuthConfig                 *config.AuthConfig
+	WebhookValidator           *webhook.Validator
+	OIDCClient                 *oidcPkg.Client
+	OIDCVerifier               *oidcPkg.Verifier
+	OIDCEndSessionURL          string
+	AllowedOrigins             []string
 }
 
 func New(deps Dependencies) *Handler {
 	return &Handler{
-		environmentUseCase: deps.EnvironmentUseCase,
-		userUseCase:        deps.UserUseCase,
-		teamUseCase:        deps.TeamUseCase,
-		roleUseCase:        deps.RoleUseCase,
-		apiKeyUseCase:      deps.ApiKeyUseCase,
-		auditLogUseCase:    deps.AuditLogUseCase,
-		costUseCase:        deps.CostUseCase,
-		budgetUseCase:      deps.BudgetUseCase,
-		rightsizingUseCase: deps.RightsizingUseCase,
-		quotaUseCase:       deps.QuotaUseCase,
-		serviceUseCase:     deps.ServiceUseCase,
-		templateUseCase:    deps.TemplateUseCase,
-		authConfig:         deps.AuthConfig,
-		webhookValidator:   deps.WebhookValidator,
-		oidcClient:         deps.OIDCClient,
-		oidcVerifier:       deps.OIDCVerifier,
-		oidcEndSessionURL:  deps.OIDCEndSessionURL,
-		allowedOrigins:     deps.AllowedOrigins,
+		environmentUseCase:         deps.EnvironmentUseCase,
+		deliveryTargetUseCase:      deps.DeliveryTargetUseCase,
+		environmentMovementUseCase: deps.EnvironmentMovementUseCase,
+		userUseCase:                deps.UserUseCase,
+		teamUseCase:                deps.TeamUseCase,
+		roleUseCase:                deps.RoleUseCase,
+		apiKeyUseCase:              deps.ApiKeyUseCase,
+		auditLogUseCase:            deps.AuditLogUseCase,
+		costUseCase:                deps.CostUseCase,
+		budgetUseCase:              deps.BudgetUseCase,
+		rightsizingUseCase:         deps.RightsizingUseCase,
+		quotaUseCase:               deps.QuotaUseCase,
+		serviceUseCase:             deps.ServiceUseCase,
+		templateUseCase:            deps.TemplateUseCase,
+		notificationUseCase:        deps.NotificationUseCase,
+		liveUpdateUseCase:          deps.LiveUpdateUseCase,
+		authConfig:                 deps.AuthConfig,
+		webhookValidator:           deps.WebhookValidator,
+		oidcClient:                 deps.OIDCClient,
+		oidcVerifier:               deps.OIDCVerifier,
+		oidcEndSessionURL:          deps.OIDCEndSessionURL,
+		allowedOrigins:             deps.AllowedOrigins,
 	}
 }
 

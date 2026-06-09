@@ -10,6 +10,8 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/auditlog"
 	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
+	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
+	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
 	"github.com/davidsugianto/idp-core/internal/model/permission"
 	"github.com/davidsugianto/idp-core/internal/model/resourcequota"
 	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
@@ -20,8 +22,8 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/service_environment"
 	"github.com/davidsugianto/idp-core/internal/model/service_version"
 	"github.com/davidsugianto/idp-core/internal/model/team"
-	"github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/model/user"
+	argocdPkg "github.com/davidsugianto/idp-core/internal/pkg/argocd"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	oidcPkg "github.com/davidsugianto/idp-core/internal/pkg/oidc"
 	"github.com/davidsugianto/idp-core/internal/pkg/opencost"
@@ -36,8 +38,12 @@ import (
 	auditlogRepository "github.com/davidsugianto/idp-core/internal/repository/auditlog"
 	budgetRepository "github.com/davidsugianto/idp-core/internal/repository/budget"
 	costRepository "github.com/davidsugianto/idp-core/internal/repository/cost"
+	deliveryTargetRepository "github.com/davidsugianto/idp-core/internal/repository/delivery_target"
 	envRepository "github.com/davidsugianto/idp-core/internal/repository/environment"
+	environmentMovementRepository "github.com/davidsugianto/idp-core/internal/repository/environment_movement"
+	gitopsRepository "github.com/davidsugianto/idp-core/internal/repository/gitops"
 	monitoringRepository "github.com/davidsugianto/idp-core/internal/repository/monitoring"
+	notificationRepository "github.com/davidsugianto/idp-core/internal/repository/notification"
 	permissionRepository "github.com/davidsugianto/idp-core/internal/repository/permission"
 	provisionerRepository "github.com/davidsugianto/idp-core/internal/repository/provisioner"
 	quotaRepository "github.com/davidsugianto/idp-core/internal/repository/quota"
@@ -51,7 +57,11 @@ import (
 	auditlogUsecase "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	budgetUsecase "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUsecase "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	deliveryTargetUsecase "github.com/davidsugianto/idp-core/internal/usecase/delivery_target"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	environmentMovementUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
+	liveUpdateUsecase "github.com/davidsugianto/idp-core/internal/usecase/live_update"
+	notificationUsecase "github.com/davidsugianto/idp-core/internal/usecase/notification"
 	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
@@ -120,8 +130,8 @@ func main() {
 	}
 	dbClient := dbClientWrapper.DB
 
-	// Auto-migrate Phase 2 tables
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &template.Template{}, &template.TemplateVersion{}, &template.TemplateParameter{}, &template.TemplateResource{}, &template.TemplateInstance{}); err != nil {
+	// Auto-migrate shared baseline tables.
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &deliveryTargetModel.DeliveryTarget{}, &environmentMovementModel.EnvironmentMovement{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -139,6 +149,14 @@ func main() {
 		URL: cfg.FinOps.Prometheus.URL,
 	})
 
+	var argocdClient *argocdPkg.Client
+	if cfg.ArgoCD.BaseURL != "" || cfg.ArgoCD.Namespace != "" {
+		argocdClient, err = argocdPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+		if err != nil {
+			logs.Fatalf("cannot create argocd client: %v", err)
+		}
+	}
+
 	// Slack client
 	slackClient := slack.NewClient(cfg.Slack.WebhookURL, cfg.Slack.Channel)
 
@@ -147,6 +165,16 @@ func main() {
 		K8sClient: k8sClient,
 	})
 	envRepo := envRepository.New(envRepository.Dependencies{
+		Database: dbClient,
+	})
+	var gitopsRepo gitopsRepository.Repository
+	if argocdClient != nil {
+		gitopsRepo = gitopsRepository.New(gitopsRepository.Dependencies{
+			ArgoCDClient:    argocdClient,
+			ArgoCDNamespace: cfg.ArgoCD.Namespace,
+		})
+	}
+	notificationRepo := notificationRepository.New(notificationRepository.Dependencies{
 		Database: dbClient,
 	})
 	userRepo := userRepository.New(userRepository.Dependencies{
@@ -188,11 +216,36 @@ func main() {
 	templateRepo := templateRepository.New(templateRepository.Dependencies{
 		Database: dbClient,
 	})
+	deliveryTargetRepo := deliveryTargetRepository.New(deliveryTargetRepository.Dependencies{
+		Database: dbClient,
+	})
+	environmentMovementRepo := environmentMovementRepository.New(environmentMovementRepository.Dependencies{
+		Database: dbClient,
+	})
 
 	// UseCases
+	notificationUC := notificationUsecase.New(notificationUsecase.Dependencies{
+		NotificationRepo: notificationRepo,
+	})
+	liveUpdateUC := liveUpdateUsecase.New(liveUpdateUsecase.Dependencies{})
+	deliveryTargetUC := deliveryTargetUsecase.New(deliveryTargetUsecase.Dependencies{
+		DeliveryTargetRepo:      deliveryTargetRepo,
+		EnvironmentRepo:         envRepo,
+		EnvironmentMovementRepo: environmentMovementRepo,
+	})
+	environmentMovementUC := environmentMovementUsecase.New(environmentMovementUsecase.Dependencies{
+		EnvironmentRepo:         envRepo,
+		DeliveryTargetRepo:      deliveryTargetRepo,
+		EnvironmentMovementRepo: environmentMovementRepo,
+	})
 	envUC := envUsecase.New(envUsecase.Dependencies{
-		EnvironmentRepo: envRepo,
-		ProvisionerRepo: provisionerRepo,
+		EnvironmentRepo:    envRepo,
+		DeliveryTargetRepo: deliveryTargetRepo,
+		ProvisionerRepo:    provisionerRepo,
+		GitopsRepo:         gitopsRepo,
+		TemplateRepo:       templateRepo,
+		NotificationUC:     notificationUC,
+		LiveUpdateUC:       liveUpdateUC,
 	})
 	userUC := userUsecase.New(userUsecase.Dependencies{
 		UserRepo: userRepo,
@@ -273,22 +326,26 @@ func main() {
 	}
 
 	server := New(Dependencies{
-		EnvironmentUseCase: envUC,
-		UserUseCase:        userUC,
-		TeamUseCase:        teamUC,
-		RoleUseCase:        roleUC,
-		ApiKeyUseCase:      apiKeyUC,
-		AuditLogUseCase:    auditLogUC,
-		BudgetUseCase:      budgetUC,
-		CostUseCase:        costUC,
-		RightsizingUseCase: rightsizingUC,
-		QuotaUseCase:       quotaUC,
-		ServiceUseCase:     serviceUC,
-		TemplateUseCase:    templateUC,
-		Config:             cfg,
-		WebhookValidator:   webhookValidator,
-		OIDCClient:         oidcClient,
-		OIDCVerifier:       oidcVerifier,
+		EnvironmentUseCase:         envUC,
+		UserUseCase:                userUC,
+		TeamUseCase:                teamUC,
+		RoleUseCase:                roleUC,
+		ApiKeyUseCase:              apiKeyUC,
+		AuditLogUseCase:            auditLogUC,
+		BudgetUseCase:              budgetUC,
+		CostUseCase:                costUC,
+		RightsizingUseCase:         rightsizingUC,
+		QuotaUseCase:               quotaUC,
+		ServiceUseCase:             serviceUC,
+		TemplateUseCase:            templateUC,
+		DeliveryTargetUseCase:      deliveryTargetUC,
+		EnvironmentMovementUseCase: environmentMovementUC,
+		NotificationUseCase:        notificationUC,
+		LiveUpdateUseCase:          liveUpdateUC,
+		Config:                     cfg,
+		WebhookValidator:           webhookValidator,
+		OIDCClient:                 oidcClient,
+		OIDCVerifier:               oidcVerifier,
 	})
 
 	logs.Info("listening on port")

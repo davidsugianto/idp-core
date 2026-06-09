@@ -25,9 +25,9 @@
 
 **Purpose**: Establish the Phase 3 persistence and bootstrap structure shared by all stories.
 
-- [ ] T001 Create Phase 3 SQL migration files for templates, delivery targets, movements, notifications, and environment foreign keys in `migrations/20260608000000_create_templates_table.sql`, `migrations/20260608000001_create_template_versions_table.sql`, `migrations/20260608000002_create_template_parameters_table.sql`, `migrations/20260608000003_create_template_resources_table.sql`, `migrations/20260608000004_create_template_instances_table.sql`, `migrations/20260608000005_create_delivery_targets_table.sql`, `migrations/20260608000006_create_environment_movements_table.sql`, `migrations/20260608000007_create_notifications_table.sql`, and `migrations/20260608000008_alter_environments_add_phase3_refs.sql`
-- [ ] T002 [P] Register Phase 3 model types and non-schema bootstrap wiring in `cmd/http/main.go`
-- [ ] T003 [P] Extend Phase 3 permission and role seeds for template, delivery target, movement, notification, and live update actions in `internal/seed/permission.go` and `internal/seed/role.go`
+- [X] T001 Create Phase 3 SQL migration files for templates, delivery targets, movements, notifications, and environment foreign keys in `migrations/20260608000000_create_templates_table.sql`, `migrations/20260608000001_create_template_versions_table.sql`, `migrations/20260608000002_create_template_parameters_table.sql`, `migrations/20260608000003_create_template_resources_table.sql`, `migrations/20260608000004_create_template_instances_table.sql`, `migrations/20260608000005_create_delivery_targets_table.sql`, `migrations/20260608000006_create_environment_movements_table.sql`, `migrations/20260608000007_create_notifications_table.sql`, and `migrations/20260608000008_alter_environments_add_phase3_refs.sql`
+- [X] T002 [P] Register Phase 3 model types and non-schema bootstrap wiring in `cmd/http/main.go`
+- [X] T003 [P] Extend Phase 3 permission and role seeds for template, delivery target, movement, notification, and live update actions in `internal/seed/permission.go` and `internal/seed/role.go`
 
 ---
 
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Create shared Phase 3 models in `internal/model/delivery_target/type.go`, `internal/model/environment_movement/type.go`, `internal/model/notification/type.go`, and `internal/model/live_subscription/type.go`
-- [ ] T005 [P] Create repository packages and interfaces for shared Phase 3 persistence in `internal/repository/delivery_target/init.go`, `internal/repository/delivery_target/delivery_target.go`, `internal/repository/environment_movement/init.go`, `internal/repository/environment_movement/environment_movement.go`, `internal/repository/notification/init.go`, and `internal/repository/notification/notification.go`
-- [ ] T006 [P] Extend existing repository and usecase interfaces for Phase 3 shared fields and hooks in `internal/repository/environment/init.go`, `internal/repository/environment/environment.go`, `internal/repository/template/init.go`, `internal/repository/template/version.go`, `internal/usecase/environment/init.go`, `internal/usecase/template/init.go`, `internal/usecase/notification/init.go`, and `internal/usecase/live_update/init.go`
-- [ ] T007 Wire shared Phase 3 repositories, usecases, and handler dependencies in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
+- [X] T004 Create shared Phase 3 models in `internal/model/delivery_target/type.go`, `internal/model/environment_movement/type.go`, `internal/model/notification/type.go`, and `internal/model/live_subscription/type.go`
+- [X] T005 [P] Create repository packages and interfaces for shared Phase 3 persistence in `internal/repository/delivery_target/init.go`, `internal/repository/delivery_target/delivery_target.go`, `internal/repository/environment_movement/init.go`, `internal/repository/environment_movement/environment_movement.go`, `internal/repository/notification/init.go`, and `internal/repository/notification/notification.go`
+- [X] T006 [P] Extend existing repository and usecase interfaces for Phase 3 shared fields and hooks in `internal/repository/environment/init.go`, `internal/repository/environment/environment.go`, `internal/repository/template/init.go`, `internal/repository/template/version.go`, `internal/usecase/environment/init.go`, `internal/usecase/template/init.go`, `internal/usecase/notification/init.go`, and `internal/usecase/live_update/init.go`
+- [X] T007 Wire shared Phase 3 repositories, usecases, and handler dependencies in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel.
 
@@ -56,19 +56,19 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T008 [P] [US1] Add handler contract coverage for template parameters, resources, validate endpoints, duplicate version conflicts, and lifecycle transition failures in `internal/handler/http/template_test.go`
-- [ ] T009 [P] [US1] Add usecase integration coverage for template-backed environment creation and template-instance history preservation in `internal/usecase/template/template_integration_test.go` and `internal/usecase/environment/environment_template_integration_test.go`
+- [X] T008 [P] [US1] Add handler contract coverage for template parameters, resources, validate endpoints, duplicate version conflicts, and lifecycle transition failures in `internal/handler/http/template_test.go`
+- [X] T009 [P] [US1] Add usecase integration coverage for template-backed environment creation and template-instance history preservation in `internal/usecase/template/template_integration_test.go` and `internal/usecase/environment/environment_template_integration_test.go`
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Expand template domain request and response models for parameter/resource replacement, lifecycle responses, and template instantiation history in `internal/model/template/type.go`, `internal/model/template_version/type.go`, `internal/model/template_parameter/type.go`, `internal/model/template_resource/type.go`, and `internal/model/template_instance/type.go`
-- [ ] T011 [US1] Implement template parameter, resource, and instance persistence methods in `internal/repository/template/init.go`, `internal/repository/template/parameter.go`, `internal/repository/template/resource.go`, and `internal/repository/template/instance.go`
-- [ ] T012 [US1] Implement template version publishing, lifecycle transition enforcement, concurrent update handling, parameter/resource replacement, conflict handling, and input validation logic in `internal/usecase/template/init.go` and `internal/usecase/template/template.go`
-- [ ] T013 [US1] Extend environment create and read contracts for template version, input payloads, and template-instance history in `internal/model/environment/type.go`
-- [ ] T014 [US1] Implement template-backed environment creation and template-instance history recording in `internal/usecase/environment/environment.go`
-- [ ] T015 [US1] Add template parameter, resource, validation, and lifecycle handlers in `internal/handler/http/template.go`
-- [ ] T016 [US1] Register template validation routes and template-aware environment contract updates in `cmd/http/server.go` and `internal/handler/http/environment.go`
-- [ ] T017 [US1] Add template lifecycle authorization, audit, history preservation, and `409` conflict semantics in `internal/handler/http/template.go`, `internal/usecase/template/template.go`, and `internal/usecase/environment/environment.go`
+- [X] T010 [P] [US1] Expand template domain request and response models for parameter/resource replacement, lifecycle responses, and template instantiation history in `internal/model/template/type.go`, `internal/model/template_version/type.go`, `internal/model/template_parameter/type.go`, `internal/model/template_resource/type.go`, and `internal/model/template_instance/type.go`
+- [X] T011 [US1] Implement template parameter, resource, and instance persistence methods in `internal/repository/template/init.go`, `internal/repository/template/parameter.go`, `internal/repository/template/resource.go`, and `internal/repository/template/instance.go`
+- [X] T012 [US1] Implement template version publishing, lifecycle transition enforcement, concurrent update handling, parameter/resource replacement, conflict handling, and input validation logic in `internal/usecase/template/init.go` and `internal/usecase/template/template.go`
+- [X] T013 [US1] Extend environment create and read contracts for template version, input payloads, and template-instance history in `internal/model/environment/type.go`
+- [X] T014 [US1] Implement template-backed environment creation and template-instance history recording in `internal/usecase/environment/environment.go`
+- [X] T015 [US1] Add template parameter, resource, validation, and lifecycle handlers in `internal/handler/http/template.go`
+- [X] T016 [US1] Register template validation routes and template-aware environment contract updates in `cmd/http/server.go` and `internal/handler/http/environment.go`
+- [X] T017 [US1] Add template lifecycle authorization, audit, history preservation, and `409` conflict semantics in `internal/handler/http/template.go`, `internal/usecase/template/template.go`, and `internal/usecase/environment/environment.go`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
 
@@ -82,19 +82,19 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T018 [P] [US2] Add handler contract coverage for delivery target and movement endpoints in `internal/handler/http/delivery_target_test.go` and `internal/handler/http/environment_movement_test.go`
-- [ ] T019 [P] [US2] Add usecase integration coverage for target-aware environment placement and movement state transitions in `internal/usecase/delivery_target/delivery_target_integration_test.go` and `internal/usecase/environment_movement/environment_movement_integration_test.go`
+- [X] T018 [P] [US2] Add handler contract coverage for delivery target and movement endpoints in `internal/handler/http/delivery_target_test.go` and `internal/handler/http/environment_movement_test.go`
+- [X] T019 [P] [US2] Add usecase integration coverage for target-aware environment placement and movement state transitions in `internal/usecase/delivery_target/delivery_target_integration_test.go` and `internal/usecase/environment_movement/environment_movement_integration_test.go`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Extend environment placement fields and delivery target DTOs in `internal/model/environment/type.go` and `internal/model/delivery_target/type.go`
-- [ ] T021 [US2] Implement delivery target persistence, filtering, and availability updates in `internal/repository/delivery_target/init.go` and `internal/repository/delivery_target/delivery_target.go`
-- [ ] T022 [US2] Implement environment movement persistence and progress history queries in `internal/repository/environment_movement/init.go` and `internal/repository/environment_movement/environment_movement.go`
-- [ ] T023 [US2] Implement delivery target business rules and admin CRUD in `internal/usecase/delivery_target/init.go` and `internal/usecase/delivery_target/delivery_target.go`
-- [ ] T024 [US2] Implement environment movement orchestration and target-aware placement checks in `internal/usecase/environment_movement/init.go`, `internal/usecase/environment_movement/environment_movement.go`, and `internal/usecase/environment/environment.go`
-- [ ] T025 [US2] Implement delivery target and movement handlers in `internal/handler/http/delivery_target.go` and `internal/handler/http/environment_movement.go`
-- [ ] T026 [US2] Register delivery target and movement routes and dependency wiring in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
-- [ ] T027 [US2] Preserve delivery target selection and movement audit/history records in `internal/usecase/delivery_target/delivery_target.go`, `internal/usecase/environment_movement/environment_movement.go`, and `internal/repository/environment/environment.go`
+- [X] T020 [P] [US2] Extend environment placement fields and delivery target DTOs in `internal/model/environment/type.go` and `internal/model/delivery_target/type.go`
+- [X] T021 [US2] Implement delivery target persistence, filtering, and availability updates in `internal/repository/delivery_target/init.go` and `internal/repository/delivery_target/delivery_target.go`
+- [X] T022 [US2] Implement environment movement persistence and progress history queries in `internal/repository/environment_movement/init.go` and `internal/repository/environment_movement/environment_movement.go`
+- [X] T023 [US2] Implement delivery target business rules and admin CRUD in `internal/usecase/delivery_target/init.go` and `internal/usecase/delivery_target/delivery_target.go`
+- [X] T024 [US2] Implement environment movement orchestration and target-aware placement checks in `internal/usecase/environment_movement/init.go`, `internal/usecase/environment_movement/environment_movement.go`, and `internal/usecase/environment/environment.go`
+- [X] T025 [US2] Implement delivery target and movement handlers in `internal/handler/http/delivery_target.go` and `internal/handler/http/environment_movement.go`
+- [X] T026 [US2] Register delivery target and movement routes and dependency wiring in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/init.go`
+- [X] T027 [US2] Preserve delivery target selection and movement audit/history records in `internal/usecase/delivery_target/delivery_target.go`, `internal/usecase/environment_movement/environment_movement.go`, and `internal/repository/environment/environment.go`
 
 **Checkpoint**: At this point, User Stories 1 and 2 should both work independently.
 

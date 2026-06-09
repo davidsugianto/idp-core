@@ -6,16 +6,21 @@ import (
 
 // Resource types
 const (
-	ResourceEnvironment  = "environment"
-	ResourceTeam         = "team"
-	ResourceUser         = "user"
-	ResourceRole         = "role"
-	ResourceAPIKey       = "api_key"
-	ResourceCost         = "cost"
-	ResourceBudget       = "budget"
-	ResourceRightsizing  = "rightsizing"
-	ResourceService      = "service"
-	ResourceAuditLog     = "audit_log"
+	ResourceEnvironment         = "environment"
+	ResourceTeam                = "team"
+	ResourceUser                = "user"
+	ResourceRole                = "role"
+	ResourceAPIKey              = "api_key"
+	ResourceCost                = "cost"
+	ResourceBudget              = "budget"
+	ResourceRightsizing         = "rightsizing"
+	ResourceService             = "service"
+	ResourceAuditLog            = "audit_log"
+	ResourceTemplate            = "template"
+	ResourceDeliveryTarget      = "delivery_target"
+	ResourceEnvironmentMovement = "environment_movement"
+	ResourceNotification        = "notification"
+	ResourceLiveUpdate          = "live_update"
 )
 
 // Action types

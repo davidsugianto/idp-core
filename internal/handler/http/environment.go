@@ -39,6 +39,14 @@ func (h *Handler) CreateEnvironment(c *gin.Context) {
 
 	env, err := h.environmentUseCase.Create(c.Request.Context(), teamID, req)
 	if err != nil {
+		if errors.Is(err, envUsecase.ErrTemplateVersionNotFound) {
+			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, envUsecase.ErrTemplateInputInvalid) {
+			response.GinBadRequest(c, err)
+			return
+		}
 		response.GinInternalServerError(c, err)
 		return
 	}

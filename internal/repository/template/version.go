@@ -69,6 +69,3 @@ func (r *repository) CreateResource(ctx context.Context, resource *templateModel
 	return r.db.WithContext(ctx).Create(resource).Error
 }
 
-func (r *repository) CreateInstance(ctx context.Context, instance *templateModel.TemplateInstance) error {
-	return r.db.WithContext(ctx).Create(instance).Error
-}

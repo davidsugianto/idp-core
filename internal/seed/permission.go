@@ -96,6 +96,34 @@ var DefaultPermissions = []struct {
 	// Audit log permissions
 	{"audit_log:read", "View audit logs", permissionModel.ResourceAuditLog, permissionModel.ActionRead},
 	{"audit_log:manage", "Full audit log access", permissionModel.ResourceAuditLog, permissionModel.ActionManage},
+
+	// Template permissions
+	{"template:create", "Create templates", permissionModel.ResourceTemplate, permissionModel.ActionCreate},
+	{"template:read", "View templates", permissionModel.ResourceTemplate, permissionModel.ActionRead},
+	{"template:update", "Update templates", permissionModel.ResourceTemplate, permissionModel.ActionUpdate},
+	{"template:delete", "Delete templates", permissionModel.ResourceTemplate, permissionModel.ActionDelete},
+	{"template:manage", "Full template access", permissionModel.ResourceTemplate, permissionModel.ActionManage},
+
+	// Delivery target permissions
+	{"delivery_target:create", "Create delivery targets", permissionModel.ResourceDeliveryTarget, permissionModel.ActionCreate},
+	{"delivery_target:read", "View delivery targets", permissionModel.ResourceDeliveryTarget, permissionModel.ActionRead},
+	{"delivery_target:update", "Update delivery targets", permissionModel.ResourceDeliveryTarget, permissionModel.ActionUpdate},
+	{"delivery_target:delete", "Delete delivery targets", permissionModel.ResourceDeliveryTarget, permissionModel.ActionDelete},
+	{"delivery_target:manage", "Full delivery target access", permissionModel.ResourceDeliveryTarget, permissionModel.ActionManage},
+
+	// Environment movement permissions
+	{"environment_movement:create", "Create environment movements", permissionModel.ResourceEnvironmentMovement, permissionModel.ActionCreate},
+	{"environment_movement:read", "View environment movements", permissionModel.ResourceEnvironmentMovement, permissionModel.ActionRead},
+	{"environment_movement:update", "Update environment movements", permissionModel.ResourceEnvironmentMovement, permissionModel.ActionUpdate},
+	{"environment_movement:manage", "Full environment movement access", permissionModel.ResourceEnvironmentMovement, permissionModel.ActionManage},
+
+	// Notification permissions
+	{"notification:read", "View notifications", permissionModel.ResourceNotification, permissionModel.ActionRead},
+	{"notification:manage", "Full notification access", permissionModel.ResourceNotification, permissionModel.ActionManage},
+
+	// Live update permissions
+	{"live_update:read", "View live updates", permissionModel.ResourceLiveUpdate, permissionModel.ActionRead},
+	{"live_update:manage", "Full live update access", permissionModel.ResourceLiveUpdate, permissionModel.ActionManage},
 }
 
 // SeedPermissions seeds all default permissions
@@ -109,7 +137,7 @@ func (s *Seeder) SeedPermissions(ctx context.Context) error {
 		}
 
 		if existing != nil {
-			continue // Already exists
+			continue
 		}
 
 		permission := &permissionModel.Permission{
