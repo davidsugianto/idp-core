@@ -2,7 +2,7 @@
 
 > **Project**: `idp-core`
 > **Owner**: Platform Engineering Team
-> **Last Updated**: May 21, 2026
+> **Last Updated**: June 10, 2026
 > **Status**: In Development
 
 ---
@@ -187,9 +187,9 @@ timeline
 
 ---
 
-## 🖥️ Phase 3: Platform (Planned)
+## 🖥️ Phase 3: Platform (In Progress)
 
-**Status**: 📋 Planning
+**Status**: 🚧 Backend implementation in progress
 **Timeline**: Q4 2026
 **Document**: [PRD_PHASE_3.md](./PRD_PHASE_3.md)
 
@@ -197,40 +197,44 @@ timeline
 
 | Goal | Metric | Target |
 |------|--------|--------|
-| Developer self-service | UI adoption rate | > 80% |
+| Developer self-service | API-backed workflows ready for portal consumption | 100% Phase 3 backend contracts |
 | Template standardization | Template usage | 100% environments |
 | Multi-cluster support | Cluster coverage | All production clusters |
+| Real-time operations | Authenticated live update availability | All active environments |
 
 ### Key Features
 
+- 🧩 **Template Management Backend**
+  - Template CRUD
+  - Template versioning and lifecycle control
+  - Parameter and resource replacement
+  - Input validation and instantiation history
+
+- 🌐 **Multi-cluster Placement Backend**
+  - Delivery target registration
+  - Target-aware environment placement
+  - Environment movement workflows
+  - Movement audit and history tracking
+
+- 📡 **Real-time Update Backend**
+  - Notification history APIs
+  - Authenticated SSE event streams
+  - Workload log streaming
+  - Access-loss and expiry handling
+
 - 🖥️ **Developer Portal UI**
-  - Web-based dashboard
-  - Environment visualization
-  - Real-time status updates
-  - Self-service workflows
+  - Delivered separately in [`idp-ui`](https://github.com/davidsugianto/idp-ui)
+  - Consumes backend contracts exposed by this repository
 
-- 📋 **Template Management**
-  - Custom template creation
-  - Template versioning
-  - Template marketplace
-  - Parameter validation
+### Backend/API Deliverables
 
-- 🌐 **Multi-cluster Support**
-  - Cluster registration
-  - Cross-cluster deployments
-  - Cluster-aware routing
-  - Federated monitoring
-
-### Planned UI Features
-
-| Feature | Description |
-|---------|-------------|
-| Dashboard | Overview of all environments, status, costs |
-| Environment Browser | Create, manage, monitor environments |
-| Template Editor | Create and edit environment templates |
-| Cost Explorer | View and analyze resource costs |
-| Workload Viewer | Real-time workload status and logs |
-| Settings | User preferences, API keys, notifications |
+| Area | Description |
+|------|-------------|
+| Templates | Manage templates, versions, parameters, resources, and validation |
+| Placement | Register delivery targets and place environments on approved clusters |
+| Movements | Request and inspect environment relocations between targets |
+| Live Updates | Stream status, progress, notifications, and logs over SSE |
+| Notifications | Retain and filter operational notification history |
 
 ---
 
@@ -312,14 +316,15 @@ timeline
 | Test Coverage | > 80% | CI/CD pipeline |
 | ArgoCD Sync Success Rate | > 95% | Application status |
 
-### Phase 2+ KPIs (Planned)
+### Phase 2+ KPIs
 
 | KPI | Target | Phase |
 |-----|--------|-------|
 | Cost Visibility | 100% environments | Phase 2 |
 | RBAC Adoption | 100% users | Phase 2 |
-| UI Adoption | > 80% developers | Phase 3 |
+| Template Usage | 100% environments | Phase 3 |
 | Multi-cluster Coverage | All prod clusters | Phase 3 |
+| Live Update Availability | All active environments | Phase 3 |
 
 ---
 
@@ -329,7 +334,7 @@ timeline
 |-------|----------|--------|------------------|
 | Phase 1 - MVP | May - June 2026 | ✅ Complete | Core API, K8s/ArgoCD integration |
 | Phase 2 - Enhancement | May 2026 | ✅ Complete | RBAC, FinOps, Rightsizing, Service Catalog |
-| Phase 3 - Platform | Q4 2026 | 📋 Planning | UI, Templates, Multi-cluster |
+| Phase 3 - Platform | Q4 2026 | 🚧 Backend in progress | Backend templates, placement, movements, notifications, live updates; UI in separate repo |
 | Phase 4 - Advanced | Q1 2027+ | 🔮 Roadmap | AI/ML, Analytics, Policy |
 
 ---

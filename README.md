@@ -10,10 +10,13 @@
 
 - 🚀 **Self-Service Provisioning** — Request K8s environments in minutes, not days
 - 🎯 **GitOps Native** — ArgoCD integration for declarative, version-controlled deployments
-- 📊 **Real-Time Visibility** — Live workload status, health, and resource metrics
+- 📊 **Real-Time Visibility** — Live workload status, health, resource metrics, and SSE event/log streams
+- 🧩 **Template Management** — Define reusable environment templates with versioning, validation, and instantiation history
+- 🌐 **Multi-Cluster Placement** — Register delivery targets and move environments across approved clusters with auditable history
 - 👥 **Multi-Tenant** — Team-scoped resources with RBAC for secure access control
 - 🔐 **Secure by Default** — JWT + API Key authentication, team isolation, policy enforcement
 - 📋 **Audit Logging** — Automatic request logging with filterable audit trails
+- 🔔 **Operational Notifications** — Retained notification history for environment, template, and movement events
 - 💰 **Cost Tracking** — OpenCost integration for real-time Kubernetes cost visibility by team/namespace
 - 💸 **Budget Management** — Set spend limits with Slack alerts at configurable thresholds
 - ⚖️ **Rightsizing** — CPU/memory optimization recommendations based on Prometheus usage data
@@ -36,9 +39,14 @@
 | Feature                       | Description                                                       |
 | ----------------------------- | ----------------------------------------------------------------- |
 | 🚀 **Environment Management** | Create, list, get, delete isolated K8s namespaces                 |
+| 🧩 **Template Management**    | Manage reusable templates, versions, parameters, resources, and validation |
+| 🌐 **Delivery Targets**       | Register approved cluster targets for environment placement       |
+| 🔄 **Environment Movements**  | Request and audit environment relocation between delivery targets |
+| 📡 **Live Updates**           | SSE streams for status, progress, notifications, and workload logs |
+| 🔔 **Notifications**          | Retained notification history with environment and kind filters   |
 | 🎯 **GitOps Integration**     | Automatic ArgoCD Application creation and sync                    |
 | 📊 **Live Status**            | Real-time workload status via Kubernetes informers                |
-| 🔐 **Authentication**         | JWT + OIDC (Keycloak) + API Key auth with team context          |
+| 🔐 **Authentication**         | JWT + OIDC (Keycloak) + API Key auth with team context            |
 | 👥 **User & Team Management** | Multi-tenant with team-scoped resources                           |
 | 🔑 **RBAC**                   | Role-based access control with permissions                        |
 | 🔑 **API Keys**               | Service-to-service auth with scoped permissions and rate limiting |
@@ -104,14 +112,52 @@ make test
 
 ### Environments
 
-| Method | Endpoint                      | Description            |
-| ------ | ----------------------------- | ---------------------- |
-| GET    | `/v1/environments`            | List environments      |
-| POST   | `/v1/environments`            | Create environment     |
-| GET    | `/v1/environments/:id`        | Get environment        |
-| DELETE | `/v1/environments/:id`        | Delete environment     |
-| POST   | `/v1/environments/:id/sync`   | Trigger GitOps sync    |
-| GET    | `/v1/environments/:id/status` | Get environment status |
+| Method | Endpoint                           | Description                              |
+| ------ | ---------------------------------- | ---------------------------------------- |
+| GET    | `/v1/environments`                 | List environments                        |
+| POST   | `/v1/environments`                 | Create environment                       |
+| GET    | `/v1/environments/:id`             | Get environment                          |
+| DELETE | `/v1/environments/:id`             | Delete environment                       |
+| POST   | `/v1/environments/:id/sync`        | Trigger GitOps sync                      |
+| GET    | `/v1/environments/:id/status`      | Get environment status                   |
+| GET    | `/v1/environments/:id/gitops/status` | Get GitOps status                      |
+| GET    | `/v1/environments/:id/workloads`   | Get environment workloads                |
+| GET    | `/v1/environments/:id/workloads/:name` | Get workload details                |
+| POST   | `/v1/environments/:id/movements`   | Create environment movement request      |
+| GET    | `/v1/environments/:id/movements`   | List environment movements               |
+| GET    | `/v1/environments/:id/movements/:movementId` | Get environment movement details |
+| GET    | `/v1/environments/:id/events/stream` | Stream environment events (SSE)       |
+| GET    | `/v1/environments/:id/logs/stream` | Stream workload logs (SSE)              |
+
+### Templates & Placement
+
+| Method | Endpoint                                      | Description                               |
+| ------ | --------------------------------------------- | ----------------------------------------- |
+| GET    | `/v1/templates`                               | List templates                            |
+| POST   | `/v1/templates`                               | Create template                           |
+| GET    | `/v1/templates/:id`                           | Get template details                      |
+| PATCH  | `/v1/templates/:id`                           | Update template                           |
+| DELETE | `/v1/templates/:id`                           | Delete template                           |
+| GET    | `/v1/templates/:id/versions`                  | List template versions                    |
+| POST   | `/v1/templates/:id/versions`                  | Create template version                   |
+| GET    | `/v1/templates/:id/versions/:versionId`       | Get template version                      |
+| PATCH  | `/v1/templates/:id/versions/:versionId`       | Update template version                   |
+| PUT    | `/v1/templates/:id/versions/:versionId/parameters` | Replace template parameters          |
+| PUT    | `/v1/templates/:id/versions/:versionId/resources`  | Replace template resources           |
+| POST   | `/v1/templates/:id/versions/:versionId/validate`   | Validate template inputs             |
+| GET    | `/v1/delivery-targets`                        | List delivery targets                     |
+| POST   | `/v1/delivery-targets`                        | Create delivery target                    |
+| GET    | `/v1/delivery-targets/:id`                    | Get delivery target details               |
+| PATCH  | `/v1/delivery-targets/:id`                    | Update delivery target                    |
+| DELETE | `/v1/delivery-targets/:id`                    | Delete delivery target                    |
+
+### Live Updates & Notifications
+
+| Method | Endpoint                          | Description                           |
+| ------ | --------------------------------- | ------------------------------------- |
+| GET    | `/v1/notifications`               | List recent notifications             |
+| GET    | `/v1/environments/:id/events/stream` | Stream environment events (SSE)   |
+| GET    | `/v1/environments/:id/logs/stream`   | Stream workload logs (SSE)        |
 
 ### Users & Teams
 
@@ -335,12 +381,12 @@ idp-core/
 
 ## Roadmap
 
-| Phase                 | Timeline  | Status      | Focus                                          |
-| --------------------- | --------- | ----------- | ---------------------------------------------- |
-| Phase 1 - MVP         | Q2 2026   | ✅ Complete  | Core API, K8s/ArgoCD                           |
-| Phase 2 - Enhancement | Q3 2026   | ✅ Complete  | RBAC, FinOps, Rightsizing, Service Catalog     |
-| Phase 3 - Platform    | Q4 2026   | 📋 Planned  | Developer Portal UI, Templates, Multi-cluster  |
-| Phase 4 - Advanced    | Q1 2027+  | 🔮 Roadmap  | AI/ML, Analytics, Policy Engine                |
+| Phase                 | Timeline  | Status               | Focus                                              |
+| --------------------- | --------- | -------------------- | -------------------------------------------------- |
+| Phase 1 - MVP         | Q2 2026   | ✅ Complete          | Core API, K8s/ArgoCD                               |
+| Phase 2 - Enhancement | Q3 2026   | ✅ Complete          | RBAC, FinOps, Rightsizing, Service Catalog         |
+| Phase 3 - Platform    | Q4 2026   | 🚧 Backend in progress | Backend templates, delivery targets, live updates; UI in separate repo |
+| Phase 4 - Advanced    | Q1 2027+  | 🔮 Roadmap           | AI/ML, Analytics, Policy Engine                    |
 
 ### Related Projects
 
