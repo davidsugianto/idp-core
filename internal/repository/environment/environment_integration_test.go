@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	postgrescontainer "github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -100,15 +100,15 @@ func TestRepository_Create(t *testing.T) {
 		{
 			name: "create environment with resource quota",
 			env: &environment.Environment{
-				ID:                 "test-env-2",
-				TeamID:             "team-123",
-				Name:               "prod",
-				Namespace:          "idp-team-123-prod",
-				Status:             "ready",
-				GitRepoURL:         "https://github.com/org/repo.git",
-				GitRevision:        "main",
-				ManifestPath:       "manifests",
-				ResourceQuotaCPU:   "4",
+				ID:                  "test-env-2",
+				TeamID:              "team-123",
+				Name:                "prod",
+				Namespace:           "idp-team-123-prod",
+				Status:              "ready",
+				GitRepoURL:          "https://github.com/org/repo.git",
+				GitRevision:         "main",
+				ManifestPath:        "manifests",
+				ResourceQuotaCPU:    "4",
 				ResourceQuotaMemory: "8Gi",
 			},
 			wantErr: false,
@@ -291,6 +291,101 @@ func TestRepository_ListByTeam(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRepository_UpdateDeliveryTarget(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	repo := New(Dependencies{Database: db})
+	ctx := context.Background()
+
+	env := &environment.Environment{
+		ID:               "update-target-1",
+		TeamID:           "team-update-target",
+		Name:             "dev",
+		Namespace:        "idp-team-update-target-dev",
+		Status:           "ready",
+		GitRepoURL:       "https://github.com/org/repo.git",
+		GitRevision:      "main",
+		ManifestPath:     "manifests",
+		DeliveryTargetID: "target-old",
+		ClusterName:      "cluster-old",
+		ClusterServer:    "https://old.example",
+	}
+	err := repo.Create(ctx, env)
+	require.NoError(t, err)
+
+	err = repo.UpdateDeliveryTarget(ctx, env.ID, env.TeamID, "target-new", "cluster-new", "https://new.example")
+	require.NoError(t, err)
+
+	updated, err := repo.GetByIDAndTeam(ctx, env.ID, env.TeamID)
+	require.NoError(t, err)
+	require.NotNil(t, updated)
+	assert.Equal(t, "target-new", updated.DeliveryTargetID)
+	assert.Equal(t, "cluster-new", updated.ClusterName)
+	assert.Equal(t, "https://new.example", updated.ClusterServer)
+}
+
+func TestRepository_CountByDeliveryTarget(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	repo := New(Dependencies{Database: db})
+	ctx := context.Background()
+
+	envs := []*environment.Environment{
+		{
+			ID:               "count-target-1",
+			TeamID:           "team-count",
+			Name:             "dev",
+			Namespace:        "idp-team-count-dev",
+			Status:           "ready",
+			GitRepoURL:       "https://github.com/org/repo.git",
+			GitRevision:      "main",
+			ManifestPath:     "manifests",
+			DeliveryTargetID: "target-a",
+		},
+		{
+			ID:               "count-target-2",
+			TeamID:           "team-count",
+			Name:             "staging",
+			Namespace:        "idp-team-count-staging",
+			Status:           "ready",
+			GitRepoURL:       "https://github.com/org/repo.git",
+			GitRevision:      "main",
+			ManifestPath:     "manifests",
+			DeliveryTargetID: "target-a",
+		},
+		{
+			ID:               "count-target-3",
+			TeamID:           "team-count",
+			Name:             "prod",
+			Namespace:        "idp-team-count-prod",
+			Status:           "ready",
+			GitRepoURL:       "https://github.com/org/repo.git",
+			GitRevision:      "main",
+			ManifestPath:     "manifests",
+			DeliveryTargetID: "target-b",
+		},
+	}
+
+	for _, env := range envs {
+		err := repo.Create(ctx, env)
+		require.NoError(t, err)
+	}
+
+	count, err := repo.CountByDeliveryTarget(ctx, "target-a")
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, count)
 }
 
 func TestRepository_UpdateStatus(t *testing.T) {

@@ -18,6 +18,9 @@ type Repository interface {
 	ListByStatus(ctx context.Context, status string) ([]environment.Environment, error)
 	ListExpired(ctx context.Context) ([]environment.Environment, error)
 	Update(ctx context.Context, env *environment.Environment) error
+	UpdateDeliveryTarget(ctx context.Context, id, teamID, deliveryTargetID, clusterName, clusterServer string) error
+	CountByDeliveryTarget(ctx context.Context, deliveryTargetID string) (int64, error)
+	UpdateTemplateInstance(ctx context.Context, id, templateInstanceID string) error
 	UpdateStatus(ctx context.Context, id, teamID, status, lastError string) error
 	UpdateArgoAppName(ctx context.Context, id, teamID, argoAppName string) error
 	UpdateLastSync(ctx context.Context, id string, syncedAt time.Time) error

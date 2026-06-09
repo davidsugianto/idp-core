@@ -3,6 +3,8 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
@@ -18,11 +20,13 @@ type Client struct {
 
 // Config holds OIDC client configuration
 type Config struct {
-	IssuerURL    string
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-	Scopes       []string
+	IssuerURL          string
+	DiscoveryURL       string
+	ClientID           string
+	ClientSecret       string
+	RedirectURL        string
+	Scopes             []string
+	InsecureIssuerURLs []string
 }
 
 // NewClient creates a new OIDC client
@@ -34,14 +38,26 @@ func NewClient(ctx context.Context, cfg *Config) (*Client, error) {
 		return nil, fmt.Errorf("client ID is required")
 	}
 
-	provider, err := oidc.NewProvider(ctx, cfg.IssuerURL)
+	discoveryURL := cfg.DiscoveryURL
+	if discoveryURL == "" {
+		discoveryURL = cfg.IssuerURL
+	}
+
+	providerCtx := ctx
+	if discoveryURL != cfg.IssuerURL {
+		if !containsURL(cfg.InsecureIssuerURLs, cfg.IssuerURL) {
+			return nil, fmt.Errorf("issuer URL %q must be listed in insecure issuer URLs when discovery URL %q differs", cfg.IssuerURL, discoveryURL)
+		}
+		providerCtx = oidc.InsecureIssuerURLContext(ctx, cfg.IssuerURL)
+	}
+
+	provider, err := oidc.NewProvider(providerCtx, discoveryURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OIDC provider: %w", err)
 	}
 
 	verifier := provider.Verifier(&oidc.Config{
-		ClientID:        cfg.ClientID,
-		SkipIssuerCheck: true,
+		ClientID: cfg.ClientID,
 	})
 
 	scopes := cfg.Scopes
@@ -94,4 +110,36 @@ func (c *Client) GetOAuth2Config() *oauth2.Config {
 func (c *Client) Refresh(ctx context.Context, refreshToken string) (*oauth2.Token, error) {
 	token := &oauth2.Token{RefreshToken: refreshToken}
 	return c.oauth2Conf.TokenSource(ctx, token).Token()
+}
+
+func containsURL(urls []string, target string) bool {
+	targetURL, err := normalizeURL(target)
+	if err != nil {
+		return false
+	}
+
+	for _, candidate := range urls {
+		candidateURL, err := normalizeURL(candidate)
+		if err != nil {
+			continue
+		}
+		if candidateURL == targetURL {
+			return true
+		}
+	}
+
+	return false
+}
+
+func normalizeURL(raw string) (string, error) {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return "", err
+	}
+
+	parsed.Host = strings.ToLower(parsed.Host)
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Fragment = ""
+
+	return strings.TrimRight(parsed.String(), "/"), nil
 }

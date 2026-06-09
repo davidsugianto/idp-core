@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	envModel "github.com/davidsugianto/idp-core/internal/model/environment"
@@ -43,6 +44,23 @@ func (r *repository) GetWorkloads(namespace string) ([]*appsv1.Deployment, error
 // GetPods returns all pods in a namespace from the informer cache
 func (r *repository) GetPods(namespace string) ([]*corev1.Pod, error) {
 	return r.informerManager.GetPods(namespace)
+}
+
+func (r *repository) ResolvePodForWorkload(namespace, workloadName string) (*corev1.Pod, error) {
+	return r.informerManager.ResolvePodForWorkload(namespace, workloadName)
+}
+
+func (r *repository) StreamPodLogs(ctx context.Context, namespace, podName, containerName string, tailLines int64) (io.ReadCloser, error) {
+	return r.k8sClient.Clientset.CoreV1().Pods(namespace).GetLogs(podName, &corev1.PodLogOptions{
+		Follow:    true,
+		Container: containerName,
+		TailLines: func() *int64 {
+			if tailLines <= 0 {
+				return nil
+			}
+			return &tailLines
+		}(),
+	}).Stream(ctx)
 }
 
 // Global status store for caching pod/deployment status

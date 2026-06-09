@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"context"
+	"io"
 
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
@@ -32,6 +33,8 @@ type Repository interface {
 	// Workloads and Pods from cache
 	GetWorkloads(namespace string) ([]*appsv1.Deployment, error)
 	GetPods(namespace string) ([]*corev1.Pod, error)
+	ResolvePodForWorkload(namespace, workloadName string) (*corev1.Pod, error)
+	StreamPodLogs(ctx context.Context, namespace, podName, containerName string, tailLines int64) (io.ReadCloser, error)
 
 	// Workload updates for rightsizing
 	GetDeployment(ctx context.Context, namespace, name string) (*appsv1.Deployment, error)

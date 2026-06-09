@@ -3,24 +3,25 @@
 > **Project**: `idp-core`
 > **Phase**: 3 - Platform
 > **Owner**: Platform Engineering Team
-> **Last Updated**: May 21, 2026
-> **Status**: 📋 Planning
+> **Last Updated**: June 10, 2026
+> **Status**: 🚧 Backend implementation in progress
 > **Timeline**: Q4 2026
 
 ---
 
 ## 🎯 Executive Summary
 
-Phase 3 transforms idp-core from a pure API platform into a full Internal Developer Platform (IDP) with a web-based developer portal, template management, and multi-cluster support. This phase focuses on developer experience and self-service capabilities.
+Phase 3 extends idp-core with backend platform capabilities for reusable templates, multi-cluster placement, environment movement workflows, and authenticated real-time operational updates. The developer portal remains part of Phase 3, but it is delivered from the separate `idp-ui` repository and consumes the backend contracts defined here.
 
 ### Phase 3 Goals
 
 | Goal | Metric | Target |
 |------|--------|--------|
-| Developer self-service | UI adoption rate | > 80% |
+| Developer self-service | API-backed workflows ready for portal consumption | 100% Phase 3 backend contracts |
 | Template standardization | Template usage | 100% environments |
 | Multi-cluster support | Cluster coverage | All production clusters |
 | Developer productivity | Time to production | < 1 hour |
+| Real-time operations | Event and log stream availability | All active environments |
 
 ---
 
@@ -28,21 +29,19 @@ Phase 3 transforms idp-core from a pure API platform into a full Internal Develo
 
 ```mermaid
 flowchart TB
-    subgraph Frontend ["🖥️ Developer Portal (React)"]
+    subgraph Frontend ["🖥️ Developer Portal (Separate idp-ui Repo)"]
         Dashboard["Dashboard"]
         EnvBrowser["Environment Browser"]
         TemplateEditor["Template Editor"]
-        CostExplorer["Cost Explorer"]
         WorkloadViewer["Workload Viewer"]
-        Settings["Settings"]
     end
 
     subgraph API ["🔧 idp-core API (Go/Gin)"]
         HTTP["HTTP Handlers"]
-        WS["WebSocket Server"]
+        SSE["SSE Streams"]
     end
 
-    subgraph Clusters ["☸️ Multi-Cluster"]
+    subgraph Clusters ["☸️ Multi-Cluster Delivery Targets"]
         Cluster1["Cluster 1 (prod)"]
         Cluster2["Cluster 2 (staging)"]
         Cluster3["Cluster 3 (dev)"]
@@ -51,13 +50,12 @@ flowchart TB
     subgraph Storage ["💾 Data Layer"]
         DB[(PostgreSQL)]
         Redis[(Redis)]
-        Git["Template Git Repo"]
     end
 
     Frontend --> API
     API --> Clusters
     API --> Storage
-    WS --> Frontend
+    SSE --> Frontend
 
     style Frontend fill:#e3f2fd,stroke:#2196f3
     style API fill:#e8f5e9,stroke:#4caf50
@@ -71,7 +69,7 @@ flowchart TB
 
 ### Overview
 
-Build a modern, responsive web application that provides developers with a self-service interface for all platform capabilities. The portal will be built with React and integrate with the idp-core API.
+Build a modern, responsive web application that provides developers with a self-service interface for all platform capabilities. This UI is implemented in the separate `idp-ui` repository, while `idp-core` delivers the backend APIs and streaming contracts it consumes.
 
 **UI Project**: [`idp-ui`](https://github.com/davidsugianto/idp-ui) (separate repository)
 
@@ -210,11 +208,11 @@ Build a modern, responsive web application that provides developers with a self-
 
 ---
 
-## 📋 Feature 2: Template Management
+## 📋 Feature 2: Template Management Backend
 
 ### Overview
 
-Implement a template management system that allows platform teams to define reusable environment templates with parameters, versions, and validation.
+Implement a backend template management system that allows platform teams to define reusable environment templates with parameters, version lifecycle controls, validation, and historical instantiation records.
 
 ### User Stories
 
@@ -304,25 +302,19 @@ type TemplateInstance struct {
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/templates` | List templates (filterable) |
-| POST | `/templates` | Create template |
-| GET | `/templates/:id` | Get template details |
-| PATCH | `/templates/:id` | Update template |
-| DELETE | `/templates/:id` | Archive template |
-| GET | `/templates/:id/versions` | List template versions |
-| POST | `/templates/:id/versions` | Create new version |
-| GET | `/templates/:id/versions/:version` | Get specific version |
-| PATCH | `/templates/:id/versions/:version` | Update version |
-| GET | `/templates/:id/parameters` | List template parameters |
-| POST | `/templates/:id/parameters` | Add parameter |
-| PATCH | `/templates/:id/parameters/:paramId` | Update parameter |
-| DELETE | `/templates/:id/parameters/:paramId` | Remove parameter |
-| GET | `/templates/:id/resources` | List template resources |
-| POST | `/templates/:id/resources` | Add resource |
-| PATCH | `/templates/:id/resources/:resourceId` | Update resource |
-| DELETE | `/templates/:id/resources/:resourceId` | Remove resource |
-| POST | `/templates/:id/validate` | Validate template parameters |
-| POST | `/templates/:id/instantiate` | Create environment from template |
+| GET | `/v1/templates` | List templates (filterable) |
+| POST | `/v1/templates` | Create template |
+| GET | `/v1/templates/:id` | Get template details |
+| PATCH | `/v1/templates/:id` | Update template |
+| DELETE | `/v1/templates/:id` | Delete template |
+| GET | `/v1/templates/:id/versions` | List template versions |
+| POST | `/v1/templates/:id/versions` | Create new version |
+| GET | `/v1/templates/:id/versions/:versionId` | Get specific version |
+| PATCH | `/v1/templates/:id/versions/:versionId` | Update version lifecycle |
+| PUT | `/v1/templates/:id/versions/:versionId/parameters` | Replace parameter definitions |
+| PUT | `/v1/templates/:id/versions/:versionId/resources` | Replace resource definitions |
+| POST | `/v1/templates/:id/versions/:versionId/validate` | Validate template inputs |
+| POST | `/v1/environments` | Create environment from a template version |
 
 ### Built-in Templates
 
@@ -337,11 +329,11 @@ type TemplateInstance struct {
 
 ---
 
-## 🌐 Feature 3: Multi-Cluster Support
+## 🌐 Feature 3: Multi-Cluster Placement Backend
 
 ### Overview
 
-Enable idp-core to manage environments across multiple Kubernetes clusters, providing cluster registration, cross-cluster deployments, and federated monitoring.
+Enable idp-core to manage environment placement across multiple Kubernetes clusters through delivery targets, target-aware provisioning, and auditable movement workflows.
 
 ### User Stories
 
@@ -407,24 +399,22 @@ type ClusterHealth struct {
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/clusters` | List registered clusters |
-| POST | `/clusters` | Register new cluster |
-| GET | `/clusters/:id` | Get cluster details |
-| PATCH | `/clusters/:id` | Update cluster config |
-| DELETE | `/clusters/:id` | Deregister cluster |
-| GET | `/clusters/:id/health` | Get cluster health |
-| GET | `/clusters/:id/namespaces` | List cluster namespaces |
-| GET | `/clusters/:id/metrics` | Get cluster metrics |
-| POST | `/clusters/:id/test` | Test cluster connectivity |
-| POST | `/environments/:id/migrate` | Migrate environment to another cluster |
+| GET | `/v1/delivery-targets` | List registered delivery targets |
+| POST | `/v1/delivery-targets` | Register new delivery target |
+| GET | `/v1/delivery-targets/:id` | Get delivery target details |
+| PATCH | `/v1/delivery-targets/:id` | Update delivery target config |
+| DELETE | `/v1/delivery-targets/:id` | Remove delivery target |
+| POST | `/v1/environments/:id/movements` | Request environment movement to another target |
+| GET | `/v1/environments/:id/movements` | List movement history for an environment |
+| GET | `/v1/environments/:id/movements/:movementId` | Get movement details |
 
 ---
 
-## 🔌 Feature 4: Real-time Updates
+## 🔌 Feature 4: Real-time Update Backend
 
 ### Overview
 
-Implement WebSocket support for real-time updates to the UI, including environment status changes, deployment progress, and log streaming.
+Implement authenticated server-sent event streams and retained notification history for environment status changes, movement progress, notifications, and workload log streaming.
 
 ### User Stories
 
@@ -435,48 +425,22 @@ Implement WebSocket support for real-time updates to the UI, including environme
 | RT-003 | As a developer, I want deployment progress updates so I know when it's done | P1 |
 | RT-004 | As a developer, I want notifications for important events so I stay informed | P1 |
 
-### WebSocket Events
+### Streamed Events
 
-| Event | Direction | Description |
+| Event | Transport | Description |
 |-------|-----------|-------------|
-| `environment:status` | Server → Client | Environment status change |
-| `environment:sync` | Server → Client | GitOps sync progress |
-| `workload:status` | Server → Client | Workload status change |
-| `workload:logs` | Server → Client | Log stream chunk |
-| `cluster:health` | Server → Client | Cluster health update |
-| `notification:new` | Server → Client | New notification |
-| `logs:subscribe` | Client → Server | Subscribe to log stream |
-| `logs:unsubscribe` | Client → Server | Unsubscribe from logs |
+| `status` | SSE | Environment status change |
+| `progress` | SSE | Deployment or movement progress update |
+| `notification` | SSE | New notification event |
+| `log` | SSE | Workload log line |
 
-### Data Model
+### API Endpoints
 
-```go
-// Notification represents a user notification
-type Notification struct {
-    ID          string    `gorm:"primaryKey"`
-    UserID      string    `gorm:"index;not null"`
-    Type        string    `gorm:"not null"` // info, warning, error, success
-    Title       string    `gorm:"not null"`
-    Message     string    `gorm:"not null"`
-    Resource    string    // environment, workload, cluster
-    ResourceID  string
-    ActionURL   string    // link to relevant page
-    Read        bool      `gorm:"default:false"`
-    CreatedAt   time.Time
-}
-
-// UserSession represents an active user session
-type UserSession struct {
-    ID          string    `gorm:"primaryKey"`
-    UserID      string    `gorm:"index;not null"`
-    Token       string    `gorm:"index;not null"`
-    IPAddress   string
-    UserAgent   string
-    LastActive  time.Time
-    ExpiresAt   time.Time
-    CreatedAt   time.Time
-}
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/notifications` | List retained notifications |
+| GET | `/v1/environments/:id/events/stream` | Stream status, progress, and notification events |
+| GET | `/v1/environments/:id/logs/stream` | Stream workload logs |
 
 ---
 
@@ -486,54 +450,47 @@ type UserSession struct {
 
 ```
 migrations/
-├── 20260601000000_create_templates_table.up.sql
-├── 20260601000001_create_template_versions_table.up.sql
-├── 20260601000002_create_template_parameters_table.up.sql
-├── 20260601000003_create_template_resources_table.up.sql
-├── 20260601000004_create_template_instances_table.up.sql
-├── 20260601000005_create_clusters_table.up.sql
-├── 20260601000006_create_cluster_namespaces_table.up.sql
-├── 20260601000007_create_cluster_health_table.up.sql
-├── 20260601000008_create_notifications_table.up.sql
-├── 20260601000009_create_user_sessions_table.up.sql
+├── 20260608000000_create_templates_table.sql
+├── 20260608000001_create_template_versions_table.sql
+├── 20260608000002_create_template_parameters_table.sql
+├── 20260608000003_create_template_resources_table.sql
+├── 20260608000004_create_template_instances_table.sql
+├── 20260608000005_create_delivery_targets_table.sql
+├── 20260608000006_create_environment_movements_table.sql
+├── 20260608000007_create_notifications_table.sql
+├── 20260608000008_alter_environments_add_phase3_refs.sql
 ```
 
 ### Configuration Updates
 
 ```yaml
-# Phase 3 additions to config.yaml
+# Phase 3 backend additions to config.yaml
 frontend:
   enabled: true
   base_url: "https://idp.example.com"
   api_base_url: "https://api.idp.example.com"
 
-websocket:
+streaming:
   enabled: true
-  path: "/ws"
-  heartbeat_interval: "30s"
-  write_timeout: "10s"
+  heartbeat_interval: "15s"
+  subscription_ttl: "30m"
 
 templates:
   enabled: true
-  git_repo_url: "${TEMPLATE_GIT_REPO}"
-  git_branch: "main"
-  sync_interval: "5m"
 
 multi_cluster:
   enabled: true
-  health_check_interval: "1m"
-  default_cluster: "prod-us-east"
+  default_delivery_target: "prod-us-east"
 ```
 
 ### External Dependencies
 
 | Dependency | Purpose | Version |
 |------------|---------|---------|
-| React | Frontend framework | 18+ |
-| Material UI | Component library | 5+ |
-| WebSocket | Real-time updates | - |
 | ArgoCD | GitOps (existing) | 2.11+ |
 | Prometheus | Metrics (existing) | 2.45+ |
+| Redis | Existing background/coordination infrastructure | Current project version |
+| idp-ui | Separate frontend consumer of these APIs | Separate repository |
 
 ---
 
@@ -541,12 +498,11 @@ multi_cluster:
 
 | KPI | Target | Measurement |
 |-----|--------|-------------|
-| UI Adoption | > 80% developers | Unique users vs API-only users |
 | Template Usage | 100% environments | Environments from templates |
-| Multi-cluster Coverage | All prod clusters | Registered clusters vs total |
-| Real-time Latency | < 1s | WebSocket event delivery time |
-| Page Load Time | < 2s | Lighthouse performance score |
-| Developer Satisfaction | > 4.5/5 | User surveys |
+| Multi-cluster Coverage | All prod clusters | Registered delivery targets vs total |
+| Real-time Latency | < 5s | SSE event delivery time |
+| Validation Speed | < 3s | Template validation response time |
+| Notification Availability | 100% authenticated callers | Notification list and stream access |
 
 ---
 

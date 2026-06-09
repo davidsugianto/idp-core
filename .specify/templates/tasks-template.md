@@ -21,10 +21,10 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- Use the real idp-core repository paths from plan.md
+- Backend code normally lives under `cmd/`, `internal/`, `configs/`, `migrations/`, and `deployments/`
+- Keep handler/usecase/repository/model work in separate tasks when they touch different files
+- Add dedicated test paths only when the feature introduces them
 
 <!--
   ============================================================================
@@ -61,6 +61,9 @@ description: "Task list template for feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
+Include foundational work for shared auth/authz rules, audit/history preservation,
+contracts, and observability whenever those concerns apply to more than one story.
+
 Examples of foundational tasks (adjust based on your project):
 
 - [ ] T004 Setup database schema and migrations framework
@@ -84,17 +87,17 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T010 [P] [US1] Contract test for [endpoint] in internal/handler/http/[feature]_test.go
+- [ ] T011 [P] [US1] Integration test for [user journey] in internal/usecase/[feature]/[feature]_integration_test.go
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T012 [P] [US1] Create [Entity1] model in internal/model/[feature]/type.go
+- [ ] T013 [P] [US1] Create [Entity2] model in internal/model/[feature]/related.go
+- [ ] T014 [US1] Implement [Service] in internal/usecase/[feature]/[feature].go (depends on T012, T013)
+- [ ] T015 [US1] Implement [endpoint/feature] in internal/handler/http/[feature].go
+- [ ] T016 [US1] Add validation, authz checks, and error handling in the affected handler/usecase files
+- [ ] T017 [US1] Add audit/history preservation and operator-visible logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -108,15 +111,15 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T018 [P] [US2] Contract test for [endpoint] in internal/handler/http/[feature]_test.go
+- [ ] T019 [P] [US2] Integration test for [user journey] in internal/usecase/[feature]/[feature]_integration_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T020 [P] [US2] Create [Entity] model in internal/model/[feature]/type.go
+- [ ] T021 [US2] Implement [Service] in internal/usecase/[feature]/[feature].go
+- [ ] T022 [US2] Implement [endpoint/feature] in internal/handler/http/[feature].go
+- [ ] T023 [US2] Integrate with shared contracts, history records, and prior user story components (if needed)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -130,14 +133,14 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T024 [P] [US3] Contract test for [endpoint] in internal/handler/http/[feature]_test.go
+- [ ] T025 [P] [US3] Integration test for [user journey] in internal/usecase/[feature]/[feature]_integration_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T026 [P] [US3] Create [Entity] model in internal/model/[feature]/type.go
+- [ ] T027 [US3] Implement [Service] in internal/usecase/[feature]/[feature].go
+- [ ] T028 [US3] Implement [endpoint/feature] in internal/handler/http/[feature].go
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -200,12 +203,12 @@ Examples of foundational tasks (adjust based on your project):
 
 ```bash
 # Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
+Task: "Contract test for [endpoint] in internal/handler/http/[feature]_test.go"
+Task: "Integration test for [user journey] in internal/usecase/[feature]/[feature]_integration_test.go"
 
 # Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
+Task: "Create [Entity1] model in internal/model/[feature]/type.go"
+Task: "Create [Entity2] model in internal/model/[feature]/related.go"
 ```
 
 ---

@@ -9,6 +9,7 @@ import (
 	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
@@ -161,4 +162,34 @@ func (m *informerManager) GetPods(namespace string) ([]*corev1.Pod, error) {
 		return nil, nil
 	}
 	return m.factory.Core().V1().Pods().Lister().Pods(namespace).List(labels.Everything())
+}
+
+func (m *informerManager) ResolvePodForWorkload(namespace, workloadName string) (*corev1.Pod, error) {
+	if !m.started {
+		return nil, nil
+	}
+
+	pods, err := m.factory.Core().V1().Pods().Lister().Pods(namespace).List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+	for _, pod := range pods {
+		for _, owner := range pod.OwnerReferences {
+			if owner.Kind == "ReplicaSet" {
+				replicaSet, err := m.client.Clientset.AppsV1().ReplicaSets(namespace).Get(context.Background(), owner.Name, metav1.GetOptions{})
+				if err != nil {
+					continue
+				}
+				for _, rsOwner := range replicaSet.OwnerReferences {
+					if rsOwner.Kind == "Deployment" && rsOwner.Name == workloadName {
+						return pod, nil
+					}
+				}
+			}
+			if owner.Kind == "StatefulSet" && owner.Name == workloadName {
+				return pod, nil
+			}
+		}
+	}
+	return nil, nil
 }

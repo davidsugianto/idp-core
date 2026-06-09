@@ -13,15 +13,16 @@ import (
 
 // CreateEnvironment godoc
 // @Summary Create a new environment
-// @Description Create a new Kubernetes environment with ArgoCD integration
+// @Description Create a new Kubernetes environment with optional template-based provisioning and delivery-target placement
 // @Tags environments
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param request body environment.CreateEnvironmentRequest true "Environment request"
+// @Param request body environment.CreateEnvironmentRequest true "Environment request including optional template_version_id, template_inputs, and delivery_target_id"
 // @Success 201 {object} environment.EnvironmentResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /v1/environments [post]
 func (h *Handler) CreateEnvironment(c *gin.Context) {
@@ -39,6 +40,14 @@ func (h *Handler) CreateEnvironment(c *gin.Context) {
 
 	env, err := h.environmentUseCase.Create(c.Request.Context(), teamID, req)
 	if err != nil {
+		if errors.Is(err, envUsecase.ErrTemplateVersionNotFound) {
+			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, envUsecase.ErrTemplateInputInvalid) {
+			response.GinBadRequest(c, err)
+			return
+		}
 		response.GinInternalServerError(c, err)
 		return
 	}

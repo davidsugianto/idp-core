@@ -41,6 +41,7 @@ type OIDCTokenResponse struct {
 	ExpiresIn    int64  `json:"expires_in"`
 	TokenType    string `json:"token_type"`
 	UserID       string `json:"user_id"`
+	TeamID       string `json:"team_id,omitempty"`
 	Email        string `json:"email"`
 	IsAdmin      bool   `json:"is_admin"`
 }
@@ -174,12 +175,17 @@ func (h *Handler) OIDCCallback(c *gin.Context) {
 	}
 
 	isAdmin := h.oidcVerifier.IsAdmin(userInfo)
+	teamID, err := h.resolveOIDCTeamID(ctx, dbUser.ID)
+	if err != nil {
+		response.GinInternalServerError(c, err)
+		return
+	}
 
 	// Issue JWT
 	jwt, err := middleware.GenerateToken(
 		h.authConfig,
 		dbUser.ID,
-		"",
+		teamID,
 		userInfo.Email,
 		isAdmin,
 	)
@@ -207,6 +213,7 @@ func (h *Handler) OIDCCallback(c *gin.Context) {
 			ExpiresIn:    expiresIn,
 			TokenType:    "Bearer",
 			UserID:       dbUser.ID,
+			TeamID:       teamID,
 			Email:        userInfo.Email,
 			IsAdmin:      isAdmin,
 		})
@@ -257,11 +264,16 @@ func (h *Handler) OIDCRefresh(c *gin.Context) {
 			dbUser, err := h.upsertOIDCUser(ctx, userInfo)
 			if err == nil && dbUser != nil {
 				isAdmin := h.oidcVerifier.IsAdmin(userInfo)
+				teamID, err := h.resolveOIDCTeamID(ctx, dbUser.ID)
+				if err != nil {
+					response.GinInternalServerError(c, err)
+					return
+				}
 
 				jwt, err := middleware.GenerateToken(
 					h.authConfig,
 					dbUser.ID,
-					"",
+					teamID,
 					userInfo.Email,
 					isAdmin,
 				)
@@ -280,6 +292,7 @@ func (h *Handler) OIDCRefresh(c *gin.Context) {
 						ExpiresIn:    expiresIn,
 						TokenType:    "Bearer",
 						UserID:       dbUser.ID,
+						TeamID:       teamID,
 						Email:        userInfo.Email,
 						IsAdmin:      isAdmin,
 					})
@@ -353,6 +366,22 @@ func (h *Handler) upsertOIDCUser(ctx context.Context, userInfo *oidcPkg.UserInfo
 	}
 
 	return newUser, nil
+}
+
+func (h *Handler) resolveOIDCTeamID(ctx context.Context, userID string) (string, error) {
+	if h.teamUseCase == nil || userID == "" {
+		return "", nil
+	}
+
+	teams, err := h.teamUseCase.ListUserTeams(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	if len(teams) == 0 {
+		return "", nil
+	}
+
+	return teams[0].ID, nil
 }
 
 func generateState() string {

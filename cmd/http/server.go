@@ -13,12 +13,17 @@ import (
 	auditlogUC "github.com/davidsugianto/idp-core/internal/usecase/auditlog"
 	budgetUC "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
+	deliveryTargetUC "github.com/davidsugianto/idp-core/internal/usecase/delivery_target"
 	environmentUC "github.com/davidsugianto/idp-core/internal/usecase/environment"
+	environmentMovementUC "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
+	liveUpdateUC "github.com/davidsugianto/idp-core/internal/usecase/live_update"
+	notificationUC "github.com/davidsugianto/idp-core/internal/usecase/notification"
 	quotaUC "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUC "github.com/davidsugianto/idp-core/internal/usecase/service"
 	teamUC "github.com/davidsugianto/idp-core/internal/usecase/team"
+	templateUC "github.com/davidsugianto/idp-core/internal/usecase/template"
 	userUC "github.com/davidsugianto/idp-core/internal/usecase/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -31,63 +36,83 @@ import (
 
 type Server struct {
 	*http.Server
-	handler            *httpHandler.Handler
-	config             *config.Config
-	apiKeyUseCase      apikeyUC.Usecase
-	auditLogUseCase    auditlogUC.Usecase
-	budgetUseCase      budgetUC.Usecase
-	costUseCase        costUC.Usecase
-	rightsizingUseCase rightsizingUC.Usecase
-	quotaUseCase       quotaUC.Usecase
-	serviceUseCase     serviceUC.Usecase
+	handler                    *httpHandler.Handler
+	config                     *config.Config
+	apiKeyUseCase              apikeyUC.Usecase
+	auditLogUseCase            auditlogUC.Usecase
+	budgetUseCase              budgetUC.Usecase
+	costUseCase                costUC.Usecase
+	rightsizingUseCase         rightsizingUC.Usecase
+	quotaUseCase               quotaUC.Usecase
+	serviceUseCase             serviceUC.Usecase
+	templateUseCase            templateUC.Usecase
+	deliveryTargetUseCase      deliveryTargetUC.Usecase
+	environmentMovementUseCase environmentMovementUC.Usecase
+	notificationUseCase        notificationUC.Usecase
+	liveUpdateUseCase          liveUpdateUC.Usecase
 }
 
 type Dependencies struct {
-	EnvironmentUseCase environmentUC.Usecase
-	UserUseCase        userUC.Usecase
-	TeamUseCase        teamUC.Usecase
-	RoleUseCase        roleUC.Usecase
-	ApiKeyUseCase      apikeyUC.Usecase
-	AuditLogUseCase    auditlogUC.Usecase
-	BudgetUseCase      budgetUC.Usecase
-	CostUseCase        costUC.Usecase
-	RightsizingUseCase rightsizingUC.Usecase
-	QuotaUseCase       quotaUC.Usecase
-	ServiceUseCase     serviceUC.Usecase
-	Config             *config.Config
-	WebhookValidator   *webhook.Validator
-	OIDCClient         *oidcPkg.Client
-	OIDCVerifier       *oidcPkg.Verifier
+	EnvironmentUseCase         environmentUC.Usecase
+	UserUseCase                userUC.Usecase
+	TeamUseCase                teamUC.Usecase
+	RoleUseCase                roleUC.Usecase
+	ApiKeyUseCase              apikeyUC.Usecase
+	AuditLogUseCase            auditlogUC.Usecase
+	BudgetUseCase              budgetUC.Usecase
+	CostUseCase                costUC.Usecase
+	RightsizingUseCase         rightsizingUC.Usecase
+	QuotaUseCase               quotaUC.Usecase
+	ServiceUseCase             serviceUC.Usecase
+	TemplateUseCase            templateUC.Usecase
+	DeliveryTargetUseCase      deliveryTargetUC.Usecase
+	EnvironmentMovementUseCase environmentMovementUC.Usecase
+	NotificationUseCase        notificationUC.Usecase
+	LiveUpdateUseCase          liveUpdateUC.Usecase
+	Config                     *config.Config
+	WebhookValidator           *webhook.Validator
+	OIDCClient                 *oidcPkg.Client
+	OIDCVerifier               *oidcPkg.Verifier
 }
 
 func New(deps Dependencies) *Server {
 	return &Server{
-		Server:             &http.Server{},
-		apiKeyUseCase:      deps.ApiKeyUseCase,
-		auditLogUseCase:    deps.AuditLogUseCase,
-		budgetUseCase:      deps.BudgetUseCase,
-		costUseCase:        deps.CostUseCase,
-		rightsizingUseCase: deps.RightsizingUseCase,
-		quotaUseCase:       deps.QuotaUseCase,
-		serviceUseCase:     deps.ServiceUseCase,
+		Server:                     &http.Server{},
+		apiKeyUseCase:              deps.ApiKeyUseCase,
+		auditLogUseCase:            deps.AuditLogUseCase,
+		budgetUseCase:              deps.BudgetUseCase,
+		costUseCase:                deps.CostUseCase,
+		rightsizingUseCase:         deps.RightsizingUseCase,
+		quotaUseCase:               deps.QuotaUseCase,
+		serviceUseCase:             deps.ServiceUseCase,
+		templateUseCase:            deps.TemplateUseCase,
+		deliveryTargetUseCase:      deps.DeliveryTargetUseCase,
+		environmentMovementUseCase: deps.EnvironmentMovementUseCase,
+		notificationUseCase:        deps.NotificationUseCase,
+		liveUpdateUseCase:          deps.LiveUpdateUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
-			EnvironmentUseCase: deps.EnvironmentUseCase,
-			UserUseCase:        deps.UserUseCase,
-			TeamUseCase:        deps.TeamUseCase,
-			RoleUseCase:        deps.RoleUseCase,
-			ApiKeyUseCase:      deps.ApiKeyUseCase,
-			AuditLogUseCase:    deps.AuditLogUseCase,
-			BudgetUseCase:      deps.BudgetUseCase,
-			CostUseCase:        deps.CostUseCase,
-			RightsizingUseCase: deps.RightsizingUseCase,
-			QuotaUseCase:       deps.QuotaUseCase,
-			ServiceUseCase:     deps.ServiceUseCase,
-			AuthConfig:         &deps.Config.Auth,
-			WebhookValidator:   deps.WebhookValidator,
-			OIDCClient:         deps.OIDCClient,
-			OIDCVerifier:       deps.OIDCVerifier,
-			OIDCEndSessionURL:  deps.Config.OIDC.IssuerURL + "/protocol/openid-connect/logout",
-			AllowedOrigins:     deps.Config.CORS.AllowedOrigins,
+			EnvironmentUseCase:         deps.EnvironmentUseCase,
+			DeliveryTargetUseCase:      deps.DeliveryTargetUseCase,
+			EnvironmentMovementUseCase: deps.EnvironmentMovementUseCase,
+			UserUseCase:                deps.UserUseCase,
+			TeamUseCase:                deps.TeamUseCase,
+			RoleUseCase:                deps.RoleUseCase,
+			ApiKeyUseCase:              deps.ApiKeyUseCase,
+			AuditLogUseCase:            deps.AuditLogUseCase,
+			BudgetUseCase:              deps.BudgetUseCase,
+			CostUseCase:                deps.CostUseCase,
+			RightsizingUseCase:         deps.RightsizingUseCase,
+			QuotaUseCase:               deps.QuotaUseCase,
+			ServiceUseCase:             deps.ServiceUseCase,
+			TemplateUseCase:            deps.TemplateUseCase,
+			NotificationUseCase:        deps.NotificationUseCase,
+			LiveUpdateUseCase:          deps.LiveUpdateUseCase,
+			AuthConfig:                 &deps.Config.Auth,
+			WebhookValidator:           deps.WebhookValidator,
+			OIDCClient:                 deps.OIDCClient,
+			OIDCVerifier:               deps.OIDCVerifier,
+			OIDCEndSessionURL:          deps.Config.OIDC.IssuerURL + "/protocol/openid-connect/logout",
+			AllowedOrigins:             deps.Config.CORS.AllowedOrigins,
 		}),
 		config: deps.Config,
 	}
@@ -139,6 +164,8 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("/:id/sync", s.handler.SyncEnvironment)
 	envs.DELETE("/:id", s.handler.DeleteEnvironment)
 	envs.GET("/:id/services", s.handler.ListEnvironmentServices)
+	envs.GET("/:id/events/stream", s.handler.StreamEnvironmentEvents)
+	envs.GET("/:id/logs/stream", s.handler.StreamEnvironmentLogs)
 
 	// User routes (protected with JWT)
 	users := v1.Group("/users")
@@ -264,6 +291,40 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	services.POST("/:id/versions/:versionId/deploy", s.handler.DeployServiceVersion)
 	services.GET("/:id/versions/:versionId/deployments", s.handler.ListVersionDeployments)
 	services.PATCH("/:id/versions/:versionId/deployments/:deploymentId", s.handler.UpdateDeployment)
+
+	notifications := v1.Group("/notifications")
+	notifications.Use(middleware.JWT(&s.config.Auth))
+	notifications.GET("", s.handler.ListNotifications)
+
+	// Template routes (protected with JWT)
+	templates := v1.Group("/templates")
+	templates.Use(middleware.JWT(&s.config.Auth))
+	templates.GET("", s.handler.ListTemplates)
+	templates.POST("", s.handler.CreateTemplate)
+	templates.GET("/:id", s.handler.GetTemplate)
+	templates.PATCH("/:id", s.handler.UpdateTemplate)
+	templates.DELETE("/:id", s.handler.DeleteTemplate)
+	templates.GET("/:id/versions", s.handler.ListTemplateVersions)
+	templates.POST("/:id/versions", s.handler.CreateTemplateVersion)
+	templates.GET("/:id/versions/:versionId", s.handler.GetTemplateVersion)
+	templates.PATCH("/:id/versions/:versionId", s.handler.UpdateTemplateVersion)
+	templates.PUT("/:id/versions/:versionId/parameters", s.handler.ReplaceTemplateParameters)
+	templates.PUT("/:id/versions/:versionId/resources", s.handler.ReplaceTemplateResources)
+	templates.POST("/:id/versions/:versionId/validate", s.handler.ValidateTemplateVersion)
+
+	// Delivery target routes (protected with JWT)
+	deliveryTargets := v1.Group("/delivery-targets")
+	deliveryTargets.Use(middleware.JWT(&s.config.Auth))
+	deliveryTargets.GET("", s.handler.ListDeliveryTargets)
+	deliveryTargets.POST("", s.handler.CreateDeliveryTarget)
+	deliveryTargets.GET("/:id", s.handler.GetDeliveryTarget)
+	deliveryTargets.PATCH("/:id", s.handler.UpdateDeliveryTarget)
+	deliveryTargets.DELETE("/:id", s.handler.DeleteDeliveryTarget)
+
+	// Environment movement routes (protected with JWT)
+	envs.POST("/:id/movements", s.handler.CreateEnvironmentMovement)
+	envs.GET("/:id/movements", s.handler.ListEnvironmentMovements)
+	envs.GET("/:id/movements/:movementId", s.handler.GetEnvironmentMovement)
 }
 
 func (s *Server) Run(port string) error {

@@ -238,6 +238,99 @@ definitions:
       total_cost:
         type: number
     type: object
+  github_com_davidsugianto_idp-core_internal_model_delivery_target.CapacitySummary:
+    additionalProperties:
+      type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_delivery_target.CreateDeliveryTargetRequest:
+    properties:
+      availability_state:
+        type: string
+      capacity_summary:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.CapacitySummary'
+      cluster_name:
+        type: string
+      cluster_server:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      health_state:
+        type: string
+      name:
+        type: string
+      purpose:
+        type: string
+      team_id:
+        type: string
+    required:
+    - cluster_name
+    - name
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetListResponse:
+    properties:
+      targets:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse:
+    properties:
+      availability_state:
+        type: string
+      capacity_summary:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.CapacitySummary'
+      cluster_name:
+        type: string
+      cluster_server:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      health_state:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      purpose:
+        type: string
+      slug:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_delivery_target.UpdateDeliveryTargetRequest:
+    properties:
+      availability_state:
+        type: string
+      capacity_summary:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.CapacitySummary'
+      cluster_name:
+        type: string
+      cluster_server:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      health_state:
+        type: string
+      name:
+        type: string
+      purpose:
+        type: string
+      team_id:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_environment.ArgoStatus:
     properties:
       health_status:
@@ -253,6 +346,11 @@ definitions:
     properties:
       cluster_name:
         description: Optional cluster override
+        type: string
+      cluster_server:
+        type: string
+      delivery_target_id:
+        description: Optional target placement
         type: string
       description:
         type: string
@@ -277,6 +375,12 @@ definitions:
         description: Optional resource quotas
         type: string
       resource_quota_memory:
+        type: string
+      template_inputs:
+        additionalProperties: {}
+        type: object
+      template_version_id:
+        description: Optional template provisioning
         type: string
     required:
     - git_repo_url
@@ -304,6 +408,8 @@ definitions:
       cluster_server:
         type: string
       created_at:
+        type: string
+      delivery_target_id:
         type: string
       description:
         type: string
@@ -345,6 +451,8 @@ definitions:
         type: string
       team_id:
         type: string
+      template_instance_id:
+        type: string
       updated_at:
         type: string
     type: object
@@ -360,6 +468,8 @@ definitions:
       cluster_server:
         type: string
       created_at:
+        type: string
+      delivery_target_id:
         type: string
       deployment_summary:
         $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment.DeploymentSummary'
@@ -405,6 +515,8 @@ definitions:
         type: string
       team_id:
         type: string
+      template_instance_id:
+        type: string
       updated_at:
         type: string
     type: object
@@ -416,6 +528,67 @@ definitions:
         type: integer
       running:
         type: integer
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_environment_movement.EnvironmentMovement:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      destination_target_id:
+        type: string
+      environment_id:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      progress_percent:
+        type: integer
+      requested_by:
+        type: string
+      source_target_id:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_notification.Notification:
+    properties:
+      created_at:
+        type: string
+      environment_id:
+        type: string
+      id:
+        type: string
+      kind:
+        type: string
+      message:
+        type: string
+      payload:
+        type: string
+      read_at:
+        type: string
+      severity:
+        type: string
+      team_id:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_notification.NotificationListResponse:
+    properties:
+      notifications:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_notification.Notification'
+        type: array
       total:
         type: integer
     type: object
@@ -1239,6 +1412,225 @@ definitions:
       name:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_template.CreateTemplateRequest:
+    properties:
+      author:
+        type: string
+      author_email:
+        type: string
+      category:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      team_id:
+        type: string
+      visibility:
+        type: string
+    required:
+    - author
+    - description
+    - name
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.CreateTemplateVersionRequest:
+    properties:
+      changelog:
+        type: string
+      description:
+        type: string
+      is_latest:
+        type: boolean
+      is_stable:
+        type: boolean
+      status:
+        type: string
+      version:
+        type: string
+    required:
+    - version
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.ReplaceTemplateParametersRequest:
+    properties:
+      parameters:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateParameter'
+        type: array
+    required:
+    - parameters
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.ReplaceTemplateResourcesRequest:
+    properties:
+      resources:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResource'
+        type: array
+    required:
+    - resources
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateListResponse:
+    properties:
+      templates:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateParameter:
+    properties:
+      created_at:
+        type: string
+      default:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      required:
+        type: boolean
+      template_id:
+        type: string
+      type:
+        type: string
+      validation:
+        type: string
+      version_id:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateResource:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      template_id:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      version_id:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateResponse:
+    properties:
+      author:
+        type: string
+      author_email:
+        type: string
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+      visibility:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionListResponse:
+    properties:
+      total:
+        type: integer
+      versions:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionResponse'
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionResponse:
+    properties:
+      changelog:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_latest:
+        type: boolean
+      is_stable:
+        type: boolean
+      status:
+        type: string
+      template_id:
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.UpdateTemplateRequest:
+    properties:
+      author:
+        type: string
+      author_email:
+        type: string
+      category:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      visibility:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.UpdateTemplateVersionRequest:
+    properties:
+      changelog:
+        type: string
+      description:
+        type: string
+      is_latest:
+        type: boolean
+      is_stable:
+        type: boolean
+      status:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.ValidateTemplateVersionRequest:
+    properties:
+      inputs:
+        additionalProperties: {}
+        type: object
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_template.ValidateTemplateVersionResponse:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      valid:
+        type: boolean
+    type: object
   github_com_davidsugianto_idp-core_internal_model_user.CreateUserRequest:
     properties:
       avatar_url:
@@ -1373,10 +1765,19 @@ definitions:
         type: boolean
       refresh_token:
         type: string
+      team_id:
+        type: string
       token_type:
         type: string
       user_id:
         type: string
+    type: object
+  internal_handler_http.createEnvironmentMovementRequest:
+    properties:
+      destination_target_id:
+        type: string
+    required:
+    - destination_target_id
     type: object
 host: localhost:8989
 info:
@@ -2069,6 +2470,217 @@ paths:
       summary: Get team cost records
       tags:
       - costs
+  /v1/delivery-targets:
+    get:
+      description: List delivery targets visible to the caller with optional placement
+        filters
+      parameters:
+      - description: Filter by team scope
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by target purpose
+        in: query
+        name: purpose
+        type: string
+      - description: Filter by availability state
+        in: query
+        name: availability_state
+        type: string
+      - description: Filter by health state
+        in: query
+        name: health_state
+        type: string
+      - description: Search by name, display name, or cluster
+        in: query
+        name: search
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List delivery targets
+      tags:
+      - delivery-targets
+    post:
+      consumes:
+      - application/json
+      description: Register a placement target with cluster metadata, availability,
+        and capacity details
+      parameters:
+      - description: Delivery target payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.CreateDeliveryTargetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a delivery target
+      tags:
+      - delivery-targets
+  /v1/delivery-targets/{id}:
+    delete:
+      description: Delete a delivery target when it is no longer referenced by environments
+        or active movements
+      parameters:
+      - description: Delivery target ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a delivery target
+      tags:
+      - delivery-targets
+    get:
+      description: Get the details of a specific delivery target
+      parameters:
+      - description: Delivery target ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a delivery target
+      tags:
+      - delivery-targets
+    patch:
+      consumes:
+      - application/json
+      description: Update cluster metadata, capacity, or availability of a delivery
+        target
+      parameters:
+      - description: Delivery target ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delivery target update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.UpdateDeliveryTargetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a delivery target
+      tags:
+      - delivery-targets
   /v1/environments:
     get:
       description: List all environments for the caller's team
@@ -2101,9 +2713,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new Kubernetes environment with ArgoCD integration
+      description: Create a new Kubernetes environment with optional template-based
+        provisioning and delivery-target placement
       parameters:
-      - description: Environment request
+      - description: Environment request including optional template_version_id, template_inputs,
+          and delivery_target_id
         in: body
         name: request
         required: true
@@ -2124,6 +2738,12 @@ paths:
             type: object
         "401":
           description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -2218,6 +2838,61 @@ paths:
       summary: Get environment details
       tags:
       - environments
+  /v1/environments/{id}/events/stream:
+    get:
+      description: Open an authenticated SSE stream for environment status, progress,
+        and notification events
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Comma-separated channels: status,progress,notification'
+        in: query
+        name: channels
+        type: string
+      - description: Last delivered SSE event ID
+        in: query
+        name: last_event_id
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE stream
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "410":
+          description: Gone
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Stream environment events
+      tags:
+      - live-updates
   /v1/environments/{id}/gitops/status:
     get:
       description: Get the ArgoCD sync and health status for an environment
@@ -2257,6 +2932,207 @@ paths:
       summary: Get GitOps status
       tags:
       - environments
+  /v1/environments/{id}/logs/stream:
+    get:
+      description: Open an authenticated SSE stream for workload log lines within
+        an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Workload name
+        in: query
+        name: workload
+        required: true
+        type: string
+      - description: Container name
+        in: query
+        name: container
+        type: string
+      - description: Number of historical log lines to include
+        in: query
+        name: tail_lines
+        type: integer
+      - description: Last delivered SSE event ID
+        in: query
+        name: last_event_id
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE stream
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "410":
+          description: Gone
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Stream environment logs
+      tags:
+      - live-updates
+  /v1/environments/{id}/movements:
+    get:
+      description: List the historical movement requests for an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment_movement.EnvironmentMovement'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List environment movements
+      tags:
+      - environment-movements
+    post:
+      consumes:
+      - application/json
+      description: Request a move of an environment to another delivery target
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Environment movement request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.createEnvironmentMovementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment_movement.EnvironmentMovement'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create an environment movement request
+      tags:
+      - environment-movements
+  /v1/environments/{id}/movements/{movementId}:
+    get:
+      description: Get the latest state for a specific environment movement request
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Movement ID
+        in: path
+        name: movementId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_environment_movement.EnvironmentMovement'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get an environment movement
+      tags:
+      - environment-movements
   /v1/environments/{id}/services:
     get:
       description: List all services deployed to an environment
@@ -2459,6 +3335,54 @@ paths:
       summary: Get workload details
       tags:
       - environments
+  /v1/notifications:
+    get:
+      description: List recent notifications visible to the authenticated caller with
+        optional environment and kind filters
+      parameters:
+      - description: Filter by environment ID
+        in: query
+        name: environment_id
+        type: string
+      - description: Filter by notification kind
+        in: query
+        name: kind
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_notification.NotificationListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List recent notifications
+      tags:
+      - live-updates
   /v1/quotas:
     get:
       description: List all resource quotas with optional filters
@@ -4590,6 +5514,529 @@ paths:
       summary: Get user's roles in a team
       tags:
       - roles
+  /v1/templates:
+    get:
+      description: List all templates with optional filters
+      parameters:
+      - description: Filter by team ID
+        in: query
+        name: team_id
+        type: string
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by visibility
+        in: query
+        name: visibility
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search by name or description
+        in: query
+        name: search
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List templates
+      tags:
+      - template
+    post:
+      consumes:
+      - application/json
+      description: Create a new infrastructure template
+      parameters:
+      - description: Template configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.CreateTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a template
+      tags:
+      - template
+  /v1/templates/{id}:
+    delete:
+      description: Soft delete a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a template
+      tags:
+      - template
+    get:
+      description: Get detailed information about a specific template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a template
+      tags:
+      - template
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Template updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.UpdateTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a template
+      tags:
+      - template
+  /v1/templates/{id}/versions:
+    get:
+      description: List all versions for a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List template versions
+      tags:
+      - template
+    post:
+      consumes:
+      - application/json
+      description: Create a new version for a template
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Template version configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.CreateTemplateVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a template version
+      tags:
+      - template
+  /v1/templates/{id}/versions/{versionId}:
+    get:
+      description: Get detailed information about a specific template version
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a template version
+      tags:
+      - template
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing template version
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Template version updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.UpdateTemplateVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateVersionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a template version
+      tags:
+      - template
+  /v1/templates/{id}/versions/{versionId}/parameters:
+    put:
+      consumes:
+      - application/json
+      description: Replace the ordered parameter definition set for a template version
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Template parameter replacement payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.ReplaceTemplateParametersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateParameter'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Replace template parameter definitions
+      tags:
+      - template
+  /v1/templates/{id}/versions/{versionId}/resources:
+    put:
+      consumes:
+      - application/json
+      description: Replace the ordered resource definition set for a template version
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Template resource replacement payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.ReplaceTemplateResourcesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.TemplateResource'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Replace template resource definitions
+      tags:
+      - template
+  /v1/templates/{id}/versions/{versionId}/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate prospective template inputs before environment creation
+      parameters:
+      - description: Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: Template input validation payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.ValidateTemplateVersionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_template.ValidateTemplateVersionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Validate template version inputs
+      tags:
+      - template
   /v1/users:
     get:
       description: List all users with pagination

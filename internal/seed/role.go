@@ -21,7 +21,8 @@ var DefaultRoles = []struct {
 		PermissionNames: []string{
 			"environment:manage", "team:manage", "user:manage", "role:manage",
 			"api_key:manage", "cost:manage", "budget:manage", "rightsizing:manage",
-			"service:manage", "audit_log:manage",
+			"service:manage", "audit_log:manage", "template:manage", "delivery_target:manage",
+			"environment_movement:manage", "notification:manage", "live_update:manage",
 		},
 	},
 	{
@@ -31,7 +32,8 @@ var DefaultRoles = []struct {
 		PermissionNames: []string{
 			"environment:read", "team:read", "user:read", "role:read",
 			"api_key:read", "cost:read", "budget:read", "rightsizing:read",
-			"service:read", "audit_log:read",
+			"service:read", "audit_log:read", "template:read", "delivery_target:read",
+			"environment_movement:read", "notification:read", "live_update:read",
 		},
 	},
 	{
@@ -41,7 +43,8 @@ var DefaultRoles = []struct {
 		PermissionNames: []string{
 			"environment:manage", "team:read", "team:update",
 			"user:read", "role:read", "cost:read", "budget:manage",
-			"rightsizing:read", "service:manage", "api_key:manage",
+			"rightsizing:read", "service:manage", "api_key:manage", "template:manage",
+			"delivery_target:read", "environment_movement:manage", "notification:read", "live_update:read",
 		},
 	},
 	{
@@ -52,7 +55,8 @@ var DefaultRoles = []struct {
 			"environment:create", "environment:read", "environment:update",
 			"team:read", "user:read", "cost:read", "budget:read",
 			"rightsizing:read", "service:create", "service:read", "service:update",
-			"api_key:create", "api_key:read",
+			"api_key:create", "api_key:read", "template:read", "delivery_target:read",
+			"environment_movement:create", "environment_movement:read", "notification:read", "live_update:read",
 		},
 	},
 	{
@@ -61,7 +65,8 @@ var DefaultRoles = []struct {
 		Scope:       roleModel.ScopeTeam,
 		PermissionNames: []string{
 			"environment:read", "team:read", "user:read", "cost:read",
-			"budget:read", "rightsizing:read", "service:read",
+			"budget:read", "rightsizing:read", "service:read", "template:read",
+			"delivery_target:read", "environment_movement:read", "notification:read", "live_update:read",
 		},
 	},
 }
@@ -92,14 +97,12 @@ func (s *Seeder) SeedRoles(ctx context.Context) error {
 			continue
 		}
 
-		// Get permission IDs
 		permIDs, err := s.GetPermissionIDsByName(ctx, r.PermissionNames)
 		if err != nil {
 			log.Printf("Failed to get permissions for role %s: %v", r.Name, err)
 			continue
 		}
 
-		// Assign permissions to role
 		if len(permIDs) > 0 {
 			if err := s.roleRepo.SetPermissions(ctx, role.ID, permIDs); err != nil {
 				log.Printf("Failed to set permissions for role %s: %v", r.Name, err)
@@ -124,6 +127,14 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 	}
 
 	if err := s.SeedPlatformAdmin(ctx); err != nil {
+		return err
+	}
+
+	if err := s.SeedDeveloperUser(ctx); err != nil {
+		return err
+	}
+
+	if err := s.SeedDefaultTeam(ctx); err != nil {
 		return err
 	}
 
