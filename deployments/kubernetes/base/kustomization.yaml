@@ -21,7 +21,7 @@ commonLabels:
 
 # Images (override with kustomize edit set image)
 images:
-  - name: ghcr.io/davidsugianto/idp-core
+  - name: docker.io/idiots718/idp-core
     newTag: latest
-  - name: ghcr.io/davidsugianto/idp-core-cron
+  - name: docker.io/idiots718/idp-core-cron
     newTag: latest

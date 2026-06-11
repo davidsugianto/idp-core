@@ -14,6 +14,7 @@ func TestEnvironmentMovementHandlerExposesUS2Endpoints(t *testing.T) {
 		"CreateEnvironmentMovement",
 		"ListEnvironmentMovements",
 		"GetEnvironmentMovement",
+		"UpdateEnvironmentMovementStatus",
 	}
 
 	for _, methodName := range requiredMethods {

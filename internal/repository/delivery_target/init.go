@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	Create(ctx context.Context, target *deliveryTargetModel.DeliveryTarget) error
 	GetByID(ctx context.Context, id string) (*deliveryTargetModel.DeliveryTarget, error)
+	GetControlPlaneByID(ctx context.Context, id string) (*deliveryTargetModel.TargetControlPlane, error)
 	Update(ctx context.Context, target *deliveryTargetModel.DeliveryTarget) error
 	UpdateAvailability(ctx context.Context, id, availabilityState, healthState, capacitySummary string) error
 	Delete(ctx context.Context, id string) error

@@ -3,12 +3,13 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/davidsugianto/idp-core/internal/model/environment"
 	"github.com/davidsugianto/idp-core/internal/mocks"
+	"github.com/davidsugianto/idp-core/internal/model/environment"
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
 	envUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment"
@@ -30,9 +31,9 @@ func setupTestHandler(ctrl *gomock.Controller) (*Handler, *mocks.MockEnvironment
 	mockGitopsRepo := mocks.NewMockGitopsRepository(ctrl)
 
 	uc := envUsecase.New(envUsecase.Dependencies{
-		EnvironmentRepo:  mockEnvRepo,
-		ProvisionerRepo:  mockProvRepo,
-		GitopsRepo:       mockGitopsRepo,
+		EnvironmentRepo: mockEnvRepo,
+		ProvisionerRepo: mockProvRepo,
+		GitopsRepo:      mockGitopsRepo,
 	})
 
 	handler := New(Dependencies{
@@ -97,10 +98,10 @@ func TestCreateEnvironment(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "missing required fields",
-			teamID: "team-123",
-			body:   environment.CreateEnvironmentRequest{Name: ""}, // missing required fields
-			setup:  func() {},
+			name:       "missing required fields",
+			teamID:     "team-123",
+			body:       environment.CreateEnvironmentRequest{Name: ""}, // missing required fields
+			setup:      func() {},
 			wantStatus: http.StatusBadRequest,
 		},
 	}
@@ -387,6 +388,9 @@ func TestSyncEnvironment(t *testing.T) {
 				mockGitopsRepo.EXPECT().
 					SyncApplication(gomock.Any(), "env-env-1").
 					Return(nil)
+				mockEnvRepo.EXPECT().
+					UpdateLastSync(gomock.Any(), "env-1", gomock.Any()).
+					Return(nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -541,6 +545,17 @@ func TestGetGitOpsStatus(t *testing.T) {
 			envID:      "env-1",
 			setup:      func() {},
 			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:   "missing argo app returns bad request",
+			teamID: "team-123",
+			envID:  "env-1",
+			setup: func() {
+				mockEnvRepo.EXPECT().
+					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+					Return(&environment.Environment{ID: "env-1", TeamID: "team-123"}, nil)
+			},
+			wantStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -873,6 +888,19 @@ func TestGetGitOpsStatus_ErrorCases(t *testing.T) {
 			},
 			wantStatus: http.StatusInternalServerError,
 		},
+		{
+			name:   "missing argo app returns bad request",
+			teamID: "team-123",
+			envID:  "env-1",
+			setup: func(ctrl *gomock.Controller) (*Handler, *mocks.MockEnvironmentRepository) {
+				handler, mockEnvRepo, _, _ := setupTestHandler(ctrl)
+				mockEnvRepo.EXPECT().
+					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+					Return(&environment.Environment{ID: "env-1", TeamID: "team-123"}, nil)
+				return handler, mockEnvRepo
+			},
+			wantStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1009,6 +1037,114 @@ func TestDeleteEnvironment_ErrorCases(t *testing.T) {
 	}
 }
 
+func TestSyncEnvironmentSanitizesInternalErrors(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	handler, mockEnvRepo, _, mockGitopsRepo := setupTestHandler(ctrl)
+	mockEnvRepo.EXPECT().
+		GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+		Return(&environment.Environment{ID: "env-1", TeamID: "team-123", ArgoAppName: "env-env-1"}, nil)
+	mockGitopsRepo.EXPECT().
+		SyncApplication(gomock.Any(), "env-env-1").
+		Return(errors.New("Get \"https://127.0.0.1:58934/apis/argoproj.io\": dial tcp 127.0.0.1:58934: connect: connection refused: token mismatch on kubeconfig bearer auth"))
+	mockEnvRepo.EXPECT().
+		RecordSyncFailure(gomock.Any(), "env-1", gomock.Any()).
+		Return(nil)
+
+	router := setupTestRouter()
+	router.POST("/environments/:id/sync", func(c *gin.Context) {
+		withTeamID(c, "team-123")
+		c.Next()
+	}, handler.SyncEnvironment)
+
+	req := httptest.NewRequest(http.MethodPost, "/environments/env-1/sync", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotContains(t, w.Body.String(), "token")
+	assert.NotContains(t, w.Body.String(), "kubeconfig")
+	assert.NotContains(t, w.Body.String(), "bearer")
+	assert.NotContains(t, w.Body.String(), "https://")
+	assert.NotContains(t, w.Body.String(), "127.0.0.1")
+	assert.NotContains(t, w.Body.String(), "58934")
+	assert.Contains(t, w.Body.String(), "[redacted]")
+}
+
+func TestGetGitOpsStatusSanitizesInternalErrors(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	handler, mockEnvRepo, _, mockGitopsRepo := setupTestHandler(ctrl)
+	mockEnvRepo.EXPECT().
+		GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+		Return(&environment.Environment{ID: "env-1", TeamID: "team-123", ArgoAppName: "env-env-1"}, nil)
+	mockGitopsRepo.EXPECT().
+		GetApplicationStatus(gomock.Any(), "env-env-1").
+		Return(nil, errors.New("Get \"https://127.0.0.1:58934/apis/argoproj.io\": dial tcp 127.0.0.1:58934: connect: connection refused: token mismatch on kubeconfig bearer auth"))
+
+	router := setupTestRouter()
+	router.GET("/environments/:id/gitops/status", func(c *gin.Context) {
+		withTeamID(c, "team-123")
+		c.Next()
+	}, handler.GetGitOpsStatus)
+
+	req := httptest.NewRequest(http.MethodGet, "/environments/env-1/gitops/status", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotContains(t, w.Body.String(), "token")
+	assert.NotContains(t, w.Body.String(), "kubeconfig")
+	assert.NotContains(t, w.Body.String(), "bearer")
+	assert.NotContains(t, w.Body.String(), "https://")
+	assert.NotContains(t, w.Body.String(), "127.0.0.1")
+	assert.NotContains(t, w.Body.String(), "58934")
+	assert.Contains(t, w.Body.String(), "[redacted]")
+}
+
+func TestGetEnvironmentStatusSanitizesInternalErrors(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	handler, mockEnvRepo, mockProvRepo, mockGitopsRepo := setupTestHandler(ctrl)
+	mockEnvRepo.EXPECT().
+		GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+		Return(&environment.Environment{ID: "env-1", TeamID: "team-123", Namespace: "idp-team-123-dev", ArgoAppName: "env-env-1"}, nil)
+	mockProvRepo.EXPECT().
+		GetPodSummary("idp-team-123-dev").
+		Return(environment.PodSummary{}, false)
+	mockProvRepo.EXPECT().
+		GetDeploymentSummary("idp-team-123-dev").
+		Return(environment.DeploymentSummary{}, false)
+	mockGitopsRepo.EXPECT().
+		GetApplicationStatus(gomock.Any(), "env-env-1").
+		Return(nil, errors.New("Get \"https://127.0.0.1:58934/apis/argoproj.io\": dial tcp 127.0.0.1:58934: connect: connection refused: token mismatch on kubeconfig bearer auth"))
+
+	router := setupTestRouter()
+	router.GET("/environments/:id/status", func(c *gin.Context) {
+		withTeamID(c, "team-123")
+		c.Next()
+	}, handler.GetEnvironmentStatus)
+
+	req := httptest.NewRequest(http.MethodGet, "/environments/env-1/status", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotContains(t, w.Body.String(), "token")
+	assert.NotContains(t, w.Body.String(), "kubeconfig")
+	assert.NotContains(t, w.Body.String(), "bearer")
+	assert.NotContains(t, w.Body.String(), "https://")
+	assert.NotContains(t, w.Body.String(), "127.0.0.1")
+	assert.NotContains(t, w.Body.String(), "58934")
+	assert.Contains(t, w.Body.String(), "[redacted]")
+}
+
 func TestSyncEnvironment_ErrorCases(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -1029,6 +1165,19 @@ func TestSyncEnvironment_ErrorCases(t *testing.T) {
 				return handler, mockEnvRepo
 			},
 			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:   "missing argo app returns bad request",
+			teamID: "team-123",
+			envID:  "env-1",
+			setup: func(ctrl *gomock.Controller) (*Handler, *mocks.MockEnvironmentRepository) {
+				handler, mockEnvRepo, _, _ := setupTestHandler(ctrl)
+				mockEnvRepo.EXPECT().
+					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+					Return(&environment.Environment{ID: "env-1", TeamID: "team-123"}, nil)
+				return handler, mockEnvRepo
+			},
+			wantStatus: http.StatusBadRequest,
 		},
 	}
 

@@ -48,7 +48,7 @@ func (h *Handler) CreateEnvironment(c *gin.Context) {
 			response.GinBadRequest(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 
 	envs, err := h.environmentUseCase.List(c.Request.Context(), teamID)
 	if err != nil {
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *Handler) GetEnvironment(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *Handler) DeleteEnvironment(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -173,6 +173,13 @@ func (h *Handler) DeleteEnvironment(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /v1/environments/{id}/status [get]
+func sanitizeServerError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return errors.New(environment.SanitizeOperationError(err))
+}
+
 func (h *Handler) GetEnvironmentStatus(c *gin.Context) {
 	teamID := middleware.GetTeamID(c)
 	if teamID == "" {
@@ -192,7 +199,11 @@ func (h *Handler) GetEnvironmentStatus(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrEnvironmentStatusUnavailable) {
+			response.GinBadRequest(c, err)
+			return
+		}
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -229,7 +240,11 @@ func (h *Handler) SyncEnvironment(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrSyncTargetUnavailable) {
+			response.GinBadRequest(c, err)
+			return
+		}
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -267,7 +282,11 @@ func (h *Handler) GetGitOpsStatus(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrGitOpsStatusUnavailable) {
+			response.GinBadRequest(c, err)
+			return
+		}
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -305,7 +324,7 @@ func (h *Handler) GetWorkloads(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 
@@ -350,7 +369,7 @@ func (h *Handler) GetWorkloadDetails(c *gin.Context) {
 			response.GinNotFound(c, err)
 			return
 		}
-		response.GinInternalServerError(c, err)
+		response.GinInternalServerError(c, sanitizeServerError(err))
 		return
 	}
 

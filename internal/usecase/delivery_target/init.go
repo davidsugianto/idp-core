@@ -18,6 +18,7 @@ var (
 	ErrClusterNameRequired        = errors.New("cluster name is required")
 	ErrInvalidAvailabilityState   = errors.New("invalid availability state")
 	ErrInvalidHealthState         = errors.New("invalid health state")
+	ErrIncompleteControlPlaneMetadata = errors.New("control plane metadata is incomplete")
 )
 
 type Usecase interface {

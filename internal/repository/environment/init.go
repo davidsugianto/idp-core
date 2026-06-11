@@ -24,6 +24,7 @@ type Repository interface {
 	UpdateStatus(ctx context.Context, id, teamID, status, lastError string) error
 	UpdateArgoAppName(ctx context.Context, id, teamID, argoAppName string) error
 	UpdateLastSync(ctx context.Context, id string, syncedAt time.Time) error
+	RecordSyncFailure(ctx context.Context, id string, lastError string) error
 	IncrementErrorCount(ctx context.Context, id string) error
 	ResetErrorCount(ctx context.Context, id string) error
 	SoftDelete(ctx context.Context, id, teamID string) error

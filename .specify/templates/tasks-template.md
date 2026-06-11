@@ -62,7 +62,8 @@ description: "Task list template for feature implementation"
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
 Include foundational work for shared auth/authz rules, audit/history preservation,
-contracts, and observability whenever those concerns apply to more than one story.
+contracts, observability, and target/control-plane resolution whenever those concerns apply to
+more than one story.
 
 Examples of foundational tasks (adjust based on your project):
 
@@ -96,7 +97,7 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T013 [P] [US1] Create [Entity2] model in internal/model/[feature]/related.go
 - [ ] T014 [US1] Implement [Service] in internal/usecase/[feature]/[feature].go (depends on T012, T013)
 - [ ] T015 [US1] Implement [endpoint/feature] in internal/handler/http/[feature].go
-- [ ] T016 [US1] Add validation, authz checks, and error handling in the affected handler/usecase files
+- [ ] T016 [US1] Add validation, authz checks, target-resolution handling, and error handling in the affected handler/usecase files
 - [ ] T017 [US1] Add audit/history preservation and operator-visible logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently

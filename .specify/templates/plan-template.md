@@ -43,11 +43,12 @@
 - [ ] Self-service value is explicit: the plan names the user workflow, platform/operator value,
       and any historical record that must be preserved.
 - [ ] Clean architecture is preserved: planned changes name the concrete `internal/model`,
-      `internal/repository`, `internal/usecase`, `internal/handler/http`, and wiring paths.
+      `internal/repository`, `internal/usecase`, `internal/handler/http`, wiring paths, and any
+      resolver/provider interfaces used to select target-specific Kubernetes or ArgoCD clients.
 - [ ] Security and tenant isolation are covered: authn/authz boundaries, team scope, and secret
       handling are addressed for every affected flow.
 - [ ] Contracts and observability are covered: API changes, async progress, notifications, logs,
-      and validation signals are documented where relevant.
+      target-control-plane selection, and validation signals are documented where relevant.
 - [ ] Delivery stays incremental: the work remains organized into independently valuable user story
       slices with clear validation steps.
 

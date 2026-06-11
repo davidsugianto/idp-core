@@ -27,7 +27,7 @@ func skipIfNoK8s(t *testing.T) {
 		t.Skip("Skipping E2E test in short mode")
 	}
 
-	_, err := kubernetes.NewClient(false, "")
+	_, err := kubernetes.NewClient(false, "", "")
 	if err != nil {
 		t.Skipf("Kubernetes not available: %v", err)
 	}
@@ -40,7 +40,7 @@ func skipIfNoArgoCD(t *testing.T) {
 	}
 
 	// Check if ArgoCD namespace exists
-	client, err := kubernetes.NewClient(false, "")
+	client, err := kubernetes.NewClient(false, "", "")
 	if err != nil {
 		t.Skipf("Kubernetes not available: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestE2E_FullEnvironmentFlow(t *testing.T) {
 	skipIfNoArgoCD(t)
 
 	ctx := context.Background()
-	k8sClient, err := kubernetes.NewClient(false, "")
+	k8sClient, err := kubernetes.NewClient(false, "", "")
 	require.NoError(t, err, "Failed to create Kubernetes client")
 
 	// Generate unique test namespace

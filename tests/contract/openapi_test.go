@@ -253,7 +253,7 @@ func TestOpenAPIResponseCodes(t *testing.T) {
 
 	validStatusCodes := map[string]bool{
 		"200": true, "201": true, "202": true, "204": true,
-		"400": true, "401": true, "403": true, "404": true, "409": true,
+		"400": true, "401": true, "403": true, "404": true, "409": true, "410": true,
 		"500": true, "502": true, "503": true,
 	}
 

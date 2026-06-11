@@ -33,7 +33,7 @@ func skipIfNoK8s(t *testing.T) {
 	}
 
 	// Verify we can connect to the cluster
-	client, err := kubernetes.NewClient(false, "")
+	client, err := kubernetes.NewClient(false, "", "")
 	if err != nil {
 		t.Skipf("Failed to connect to Kubernetes: %v", err)
 	}
@@ -47,7 +47,7 @@ func skipIfNoK8s(t *testing.T) {
 }
 
 func setupK8sClient(t *testing.T) *kubernetes.Client {
-	client, err := kubernetes.NewClient(false, "")
+	client, err := kubernetes.NewClient(false, "", "")
 	require.NoError(t, err, "Failed to create Kubernetes client")
 	return client
 }

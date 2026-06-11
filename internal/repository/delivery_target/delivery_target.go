@@ -18,6 +18,14 @@ func (r *repository) GetByID(ctx context.Context, id string) (*deliveryTargetMod
 	return &target, nil
 }
 
+func (r *repository) GetControlPlaneByID(ctx context.Context, id string) (*deliveryTargetModel.TargetControlPlane, error) {
+	target, err := r.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return target.ControlPlane(), nil
+}
+
 func (r *repository) Update(ctx context.Context, target *deliveryTargetModel.DeliveryTarget) error {
 	return r.db.WithContext(ctx).Save(target).Error
 }

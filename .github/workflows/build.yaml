@@ -13,17 +13,17 @@ on:
       - master
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: docker.io
+  API_IMAGE_NAME: idiots718/idp-core
+  CRON_IMAGE_NAME: idiots718/idp-core-cron
   GO_VERSION: '1.25'
 
 jobs:
   build:
-    name: Build Docker Image
+    name: Build Docker Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout code
@@ -37,19 +37,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
-        id: meta
+      - name: Extract API image metadata
+        id: meta_api
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -57,24 +57,58 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
 
-      - name: Build and push Docker image
+      - name: Extract cron image metadata
+        id: meta_cron
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.CRON_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+
+      - name: Build and push API image
+        id: build_api
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_api.outputs.tags }}
+          labels: ${{ steps.meta_api.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Generate artifact attestation
+      - name: Build and push cron image
+        id: build_cron
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.cron
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta_cron.outputs.tags }}
+          labels: ${{ steps.meta_cron.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Generate API image attestation
         if: github.event_name != 'pull_request'
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.API_IMAGE_NAME }}
+          subject-digest: ${{ steps.build_api.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate cron image attestation
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.CRON_IMAGE_NAME }}
+          subject-digest: ${{ steps.build_cron.outputs.digest }}
           push-to-registry: true
 
   release:
@@ -96,7 +130,6 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # Get previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
             CHANGELOG=$(git log $PREV_TAG..HEAD --oneline --no-merges)
@@ -116,9 +149,10 @@ jobs:
             ## Changes
             ${{ steps.changelog.outputs.CHANGELOG }}
 
-            ## Docker Image
+            ## Docker Images
             ```
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            docker pull ${{ env.REGISTRY }}/${{ env.API_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            docker pull ${{ env.REGISTRY }}/${{ env.CRON_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
             ```
 
             ## Kubernetes Deployment

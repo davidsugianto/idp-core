@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/davidsugianto/go-pkgs/config"
+	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 )
 
 var (
@@ -102,6 +103,9 @@ func (c *Config) applyEnvOverrides() {
 	if v := os.Getenv("KUBECONFIG_PATH"); v != "" {
 		c.Kubernetes.KubeconfigPath = v
 	}
+	if v := os.Getenv("KUBECONFIG_CONTEXT"); v != "" {
+		c.Kubernetes.KubeconfigContext = v
+	}
 
 	// ArgoCD
 	if v := os.Getenv("ARGOCD_BASE_URL"); v != "" {
@@ -112,6 +116,12 @@ func (c *Config) applyEnvOverrides() {
 	}
 	if v := os.Getenv("ARGOCD_TOKEN"); v != "" {
 		c.ArgoCD.Token = v
+	}
+	if v := os.Getenv("ARGOCD_CONTROL_PLANE_NAME"); v != "" {
+		c.ArgoCD.ControlPlaneName = v
+	}
+	if v := os.Getenv("ARGOCD_CONTROL_PLANE_TYPE"); v != "" {
+		c.ArgoCD.ControlPlaneType = v
 	}
 
 	// OIDC
@@ -241,14 +251,17 @@ type CORSConfig struct {
 }
 
 type KubernetesConfig struct {
-	InCluster      bool   `json:"in_cluster" yaml:"in_cluster"`
-	KubeconfigPath string `json:"kubeconfig_path" yaml:"kubeconfig_path"`
+	InCluster         bool   `json:"in_cluster" yaml:"in_cluster"`
+	KubeconfigPath    string `json:"kubeconfig_path" yaml:"kubeconfig_path"`
+	KubeconfigContext string `json:"kubeconfig_context" yaml:"kubeconfig_context"`
 }
 
 type ArgoCDConfig struct {
-	BaseURL   string `json:"base_url" yaml:"base_url"`
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Token     string `json:"token" yaml:"token"`
+	BaseURL          string `json:"base_url" yaml:"base_url"`
+	Namespace        string `json:"namespace" yaml:"namespace"`
+	Token            string `json:"token" yaml:"token"`
+	ControlPlaneName string `json:"control_plane_name" yaml:"control_plane_name"`
+	ControlPlaneType string `json:"control_plane_type" yaml:"control_plane_type"`
 }
 
 type OIDCConfig struct {
@@ -295,4 +308,30 @@ type RightsizingConfig struct {
 type SlackConfig struct {
 	WebhookURL string `json:"webhook_url" yaml:"webhook_url"`
 	Channel    string `json:"channel" yaml:"channel"`
+}
+
+func (c *Config) DefaultTargetControlPlane() deliveryTargetModel.TargetControlPlaneDefaults {
+	return deliveryTargetModel.TargetControlPlaneDefaults{
+		InCluster:           c.Kubernetes.InCluster,
+		KubeconfigPath:      c.Kubernetes.KubeconfigPath,
+		KubeconfigContext:   c.Kubernetes.KubeconfigContext,
+		ControlPlaneName:    c.ArgoCD.ControlPlaneName,
+		ControlPlaneType:    c.ArgoCD.ControlPlaneType,
+		ArgoCDNamespace:     c.ArgoCD.Namespace,
+		ArgoCDServer:        c.ArgoCD.BaseURL,
+		CredentialReference: "",
+	}
+}
+
+func (c *Config) ResolveTargetControlPlane(target *deliveryTargetModel.DeliveryTarget) *deliveryTargetModel.TargetControlPlane {
+	if c == nil {
+		return nil
+	}
+
+	defaults := c.DefaultTargetControlPlane()
+	if target == nil {
+		return (&deliveryTargetModel.TargetControlPlane{}).Resolve(defaults)
+	}
+
+	return target.ControlPlane().Resolve(defaults)
 }

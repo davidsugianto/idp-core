@@ -10,9 +10,9 @@ GO_VERSION := $(shell go version | awk '{print $$3}')
 LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 
 # Docker
-DOCKER_REGISTRY ?= ghcr.io
-DOCKER_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)
-DOCKER_CRON_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)-cron
+DOCKER_REGISTRY ?= docker.io
+DOCKER_IMAGE := $(DOCKER_REGISTRY)/idiots718/$(APP_NAME)
+DOCKER_CRON_IMAGE := $(DOCKER_REGISTRY)/idiots718/$(APP_NAME)-cron
 
 # Go
 GOCMD := go
@@ -568,12 +568,14 @@ docker-build-cron:
 	docker build -f Dockerfile.cron -t $(DOCKER_CRON_IMAGE):$(VERSION) -t $(DOCKER_CRON_IMAGE):latest .
 	@echo "✅ Cron Docker image built: $(DOCKER_CRON_IMAGE):$(VERSION)"
 
-## docker-push: Push Docker image to registry
-docker-push: docker-build
-	@echo "==> Pushing Docker image..."
+## docker-push: Push Docker images to registry
+docker-push: docker-build docker-build-cron
+	@echo "==> Pushing Docker images..."
 	docker push $(DOCKER_IMAGE):$(VERSION)
 	docker push $(DOCKER_IMAGE):latest
-	@echo "✅ Docker image pushed!"
+	docker push $(DOCKER_CRON_IMAGE):$(VERSION)
+	docker push $(DOCKER_CRON_IMAGE):latest
+	@echo "✅ Docker images pushed!"
 
 ## docker-run: Run Docker container locally
 docker-run:

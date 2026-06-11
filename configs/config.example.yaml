@@ -49,6 +49,7 @@ cors:
 kubernetes:
   in_cluster: false
   kubeconfig_path: "~/.kube/config"
+  kubeconfig_context: ""
 
 argocd:
   base_url: "http://argocd-server.argocd.svc.cluster.local:80"

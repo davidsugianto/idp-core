@@ -3,6 +3,7 @@ package delivery_target
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
@@ -10,6 +11,20 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+func hasIncompleteControlPlaneMetadata(controlPlaneName, kubeconfigContext, argoCDNamespace string) bool {
+	provided := 0
+	if strings.TrimSpace(controlPlaneName) != "" {
+		provided++
+	}
+	if strings.TrimSpace(kubeconfigContext) != "" {
+		provided++
+	}
+	if strings.TrimSpace(argoCDNamespace) != "" {
+		provided++
+	}
+	return provided > 0 && provided < 3
+}
 
 func (u *usecase) Create(ctx context.Context, req *deliveryTargetModel.CreateDeliveryTargetRequest) (*deliveryTargetModel.DeliveryTargetResponse, error) {
 	if req == nil || req.Name == "" {
@@ -30,6 +45,9 @@ func (u *usecase) Create(ctx context.Context, req *deliveryTargetModel.CreateDel
 	healthState := req.HealthState
 	if healthState == "" {
 		healthState = deliveryTargetModel.HealthUnknown
+	}
+	if hasIncompleteControlPlaneMetadata(req.ControlPlaneName, req.KubeconfigContext, req.ArgoCDNamespace) {
+		return nil, ErrIncompleteControlPlaneMetadata
 	}
 	if !deliveryTargetModel.ValidHealthState(healthState) {
 		return nil, ErrInvalidHealthState
@@ -58,9 +76,15 @@ func (u *usecase) Create(ctx context.Context, req *deliveryTargetModel.CreateDel
 		Description:       req.Description,
 		Purpose:           req.Purpose,
 		TeamID:            req.TeamID,
-		ClusterName:       req.ClusterName,
-		ClusterServer:     req.ClusterServer,
-		AvailabilityState: availabilityState,
+		ClusterName:         req.ClusterName,
+		ClusterServer:       req.ClusterServer,
+		ControlPlaneName:    req.ControlPlaneName,
+		ControlPlaneType:    req.ControlPlaneType,
+		KubeconfigContext:   req.KubeconfigContext,
+		ArgoCDNamespace:     req.ArgoCDNamespace,
+		ArgoCDServer:        req.ArgoCDServer,
+		CredentialReference: req.CredentialReference,
+		AvailabilityState:   availabilityState,
 		HealthState:       healthState,
 		CapacitySummary:   capacitySummary,
 		CreatedAt:         now,
@@ -139,6 +163,39 @@ func (u *usecase) Update(ctx context.Context, id string, req *deliveryTargetMode
 	}
 	if req.ClusterServer != nil {
 		target.ClusterServer = *req.ClusterServer
+	}
+	if req.ControlPlaneName != nil {
+		target.ControlPlaneName = *req.ControlPlaneName
+	}
+	if req.ControlPlaneType != nil {
+		target.ControlPlaneType = *req.ControlPlaneType
+	}
+	if req.KubeconfigContext != nil {
+		target.KubeconfigContext = *req.KubeconfigContext
+	}
+	if req.ArgoCDNamespace != nil {
+		target.ArgoCDNamespace = *req.ArgoCDNamespace
+	}
+	if req.ArgoCDServer != nil {
+		target.ArgoCDServer = *req.ArgoCDServer
+	}
+	if req.CredentialReference != nil {
+		target.CredentialReference = *req.CredentialReference
+	}
+	resolvedControlPlaneName := target.ControlPlaneName
+	if req.ControlPlaneName != nil {
+		resolvedControlPlaneName = *req.ControlPlaneName
+	}
+	resolvedKubeconfigContext := target.KubeconfigContext
+	if req.KubeconfigContext != nil {
+		resolvedKubeconfigContext = *req.KubeconfigContext
+	}
+	resolvedArgoCDNamespace := target.ArgoCDNamespace
+	if req.ArgoCDNamespace != nil {
+		resolvedArgoCDNamespace = *req.ArgoCDNamespace
+	}
+	if hasIncompleteControlPlaneMetadata(resolvedControlPlaneName, resolvedKubeconfigContext, resolvedArgoCDNamespace) {
+		return nil, ErrIncompleteControlPlaneMetadata
 	}
 	if req.AvailabilityState != nil {
 		if !deliveryTargetModel.ValidAvailabilityState(*req.AvailabilityState) {

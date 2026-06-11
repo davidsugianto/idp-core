@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	k8sPkg "github.com/davidsugianto/idp-core/internal/pkg/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
@@ -57,10 +58,32 @@ type Dependencies struct {
 	K8sClient *k8sPkg.Client
 }
 
+type ClientFactory func(ctx context.Context, target *deliveryTargetModel.TargetControlPlane) (*k8sPkg.Client, error)
+
+type ProviderDependencies struct {
+	DefaultRepository Repository
+	Defaults          deliveryTargetModel.TargetControlPlaneDefaults
+	ClientFactory     ClientFactory
+}
+
+type Provider struct {
+	defaultRepository Repository
+	defaults          deliveryTargetModel.TargetControlPlaneDefaults
+	clientFactory     ClientFactory
+}
+
 func New(deps Dependencies) Repository {
 	return &repository{
 		k8sClient:       deps.K8sClient,
 		statusStore:     globalStatusStore,
 		informerManager: newInformerManager(deps.K8sClient, globalStatusStore),
+	}
+}
+
+func NewProvider(deps ProviderDependencies) *Provider {
+	return &Provider{
+		defaultRepository: deps.DefaultRepository,
+		defaults:          deps.Defaults,
+		clientFactory:     deps.ClientFactory,
 	}
 }

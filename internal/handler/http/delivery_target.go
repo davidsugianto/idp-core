@@ -71,7 +71,8 @@ func (h *Handler) CreateDeliveryTarget(c *gin.Context) {
 		case errors.Is(err, deliveryTargetUsecase.ErrDeliveryTargetNameRequired),
 			errors.Is(err, deliveryTargetUsecase.ErrClusterNameRequired),
 			errors.Is(err, deliveryTargetUsecase.ErrInvalidAvailabilityState),
-			errors.Is(err, deliveryTargetUsecase.ErrInvalidHealthState):
+			errors.Is(err, deliveryTargetUsecase.ErrInvalidHealthState),
+			errors.Is(err, deliveryTargetUsecase.ErrIncompleteControlPlaneMetadata):
 			response.GinBadRequest(c, err)
 		default:
 			response.GinInternalServerError(c, err)
@@ -139,7 +140,8 @@ func (h *Handler) UpdateDeliveryTarget(c *gin.Context) {
 		case errors.Is(err, deliveryTargetUsecase.ErrDeliveryTargetNameRequired),
 			errors.Is(err, deliveryTargetUsecase.ErrClusterNameRequired),
 			errors.Is(err, deliveryTargetUsecase.ErrInvalidAvailabilityState),
-			errors.Is(err, deliveryTargetUsecase.ErrInvalidHealthState):
+			errors.Is(err, deliveryTargetUsecase.ErrInvalidHealthState),
+			errors.Is(err, deliveryTargetUsecase.ErrIncompleteControlPlaneMetadata):
 			response.GinBadRequest(c, err)
 		default:
 			response.GinInternalServerError(c, err)

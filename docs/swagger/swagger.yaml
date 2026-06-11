@@ -244,6 +244,10 @@ definitions:
     type: object
   github_com_davidsugianto_idp-core_internal_model_delivery_target.CreateDeliveryTargetRequest:
     properties:
+      argocd_namespace:
+        type: string
+      argocd_server:
+        type: string
       availability_state:
         type: string
       capacity_summary:
@@ -252,11 +256,19 @@ definitions:
         type: string
       cluster_server:
         type: string
+      control_plane_name:
+        type: string
+      control_plane_type:
+        type: string
+      credential_reference:
+        type: string
       description:
         type: string
       display_name:
         type: string
       health_state:
+        type: string
+      kubeconfig_context:
         type: string
       name:
         type: string
@@ -279,6 +291,10 @@ definitions:
     type: object
   github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse:
     properties:
+      argocd_namespace:
+        type: string
+      argocd_server:
+        type: string
       availability_state:
         type: string
       capacity_summary:
@@ -287,7 +303,13 @@ definitions:
         type: string
       cluster_server:
         type: string
+      control_plane_name:
+        type: string
+      control_plane_type:
+        type: string
       created_at:
+        type: string
+      credential_reference:
         type: string
       description:
         type: string
@@ -296,6 +318,8 @@ definitions:
       health_state:
         type: string
       id:
+        type: string
+      kubeconfig_context:
         type: string
       name:
         type: string
@@ -310,6 +334,10 @@ definitions:
     type: object
   github_com_davidsugianto_idp-core_internal_model_delivery_target.UpdateDeliveryTargetRequest:
     properties:
+      argocd_namespace:
+        type: string
+      argocd_server:
+        type: string
       availability_state:
         type: string
       capacity_summary:
@@ -318,11 +346,19 @@ definitions:
         type: string
       cluster_server:
         type: string
+      control_plane_name:
+        type: string
+      control_plane_type:
+        type: string
+      credential_reference:
+        type: string
       description:
         type: string
       display_name:
         type: string
       health_state:
+        type: string
+      kubeconfig_context:
         type: string
       name:
         type: string
