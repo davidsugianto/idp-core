@@ -13,6 +13,7 @@ patches:
       kind: Deployment
       metadata:
         name: idp-core
+        namespace: idp-core
       spec:
         replicas: 3
         template:
@@ -31,6 +32,7 @@ patches:
       kind: Deployment
       metadata:
         name: idp-core-cron
+        namespace: idp-core
       spec:
         template:
           spec:
@@ -43,13 +45,14 @@ patches:
                   limits:
                     cpu: "500m"
                     memory: "512Mi"
-
-# Production-specific ConfigMap overrides
-configMapGenerator:
-  - name: idp-core-config
-    behavior: merge
-    literals:
-      - DB_SSLMODE=require
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: idp-core-config
+        namespace: idp-core
+      data:
+        DB_SSLMODE: require
 
 # Image tags for production
 images:
