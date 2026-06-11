@@ -11,7 +11,7 @@ func (r *repository) ListParametersByVersion(ctx context.Context, versionID stri
 	var parameters []templateModel.TemplateParameter
 	if err := r.db.WithContext(ctx).
 		Where("version_id = ?", versionID).
-		Order("`order` ASC, created_at ASC").
+		Order("\"order\" ASC, created_at ASC").
 		Find(&parameters).Error; err != nil {
 		return nil, err
 	}

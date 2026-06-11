@@ -11,7 +11,7 @@ func (r *repository) ListResourcesByVersion(ctx context.Context, versionID strin
 	var resources []templateModel.TemplateResource
 	if err := r.db.WithContext(ctx).
 		Where("version_id = ?", versionID).
-		Order("`order` ASC, created_at ASC").
+		Order("\"order\" ASC, created_at ASC").
 		Find(&resources).Error; err != nil {
 		return nil, err
 	}

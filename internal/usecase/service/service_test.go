@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/davidsugianto/idp-core/internal/mocks"
+	environmentModel "github.com/davidsugianto/idp-core/internal/model/environment"
+	serviceModel "github.com/davidsugianto/idp-core/internal/model/service"
 	depModel "github.com/davidsugianto/idp-core/internal/model/service_dependency"
 	svcEnvModel "github.com/davidsugianto/idp-core/internal/model/service_environment"
-	serviceModel "github.com/davidsugianto/idp-core/internal/model/service"
 	versionModel "github.com/davidsugianto/idp-core/internal/model/service_version"
-	environmentModel "github.com/davidsugianto/idp-core/internal/model/environment"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -290,7 +290,7 @@ func TestDeployToEnvironment(t *testing.T) {
 	mockSvcRepo := mocks.NewMockServiceRepository(ctrl)
 	mockEnvRepo := mocks.NewMockEnvironmentRepository(ctrl)
 	uc := New(Dependencies{
-		ServiceRepo:   mockSvcRepo,
+		ServiceRepo:     mockSvcRepo,
 		EnvironmentRepo: mockEnvRepo,
 	})
 

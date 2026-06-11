@@ -1,10 +1,9 @@
 <!--
 Sync Impact Report
-Version change: 1.0.0 → 1.0.1
+Version change: 1.0.1 → 1.1.0
 Modified principles:
-- I. Self-Service Platform Value → clarified that Phase 1 MVP and Phase 2 Enhancement are completed baseline capabilities
-- III. Security and Tenant Isolation → clarified that shipped auth, RBAC, API keys, and audit logging are inherited constraints
-- V. Incremental Phase Delivery → clarified that active Spec Kit work starts from the completed Phase 1/2 baseline and targets the next roadmap phase
+- II. Clean Architecture Boundaries → expanded to require resolver-driven external client selection for multi-target operations
+- IV. Contracted and Observable Operations → expanded to require target-aware sync/status contracts and validation
 Added sections:
 - None
 Removed sections:
@@ -39,10 +38,15 @@ repository → model. Handlers MUST own transport concerns only, usecases MUST o
 and orchestration, repositories MUST own persistence and external integrations, and models MUST
 remain domain-focused. New features MUST follow the established directory pattern under
 `internal/model`, `internal/repository`, `internal/usecase`, and `internal/handler/http`, with
-wiring performed in the application entry points.
+wiring performed in the application entry points. When a workflow targets delivery-target-specific
+external systems such as Kubernetes or ArgoCD, the usecase layer MUST resolve the environment's
+stored target metadata and delegate client selection through explicit repository or provider
+interfaces rather than relying on a single static client or process-wide context.
 
 Rationale: the system already depends on strict separation to keep Kubernetes, ArgoCD, auth, and
-platform logic testable and maintainable as Phase 3 expands backend scope.
+platform logic testable and maintainable as Phase 3 expands backend scope, and multi-target
+operations need deterministic client selection without leaking infrastructure choices into
+handlers.
 
 ### III. Security and Tenant Isolation
 All feature work MUST enforce existing authentication, authorization, and team-scoped access
@@ -61,10 +65,14 @@ Externally visible behavior MUST be explicit and testable through stable contrac
 that changes API behavior, long-running operations, or live status delivery MUST define request
 and response expectations, failure modes, and operator-visible signals. Plans and tasks MUST
 include validation for correctness, operational visibility, and historical traceability whenever a
-feature affects provisioning, sync, movement, or notifications.
+feature affects provisioning, sync, movement, or notifications. For delivery-target-aware
+operations, contracts and tests MUST verify how the system resolves the target control plane,
+handles missing or misconfigured target metadata, and reports target-specific sync/status failures
+without masking which ArgoCD or cluster context was selected.
 
 Rationale: idp-core is an API product that coordinates Kubernetes and GitOps workflows; operators
-need predictable contracts and timely visibility to trust automation.
+need predictable contracts, target-aware error reporting, and timely visibility to trust
+automation across multiple clusters or ArgoCD instances.
 
 ### V. Incremental Phase Delivery
 Work MUST be sliced into independently valuable increments aligned to prioritized user stories.
@@ -84,10 +92,11 @@ backend foundations before UI or future advanced capabilities.
   outcomes; they MUST NOT prescribe implementation details unless the constitution explicitly
   requires a repo-specific constraint.
 - Plans MUST document the real repository paths they will touch, the affected contracts or data
-  models, and the validation steps needed to prove the feature works end to end.
+  models, the control-plane resolution strategy for external systems, and the validation steps
+  needed to prove the feature works end to end.
 - Tasks MUST reference exact files, keep foundational work separate from story delivery, and
-  include testing or validation work whenever contracts, authorization, or long-running operations
-  change.
+  include testing or validation work whenever contracts, authorization, long-running operations,
+  or control-plane resolution logic change.
 - Changes that affect audits, notifications, template history, cluster targeting, or environment
   lifecycle state MUST preserve historical records rather than overwrite prior state.
 - Documentation and generated guidance MUST stay consistent with the active PRD phase and current
@@ -122,4 +131,4 @@ Every specification, implementation plan, task list, and code review MUST verify
 compliance. If a necessary change cannot satisfy a principle, the deviation MUST be documented in
 Complexity Tracking or an equivalent justification section before implementation proceeds.
 
-**Version**: 1.0.1 | **Ratified**: 2026-06-08 | **Last Amended**: 2026-06-08
+**Version**: 1.1.0 | **Ratified**: 2026-06-08 | **Last Amended**: 2026-06-10

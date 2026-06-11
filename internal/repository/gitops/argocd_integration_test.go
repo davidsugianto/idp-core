@@ -33,7 +33,7 @@ func skipIfNoArgoCD(t *testing.T) {
 	}
 
 	// Try to connect and check if ArgoCD namespace exists
-	client, err := argocd.NewClient(false, "")
+	client, err := argocd.NewClient(false, "", "")
 	if err != nil {
 		t.Skipf("Failed to create Kubernetes client: %v", err)
 	}
@@ -63,7 +63,7 @@ func skipIfNoArgoCD(t *testing.T) {
 }
 
 func setupArgoCDClient(t *testing.T) *argocd.Client {
-	client, err := argocd.NewClient(false, "")
+	client, err := argocd.NewClient(false, "", "")
 	require.NoError(t, err, "Failed to create ArgoCD client")
 	return client
 }

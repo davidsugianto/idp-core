@@ -10,11 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davidsugianto/go-pkgs/logs"
+	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	templateModel "github.com/davidsugianto/idp-core/internal/model/template"
 	"github.com/davidsugianto/idp-core/internal/model/workload"
 	"github.com/davidsugianto/idp-core/internal/pkg/argocd"
+	gitopsRepo "github.com/davidsugianto/idp-core/internal/repository/gitops"
+	provisionerRepo "github.com/davidsugianto/idp-core/internal/repository/provisioner"
 	templateRepo "github.com/davidsugianto/idp-core/internal/repository/template"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -23,24 +27,106 @@ import (
 )
 
 const (
-	StatusCreating = "creating"
-	StatusReady    = "ready"
-	StatusDeleting = "deleting"
-	StatusFailed   = "failed"
+	StatusCreating               = "creating"
+	StatusReady                  = "ready"
+	StatusDeleting               = "deleting"
+	StatusFailed                 = "failed"
+	defaultArgoDestinationServer = "https://kubernetes.default.svc"
 )
 
 // Sentinel errors
 var (
-	ErrEnvironmentNotFound     = errors.New("environment not found")
-	ErrNoArgoApp               = errors.New("environment has no ArgoCD application")
-	ErrGitOpsNotConfigured     = errors.New("GitOps integration not configured")
-	ErrK8sNotConfigured        = errors.New("Kubernetes integration not configured")
-	ErrWorkloadNotFound        = errors.New("workload not found")
-	ErrTemplateVersionNotFound = errors.New("template version not found")
-	ErrTemplateInputInvalid    = errors.New("template inputs are invalid")
-	ErrDeliveryTargetNotFound  = errors.New("delivery target not found")
-	ErrDeliveryTargetInvalid   = errors.New("delivery target is not available for placement")
+	ErrEnvironmentNotFound          = errors.New("environment not found")
+	ErrNoArgoApp                    = errors.New("environment has no ArgoCD application")
+	ErrGitOpsNotConfigured          = errors.New("GitOps integration not configured")
+	ErrK8sNotConfigured             = errors.New("Kubernetes integration not configured")
+	ErrWorkloadNotFound             = errors.New("workload not found")
+	ErrTemplateVersionNotFound      = errors.New("template version not found")
+	ErrTemplateInputInvalid         = errors.New("template inputs are invalid")
+	ErrDeliveryTargetNotFound       = errors.New("delivery target not found")
+	ErrDeliveryTargetInvalid        = errors.New("delivery target is not available for placement")
+	ErrSyncTargetUnavailable        = errors.New("sync target resolution failed")
+	ErrGitOpsStatusUnavailable      = errors.New("gitops status target resolution failed")
+	ErrEnvironmentStatusUnavailable = errors.New("environment status target resolution failed")
 )
+
+func (u *usecase) resolveTargetControlPlane(ctx context.Context, env *environment.Environment) (*deliveryTargetModel.TargetControlPlane, error) {
+	if env == nil {
+		return nil, ErrEnvironmentNotFound
+	}
+	if env.DeliveryTargetID == "" {
+		return nil, ErrDeliveryTargetNotFound
+	}
+	if u.deliveryTargetRepo == nil {
+		return nil, ErrTargetResolutionUnavailable
+	}
+
+	target, err := u.deliveryTargetRepo.GetByID(ctx, env.DeliveryTargetID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrDeliveryTargetNotFound
+		}
+		return nil, fmt.Errorf("failed to resolve delivery target: %w", err)
+	}
+	if !deliveryTargetAllowsPlacement(target, env.TeamID) {
+		return nil, ErrTargetAccessDenied
+	}
+
+	controlPlane := target.ControlPlane()
+	if controlPlane == nil {
+		return nil, ErrTargetResolutionUnavailable
+	}
+	return controlPlane.Resolve(u.defaultTargetDefaults), nil
+}
+
+func (u *usecase) gitopsRepositoryForEnvironment(ctx context.Context, env *environment.Environment) (gitopsRepo.Repository, *deliveryTargetModel.TargetControlPlane, error) {
+	if u.gitopsProvider != nil {
+		controlPlane, err := u.resolveTargetControlPlane(ctx, env)
+		if err != nil {
+			return nil, nil, err
+		}
+		repo, err := u.gitopsProvider(ctx, controlPlane)
+		if err != nil {
+			return nil, controlPlane, fmt.Errorf("failed to resolve gitops repository: %w", err)
+		}
+		if repo == nil {
+			return nil, controlPlane, ErrGitOpsNotConfigured
+		}
+		return repo, controlPlane, nil
+	}
+	if u.gitopsRepo == nil {
+		return nil, nil, ErrGitOpsNotConfigured
+	}
+	return u.gitopsRepo, nil, nil
+}
+
+func (u *usecase) provisionerRepositoryForEnvironment(ctx context.Context, env *environment.Environment) (provisionerRepo.Repository, *deliveryTargetModel.TargetControlPlane, error) {
+	if u.provisionerProvider != nil {
+		controlPlane, err := u.resolveTargetControlPlane(ctx, env)
+		if err != nil {
+			return nil, nil, err
+		}
+		repo, err := u.provisionerProvider(ctx, controlPlane)
+		if err != nil {
+			return nil, controlPlane, fmt.Errorf("failed to resolve kubernetes repository: %w", err)
+		}
+		if repo == nil {
+			return nil, controlPlane, ErrK8sNotConfigured
+		}
+		return repo, controlPlane, nil
+	}
+	if u.provisionerRepo == nil {
+		return nil, nil, ErrK8sNotConfigured
+	}
+	return u.provisionerRepo, nil, nil
+}
+
+func argoDestinationServer(clusterServer string) string {
+	if clusterServer != "" {
+		return clusterServer
+	}
+	return defaultArgoDestinationServer
+}
 
 func (u *usecase) Create(ctx context.Context, teamID string, req environment.CreateEnvironmentRequest) (*environment.Environment, error) {
 	var templateVersion *templateModel.TemplateVersion
@@ -181,18 +267,13 @@ func (u *usecase) Create(ctx context.Context, teamID string, req environment.Cre
 	}
 
 	if u.gitopsRepo != nil {
-		serverURL := req.ClusterServer
-		if serverURL == "" {
-			serverURL = "https://kubernetes.default.svc"
-		}
-
 		appSpec := argocd.ApplicationSpec{
 			Name:      argAppName,
 			Namespace: namespace,
 			RepoURL:   req.GitRepoURL,
 			Revision:  gitRevision,
 			Path:      req.ManifestPath,
-			ServerURL: serverURL,
+			ServerURL: argoDestinationServer(req.ClusterServer),
 		}
 
 		if err := u.gitopsRepo.CreateApplication(ctx, appSpec); err != nil {
@@ -318,24 +399,33 @@ func (u *usecase) GetStatus(ctx context.Context, teamID, id string) (*environmen
 		EnvironmentResponse: *environment.ToEnvironmentResponse(env),
 	}
 
-	// Get K8s status from provisioner repository
-	if u.provisionerRepo != nil {
-		if podSummary, ok := u.provisionerRepo.GetPodSummary(env.Namespace); ok {
-			response.PodSummary = podSummary
-		}
-
-		if deploySummary, ok := u.provisionerRepo.GetDeploymentSummary(env.Namespace); ok {
-			response.DeploymentSummary = deploySummary
-		}
+	provisionerRepo, provisionerControlPlane, err := u.provisionerRepositoryForEnvironment(ctx, env)
+	if err != nil {
+		u.recordOperationOutcome(ctx, env, "environment_status", "resolution_failed", nil, err)
+		return nil, fmt.Errorf("%w: %w", ErrEnvironmentStatusUnavailable, err)
+	}
+	if podSummary, ok := provisionerRepo.GetPodSummary(env.Namespace); ok {
+		response.PodSummary = podSummary
+	}
+	if deploySummary, ok := provisionerRepo.GetDeploymentSummary(env.Namespace); ok {
+		response.DeploymentSummary = deploySummary
 	}
 
-	// Get ArgoCD status from gitops repository
-	if u.gitopsRepo != nil && env.ArgoAppName != "" {
-		if argoStatus, err := u.gitopsRepo.GetApplicationStatus(ctx, env.ArgoAppName); err == nil {
-			response.ArgoStatus = *argoStatus
+	if env.ArgoAppName != "" {
+		gitopsRepo, gitopsControlPlane, err := u.gitopsRepositoryForEnvironment(ctx, env)
+		if err != nil {
+			u.recordOperationOutcome(ctx, env, "environment_status", "resolution_failed", provisionerControlPlane, err)
+			return nil, fmt.Errorf("%w: %w", ErrEnvironmentStatusUnavailable, err)
 		}
+		argoStatus, err := gitopsRepo.GetApplicationStatus(ctx, env.ArgoAppName)
+		if err != nil {
+			u.recordOperationOutcome(ctx, env, "environment_status", "failed", gitopsControlPlane, err)
+			return nil, fmt.Errorf("failed to get environment status from control plane %s: %w", controlPlaneName(gitopsControlPlane), err)
+		}
+		response.ArgoStatus = *argoStatus
 	}
 
+	u.recordOperationOutcome(ctx, env, "environment_status", "succeeded", provisionerControlPlane, nil)
 	return response, nil
 }
 
@@ -390,19 +480,107 @@ func (u *usecase) TriggerSync(ctx context.Context, teamID, id string) error {
 		return ErrNoArgoApp
 	}
 
-	if u.gitopsRepo == nil {
-		return ErrGitOpsNotConfigured
+	gitopsRepo, controlPlane, err := u.gitopsRepositoryForEnvironment(ctx, env)
+	if err != nil {
+		u.recordSyncFailure(ctx, env, nil, err)
+		return fmt.Errorf("%w: %w", ErrSyncTargetUnavailable, err)
 	}
 
-	if err := u.gitopsRepo.SyncApplication(ctx, env.ArgoAppName); err != nil {
+	if err := gitopsRepo.SyncApplication(ctx, env.ArgoAppName); err != nil {
+		u.recordSyncFailure(ctx, env, controlPlane, err)
 		return fmt.Errorf("failed to trigger sync: %w", err)
 	}
 
-	// Update last sync time
 	now := time.Now()
-	env.LastSyncAt = &now
+	if err := u.environmentRepo.UpdateLastSync(ctx, env.ID, now); err != nil {
+		logs.Errorf("failed to persist sync timestamp for environment %s: %v", env.ID, err)
+	} else {
+		env.LastSyncAt = &now
+	}
 
+	u.recordOperationOutcome(ctx, env, "sync", "succeeded", controlPlane, nil)
 	return nil
+}
+
+func (u *usecase) recordOperationOutcome(ctx context.Context, env *environment.Environment, operation, outcome string, controlPlane *deliveryTargetModel.TargetControlPlane, err error) {
+	if env == nil {
+		return
+	}
+
+	payload := environment.TargetResolutionOutcome{
+		Operation:               operation,
+		Outcome:                 outcome,
+		EnvironmentID:           env.ID,
+		DeliveryTargetID:        env.DeliveryTargetID,
+		ControlPlaneName:        controlPlaneName(controlPlane),
+		UsesDefaultControlPlane: usesDefaultControlPlane(controlPlane),
+	}
+	if err != nil {
+		payload.Error = environment.SanitizeOperationError(err)
+	}
+
+	if payload.Error != "" {
+		logs.Errorf("environment operation failed: environment_id=%s delivery_target_id=%s control_plane=%s default_control_plane=%t operation=%s outcome=%s error=%s", env.ID, env.DeliveryTargetID, payload.ControlPlaneName, payload.UsesDefaultControlPlane, operation, outcome, payload.Error)
+	} else {
+		logs.Infof("environment operation succeeded: environment_id=%s delivery_target_id=%s control_plane=%s default_control_plane=%t operation=%s outcome=%s", env.ID, env.DeliveryTargetID, payload.ControlPlaneName, payload.UsesDefaultControlPlane, operation, outcome)
+	}
+
+	if u.notificationUC != nil {
+		encodedPayload, marshalErr := json.Marshal(payload)
+		if marshalErr != nil {
+			logs.Errorf("failed to encode target resolution outcome for environment %s: %v", env.ID, marshalErr)
+			return
+		}
+		severity := notificationModel.SeverityInfo
+		title := "Environment operation completed"
+		message := "Environment operation completed"
+		if payload.Error != "" {
+			severity = notificationModel.SeverityError
+			title = "Environment operation failed"
+			message = payload.Error
+		}
+		_ = u.notificationUC.Create(ctx, &notificationModel.Notification{
+			EnvironmentID: env.ID,
+			TeamID:        env.TeamID,
+			Kind:          notificationModel.KindEnvironment,
+			Severity:      severity,
+			Title:         title,
+			Message:       message,
+			Payload:       string(encodedPayload),
+			CreatedAt:     time.Now(),
+		})
+	}
+}
+
+func (u *usecase) recordSyncFailure(ctx context.Context, env *environment.Environment, controlPlane *deliveryTargetModel.TargetControlPlane, err error) {
+	if env == nil || err == nil {
+		return
+	}
+
+	safeError := environment.SanitizeOperationError(err)
+	u.recordOperationOutcome(ctx, env, "sync", "failed", controlPlane, err)
+	if u.environmentRepo != nil {
+		if persistErr := u.environmentRepo.RecordSyncFailure(ctx, env.ID, safeError); persistErr != nil {
+			logs.Errorf("failed to persist sync failure for environment %s: %v", env.ID, persistErr)
+		}
+	}
+}
+
+func controlPlaneName(controlPlane *deliveryTargetModel.TargetControlPlane) string {
+	if controlPlane == nil {
+		return "unresolved"
+	}
+	if controlPlane.ControlPlaneName != "" {
+		return controlPlane.ControlPlaneName
+	}
+	if controlPlane.DeliveryTargetID != "" {
+		return controlPlane.DeliveryTargetID
+	}
+	return "default"
+}
+
+func usesDefaultControlPlane(controlPlane *deliveryTargetModel.TargetControlPlane) bool {
+	return controlPlane == nil || controlPlane.UsesDefaultControlPlane
 }
 
 // GetGitOpsStatus fetches sync and health status from ArgoCD
@@ -419,11 +597,20 @@ func (u *usecase) GetGitOpsStatus(ctx context.Context, teamID, id string) (*envi
 		return nil, ErrNoArgoApp
 	}
 
-	if u.gitopsRepo == nil {
-		return nil, ErrGitOpsNotConfigured
+	gitopsRepo, controlPlane, err := u.gitopsRepositoryForEnvironment(ctx, env)
+	if err != nil {
+		u.recordOperationOutcome(ctx, env, "gitops_status", "resolution_failed", nil, err)
+		return nil, fmt.Errorf("%w: %w", ErrGitOpsStatusUnavailable, err)
 	}
 
-	return u.gitopsRepo.GetApplicationStatus(ctx, env.ArgoAppName)
+	status, err := gitopsRepo.GetApplicationStatus(ctx, env.ArgoAppName)
+	if err != nil {
+		u.recordOperationOutcome(ctx, env, "gitops_status", "failed", controlPlane, err)
+		return nil, fmt.Errorf("failed to get gitops status from control plane %s: %w", controlPlaneName(controlPlane), err)
+	}
+
+	u.recordOperationOutcome(ctx, env, "gitops_status", "succeeded", controlPlane, nil)
+	return status, nil
 }
 
 // GetWorkloads fetches live workload data from Kubernetes for a specific environment
@@ -436,18 +623,19 @@ func (u *usecase) GetWorkloads(ctx context.Context, teamID, id string) (*workloa
 		return nil, ErrEnvironmentNotFound
 	}
 
-	if u.provisionerRepo == nil {
-		return nil, ErrK8sNotConfigured
+	provisionerRepo, _, err := u.provisionerRepositoryForEnvironment(ctx, env)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get deployments from cache
-	deployments, err := u.provisionerRepo.GetWorkloads(env.Namespace)
+	deployments, err := provisionerRepo.GetWorkloads(env.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get workloads: %w", err)
 	}
 
 	// Get pods from cache
-	pods, err := u.provisionerRepo.GetPods(env.Namespace)
+	pods, err := provisionerRepo.GetPods(env.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pods: %w", err)
 	}
@@ -565,12 +753,13 @@ func (u *usecase) GetWorkloadDetails(ctx context.Context, teamID, id, workloadNa
 		return nil, ErrEnvironmentNotFound
 	}
 
-	if u.provisionerRepo == nil {
-		return nil, ErrK8sNotConfigured
+	provisionerRepo, _, err := u.provisionerRepositoryForEnvironment(ctx, env)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get all deployments from cache
-	deployments, err := u.provisionerRepo.GetWorkloads(env.Namespace)
+	deployments, err := provisionerRepo.GetWorkloads(env.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get workloads: %w", err)
 	}

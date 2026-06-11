@@ -150,10 +150,28 @@ func (r *repository) UpdateArgoAppName(ctx context.Context, id, teamID, argoAppN
 
 // UpdateLastSync updates the last sync timestamp
 func (r *repository) UpdateLastSync(ctx context.Context, id string, syncedAt time.Time) error {
+	updates := map[string]any{
+		"last_sync_at": syncedAt,
+		"last_error":   "",
+		"error_count":  0,
+	}
+
 	return r.db.WithContext(ctx).
 		Model(&environment.Environment{}).
 		Where("id = ?", id).
-		Update("last_sync_at", syncedAt).Error
+		Updates(updates).Error
+}
+
+func (r *repository) RecordSyncFailure(ctx context.Context, id string, lastError string) error {
+	updates := map[string]any{
+		"last_error":  lastError,
+		"error_count": gorm.Expr("error_count + 1"),
+	}
+
+	return r.db.WithContext(ctx).
+		Model(&environment.Environment{}).
+		Where("id = ?", id).
+		Updates(updates).Error
 }
 
 // IncrementErrorCount increments the error count for an environment

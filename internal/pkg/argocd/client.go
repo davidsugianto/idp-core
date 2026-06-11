@@ -16,7 +16,7 @@ type Client struct {
 }
 
 // NewClient creates a new ArgoCD client using dynamic client
-func NewClient(inCluster bool, kubeconfigPath string) (*Client, error) {
+func NewClient(inCluster bool, kubeconfigPath, kubeconfigContext string) (*Client, error) {
 	var config *rest.Config
 	var err error
 
@@ -32,7 +32,14 @@ func NewClient(inCluster bool, kubeconfigPath string) (*Client, error) {
 			kubeconfig = filepath.Join(home, ".kube", "config")
 		}
 
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		loadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
+		overrides := &clientcmd.ConfigOverrides{}
+		if kubeconfigContext != "" {
+			overrides.CurrentContext = kubeconfigContext
+		}
+
+		clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
+		config, err = clientConfig.ClientConfig()
 		if err != nil {
 			return nil, err
 		}

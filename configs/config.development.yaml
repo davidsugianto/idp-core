@@ -48,7 +48,8 @@ cors:
 
 kubernetes:
   in_cluster: false
-  kubeconfig_path: "/app/.kube/config"
+  kubeconfig_path: "/app/.kube/config-idp-test-internal"
+  kubeconfig_context: ""
 
 argocd:
   base_url: "http://argocd-server.argocd.svc.cluster.local:80"

@@ -325,6 +325,7 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	envs.POST("/:id/movements", s.handler.CreateEnvironmentMovement)
 	envs.GET("/:id/movements", s.handler.ListEnvironmentMovements)
 	envs.GET("/:id/movements/:movementId", s.handler.GetEnvironmentMovement)
+	envs.PATCH("/:id/movements/:movementId", s.handler.UpdateEnvironmentMovementStatus)
 }
 
 func (s *Server) Run(port string) error {

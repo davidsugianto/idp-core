@@ -5,10 +5,14 @@ import (
 	"errors"
 
 	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func (u *usecase) Create(ctx context.Context, notification *notificationModel.Notification) error {
+	if notification.ID == "" {
+		notification.ID = uuid.New().String()
+	}
 	return u.notificationRepo.Create(ctx, notification)
 }
 

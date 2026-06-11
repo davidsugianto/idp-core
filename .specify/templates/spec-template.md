@@ -87,6 +87,8 @@
   Constitution guardrails:
   - Describe user-visible platform value and preserved historical records.
   - State access-control, team-scope, and audit expectations when relevant.
+  - Describe any delivery-target or control-plane resolution expectations that affect
+    user-visible behavior or failure handling.
   - Avoid implementation choices unless they are repo-level constraints already
     mandated elsewhere.
 -->

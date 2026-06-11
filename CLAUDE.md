@@ -72,5 +72,5 @@ Config loaded from `configs/config.yaml` with environment variable overrides. Se
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/002-phase3-backend-foundation/plan.md`.
+shell commands, and other important information, read `specs/003-target-aware-sync-status/plan.md`.
 <!-- SPECKIT END -->

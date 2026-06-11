@@ -92,6 +92,9 @@ make dev-run
 # Run cron server with hot-reload
 make dev-cron-run
 
+# Or run the API in Docker (expects ~/.kube mounted to /app/.kube)
+make dev-app-up
+
 # Run tests
 make test
 ```
@@ -311,6 +314,10 @@ make test             # Run all tests
 make test-coverage    # Coverage report
 make lint             # Run linter
 
+# Test guides
+docs/TEST.md                          # Testing index
+docs/TEST_TARGET_AWARE_SYNC_STATUS.md # Target-aware sync/status E2E
+
 # K8s Integration
 make dev-k8s-setup    # Setup Kind + ArgoCD
 make test-k8s         # Run K8s tests
@@ -340,6 +347,8 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=idp_core
 JWT_SECRET=your-secret
+KUBECONFIG_PATH=~/.kube/config                # host run
+KUBECONFIG_CONTEXT=docker-desktop            # optional explicit context
 OIDC_ISSUER_URL=http://localhost:8081/realms/idp-core
 OIDC_CLIENT_ID=idp-core
 OIDC_CLIENT_SECRET=idp-core-secret-key

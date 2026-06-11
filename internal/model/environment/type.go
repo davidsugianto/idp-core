@@ -1,9 +1,16 @@
 package environment
 
 import (
+	"regexp"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
+)
+
+var (
+	urlPattern      = regexp.MustCompile(`https?://[^\s"']+`)
+	endpointPattern = regexp.MustCompile(`\b(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|\[[0-9a-fA-F:]+\]|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})(?::\d{1,5})\b`)
 )
 
 // Environment represents an isolated Kubernetes environment
@@ -112,9 +119,9 @@ type EnvironmentResponse struct {
 	ArgoAppName  string `json:"argo_app_name,omitempty"`
 
 	// Cluster info
-	ClusterName       string `json:"cluster_name,omitempty"`
-	ClusterServer     string `json:"cluster_server,omitempty"`
-	DeliveryTargetID  string `json:"delivery_target_id,omitempty"`
+	ClusterName        string `json:"cluster_name,omitempty"`
+	ClusterServer      string `json:"cluster_server,omitempty"`
+	DeliveryTargetID   string `json:"delivery_target_id,omitempty"`
 	TemplateInstanceID string `json:"template_instance_id,omitempty"`
 
 	// Resource quotas
@@ -167,6 +174,33 @@ type ArgoStatus struct {
 	HealthStatus string `json:"health_status"`
 	Revision     string `json:"revision"`
 	Message      string `json:"message,omitempty"`
+}
+
+type TargetResolutionOutcome struct {
+	Operation               string `json:"operation"`
+	Outcome                 string `json:"outcome"`
+	EnvironmentID           string `json:"environment_id,omitempty"`
+	DeliveryTargetID        string `json:"delivery_target_id,omitempty"`
+	ControlPlaneName        string `json:"control_plane_name,omitempty"`
+	UsesDefaultControlPlane bool   `json:"uses_default_control_plane"`
+	Error                   string `json:"error,omitempty"`
+}
+
+func SanitizeOperationError(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	message := err.Error()
+	message = urlPattern.ReplaceAllString(message, "[redacted]")
+	message = endpointPattern.ReplaceAllString(message, "[redacted]")
+	for _, secret := range []string{"token", "bearer", "kubeconfig", "client-key", "client-certificate", "password", "authorization"} {
+		message = strings.ReplaceAll(message, secret, "[redacted]")
+		message = strings.ReplaceAll(message, strings.ToUpper(secret[:1])+secret[1:], "[redacted]")
+		message = strings.ReplaceAll(message, strings.ToUpper(secret), "[redacted]")
+	}
+
+	return message
 }
 
 func ToEnvironmentResponse(env *Environment) *EnvironmentResponse {

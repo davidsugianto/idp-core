@@ -5,6 +5,7 @@ This document provides comprehensive information about testing in idp-core.
 ## Additional Guides
 
 - [OIDC Login Flow Testing](./TEST_LOGIN_FLOW.md)
+- [Target-Aware Sync/Status E2E Test](./TEST_TARGET_AWARE_SYNC_STATUS.md)
 
 ## Test Categories
 

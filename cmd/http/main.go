@@ -12,6 +12,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/cost"
 	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
+	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
 	"github.com/davidsugianto/idp-core/internal/model/permission"
 	"github.com/davidsugianto/idp-core/internal/model/resourcequota"
 	"github.com/davidsugianto/idp-core/internal/model/rightsizing"
@@ -131,12 +132,14 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate shared baseline tables.
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &deliveryTargetModel.DeliveryTarget{}, &environmentMovementModel.EnvironmentMovement{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &deliveryTargetModel.DeliveryTarget{}, &environmentMovementModel.EnvironmentMovement{}, &notificationModel.Notification{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
+	defaultTargetControlPlane := (&deliveryTargetModel.TargetControlPlane{}).Resolve(cfg.DefaultTargetControlPlane())
+
 	// K8s client
-	k8sClient, err := k8sPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+	k8sClient, err := k8sPkg.NewClient(defaultTargetControlPlane.InCluster, defaultTargetControlPlane.KubeconfigPath, defaultTargetControlPlane.KubeconfigContext)
 	if err != nil {
 		logs.Fatalf("cannot create k8s client: %v", err)
 	}
@@ -150,8 +153,8 @@ func main() {
 	})
 
 	var argocdClient *argocdPkg.Client
-	if cfg.ArgoCD.BaseURL != "" || cfg.ArgoCD.Namespace != "" {
-		argocdClient, err = argocdPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+	if defaultTargetControlPlane.ArgoCDServer != "" || defaultTargetControlPlane.ArgoCDNamespace != "" {
+		argocdClient, err = argocdPkg.NewClient(defaultTargetControlPlane.InCluster, defaultTargetControlPlane.KubeconfigPath, defaultTargetControlPlane.KubeconfigContext)
 		if err != nil {
 			logs.Fatalf("cannot create argocd client: %v", err)
 		}
@@ -164,6 +167,14 @@ func main() {
 	provisionerRepo := provisionerRepository.New(provisionerRepository.Dependencies{
 		K8sClient: k8sClient,
 	})
+	provisionerProviderBuilder := provisionerRepository.NewProvider(provisionerRepository.ProviderDependencies{
+		DefaultRepository: provisionerRepo,
+		Defaults:          cfg.DefaultTargetControlPlane(),
+		ClientFactory: func(ctx context.Context, target *deliveryTargetModel.TargetControlPlane) (*k8sPkg.Client, error) {
+			return k8sPkg.NewClient(target.InCluster, target.KubeconfigPath, target.KubeconfigContext)
+		},
+	})
+	provisionerProvider := envUsecase.ProvisionerProvider(provisionerProviderBuilder.ForTarget)
 	envRepo := envRepository.New(envRepository.Dependencies{
 		Database: dbClient,
 	})
@@ -171,9 +182,17 @@ func main() {
 	if argocdClient != nil {
 		gitopsRepo = gitopsRepository.New(gitopsRepository.Dependencies{
 			ArgoCDClient:    argocdClient,
-			ArgoCDNamespace: cfg.ArgoCD.Namespace,
+			ArgoCDNamespace: defaultTargetControlPlane.ArgoCDNamespace,
 		})
 	}
+	gitopsProviderBuilder := gitopsRepository.NewProvider(gitopsRepository.ProviderDependencies{
+		DefaultRepository: gitopsRepo,
+		Defaults:          cfg.DefaultTargetControlPlane(),
+		ClientFactory: func(ctx context.Context, target *deliveryTargetModel.TargetControlPlane) (*argocdPkg.Client, error) {
+			return argocdPkg.NewClient(target.InCluster, target.KubeconfigPath, target.KubeconfigContext)
+		},
+	})
+	gitopsProvider := envUsecase.GitopsProvider(gitopsProviderBuilder.ForTarget)
 	notificationRepo := notificationRepository.New(notificationRepository.Dependencies{
 		Database: dbClient,
 	})
@@ -245,13 +264,16 @@ func main() {
 		LiveUpdateUC:            liveUpdateUC,
 	})
 	envUC := envUsecase.New(envUsecase.Dependencies{
-		EnvironmentRepo:    envRepo,
-		DeliveryTargetRepo: deliveryTargetRepo,
-		ProvisionerRepo:    provisionerRepo,
-		GitopsRepo:         gitopsRepo,
-		TemplateRepo:       templateRepo,
-		NotificationUC:     notificationUC,
-		LiveUpdateUC:       liveUpdateUC,
+		EnvironmentRepo:       envRepo,
+		DeliveryTargetRepo:    deliveryTargetRepo,
+		ProvisionerRepo:       provisionerRepo,
+		ProvisionerProvider:   provisionerProvider,
+		GitopsRepo:            gitopsRepo,
+		GitopsProvider:        gitopsProvider,
+		TemplateRepo:          templateRepo,
+		NotificationUC:        notificationUC,
+		LiveUpdateUC:          liveUpdateUC,
+		DefaultTargetDefaults: cfg.DefaultTargetControlPlane(),
 	})
 	userUC := userUsecase.New(userUsecase.Dependencies{
 		UserRepo: userRepo,

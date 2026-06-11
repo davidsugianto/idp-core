@@ -176,6 +176,16 @@ func (mr *MockEnvironmentRepositoryMockRecorder) UpdateLastSync(ctx, id, syncedA
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastSync", reflect.TypeOf((*MockEnvironmentRepository)(nil).UpdateLastSync), ctx, id, syncedAt)
 }
 
+func (m *MockEnvironmentRepository) RecordSyncFailure(ctx context.Context, id string, lastError string) error {
+	ret := m.ctrl.Call(m, "RecordSyncFailure", ctx, id, lastError)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockEnvironmentRepositoryMockRecorder) RecordSyncFailure(ctx, id, lastError interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordSyncFailure", reflect.TypeOf((*MockEnvironmentRepository)(nil).RecordSyncFailure), ctx, id, lastError)
+}
+
 func (m *MockEnvironmentRepository) IncrementErrorCount(ctx context.Context, id string) error {
 	ret := m.ctrl.Call(m, "IncrementErrorCount", ctx, id)
 	ret0, _ := ret[0].(error)

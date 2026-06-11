@@ -85,7 +85,7 @@ func main() {
 	// distributed lock redis
 	distlock := redislock.New(optGoredis)
 
-	k8sClient, err := k8sPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath)
+	k8sClient, err := k8sPkg.NewClient(cfg.Kubernetes.InCluster, cfg.Kubernetes.KubeconfigPath, cfg.Kubernetes.KubeconfigContext)
 	if err != nil {
 		logs.Fatal("cannot create k8s client")
 	}

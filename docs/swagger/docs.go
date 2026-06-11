@@ -7350,6 +7350,12 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "argocd_namespace": {
+                    "type": "string"
+                },
+                "argocd_server": {
+                    "type": "string"
+                },
                 "availability_state": {
                     "type": "string"
                 },
@@ -7362,6 +7368,15 @@ const docTemplate = `{
                 "cluster_server": {
                     "type": "string"
                 },
+                "control_plane_name": {
+                    "type": "string"
+                },
+                "control_plane_type": {
+                    "type": "string"
+                },
+                "credential_reference": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -7369,6 +7384,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "health_state": {
+                    "type": "string"
+                },
+                "kubeconfig_context": {
                     "type": "string"
                 },
                 "name": {
@@ -7399,6 +7417,12 @@ const docTemplate = `{
         "github_com_davidsugianto_idp-core_internal_model_delivery_target.DeliveryTargetResponse": {
             "type": "object",
             "properties": {
+                "argocd_namespace": {
+                    "type": "string"
+                },
+                "argocd_server": {
+                    "type": "string"
+                },
                 "availability_state": {
                     "type": "string"
                 },
@@ -7411,7 +7435,16 @@ const docTemplate = `{
                 "cluster_server": {
                     "type": "string"
                 },
+                "control_plane_name": {
+                    "type": "string"
+                },
+                "control_plane_type": {
+                    "type": "string"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "credential_reference": {
                     "type": "string"
                 },
                 "description": {
@@ -7424,6 +7457,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "kubeconfig_context": {
                     "type": "string"
                 },
                 "name": {
@@ -7446,6 +7482,12 @@ const docTemplate = `{
         "github_com_davidsugianto_idp-core_internal_model_delivery_target.UpdateDeliveryTargetRequest": {
             "type": "object",
             "properties": {
+                "argocd_namespace": {
+                    "type": "string"
+                },
+                "argocd_server": {
+                    "type": "string"
+                },
                 "availability_state": {
                     "type": "string"
                 },
@@ -7458,6 +7500,15 @@ const docTemplate = `{
                 "cluster_server": {
                     "type": "string"
                 },
+                "control_plane_name": {
+                    "type": "string"
+                },
+                "control_plane_type": {
+                    "type": "string"
+                },
+                "credential_reference": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -7465,6 +7516,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "health_state": {
+                    "type": "string"
+                },
+                "kubeconfig_context": {
                     "type": "string"
                 },
                 "name": {
