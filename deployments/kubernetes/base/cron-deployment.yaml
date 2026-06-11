@@ -32,7 +32,7 @@ spec:
 
       containers:
         - name: idp-core-cron
-          image: ghcr.io/davidsugianto/idp-core-cron:latest
+          image: docker.io/idiots718/idp-core-cron:latest
           imagePullPolicy: Always
 
           ports:

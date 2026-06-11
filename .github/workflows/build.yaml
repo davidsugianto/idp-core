@@ -13,8 +13,8 @@ on:
       - master
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: docker.io
+  IMAGE_NAME: idiots718/idp-core
   GO_VERSION: '1.25'
 
 jobs:

@@ -10,9 +10,9 @@ GO_VERSION := $(shell go version | awk '{print $$3}')
 LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 
 # Docker
-DOCKER_REGISTRY ?= ghcr.io
-DOCKER_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)
-DOCKER_CRON_IMAGE := $(DOCKER_REGISTRY)/davidsugianto/$(APP_NAME)-cron
+DOCKER_REGISTRY ?= docker.io
+DOCKER_IMAGE := $(DOCKER_REGISTRY)/idiots718/$(APP_NAME)
+DOCKER_CRON_IMAGE := $(DOCKER_REGISTRY)/idiots718/$(APP_NAME)-cron
 
 # Go
 GOCMD := go

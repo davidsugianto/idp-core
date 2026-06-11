@@ -50,7 +50,7 @@ spec:
       # Container definition
       containers:
         - name: idp-core
-          image: ghcr.io/davidsugianto/idp-core:latest
+          image: docker.io/idiots718/idp-core:latest
           imagePullPolicy: Always
 
           ports:
