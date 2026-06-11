@@ -568,12 +568,14 @@ docker-build-cron:
 	docker build -f Dockerfile.cron -t $(DOCKER_CRON_IMAGE):$(VERSION) -t $(DOCKER_CRON_IMAGE):latest .
 	@echo "✅ Cron Docker image built: $(DOCKER_CRON_IMAGE):$(VERSION)"
 
-## docker-push: Push Docker image to registry
-docker-push: docker-build
-	@echo "==> Pushing Docker image..."
+## docker-push: Push Docker images to registry
+docker-push: docker-build docker-build-cron
+	@echo "==> Pushing Docker images..."
 	docker push $(DOCKER_IMAGE):$(VERSION)
 	docker push $(DOCKER_IMAGE):latest
-	@echo "✅ Docker image pushed!"
+	docker push $(DOCKER_CRON_IMAGE):$(VERSION)
+	docker push $(DOCKER_CRON_IMAGE):latest
+	@echo "✅ Docker images pushed!"
 
 ## docker-run: Run Docker container locally
 docker-run:
