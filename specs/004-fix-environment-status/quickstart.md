@@ -9,10 +9,13 @@ Validate that environment operational endpoints return accurate namespace-scoped
 - `idp-core` API is running locally on `http://localhost:8989`
 - PostgreSQL is running and reachable by the API
 - Kubernetes cluster is running and reachable through the delivery target assigned to the test environment
+- For populated-namespace validation, the namespace informer/cache backing the provisioner repository has observed the target namespace at least once so cached summaries and live fallback reads can be compared
+- For empty-namespace validation, the namespace exists and is reachable from the resolved delivery target even though it has no deployments or pods
 - A test environment already exists with:
   - a valid `delivery_target_id`
   - a namespace that contains at least one workload for the primary validation flow
 - A second environment or namespace is available for validating the empty-namespace path
+- Before running Scenario 1, verify the chosen environment namespace currently has at least one deployment or pod. If the namespace is empty, use that environment for Scenario 4 instead and choose a different populated environment for Scenarios 1 through 3.
 
 ## Fetch a bearer token
 

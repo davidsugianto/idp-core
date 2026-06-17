@@ -105,43 +105,42 @@ type WorkloadSummary struct {
 
 // WorkloadStatusResponse is the API response for workload status
 type WorkloadStatusResponse struct {
-	EnvironmentID string            `json:"environment_id"`
-	Namespace     string            `json:"namespace"`
-	Summary       WorkloadSummary   `json:"summary"`
-	Workloads     []WorkloadInfo    `json:"workloads"`
+	EnvironmentID string          `json:"environment_id"`
+	Namespace     string          `json:"namespace"`
+	Summary       WorkloadSummary `json:"summary"`
+	Workloads     []WorkloadInfo  `json:"workloads"`
 }
 
 // WorkloadInfo contains detailed workload information
 type WorkloadInfo struct {
-	Name              string `json:"name"`
-	Kind              string `json:"kind"`
-	Status            string `json:"status"`
-	DesiredReplicas   int    `json:"desired_replicas"`
-	ReadyReplicas     int    `json:"ready_replicas"`
-	Image             string `json:"image"`
+	Name            string `json:"name"`
+	Kind            string `json:"kind"`
+	Status          string `json:"status"`
+	DesiredReplicas int    `json:"desired_replicas"`
+	ReadyReplicas   int    `json:"ready_replicas"`
+	Image           string `json:"image"`
 }
 
-func ToWorkloadStatusResponse(statuses []WorkloadStatus, pods []PodStatus) *WorkloadStatusResponse {
-	if len(statuses) == 0 {
-		return &WorkloadStatusResponse{}
+func ToWorkloadInfo(status WorkloadStatus) WorkloadInfo {
+	return WorkloadInfo{
+		Name:            status.Name,
+		Kind:            status.Kind,
+		Status:          status.Status,
+		DesiredReplicas: status.DesiredReplicas,
+		ReadyReplicas:   status.ReadyReplicas,
+		Image:           status.Image,
 	}
+}
 
+func NewWorkloadStatusResponse(environmentID, namespace string, statuses []WorkloadStatus, pods []PodStatus) *WorkloadStatusResponse {
 	response := &WorkloadStatusResponse{
-		EnvironmentID: statuses[0].EnvironmentID,
-		Namespace:     statuses[0].Namespace,
-		Workloads:     make([]WorkloadInfo, len(statuses)),
+		EnvironmentID: environmentID,
+		Namespace:     namespace,
+		Workloads:     make([]WorkloadInfo, 0, len(statuses)),
 	}
 
-	for i, w := range statuses {
-		response.Workloads[i] = WorkloadInfo{
-			Name:            w.Name,
-			Kind:            w.Kind,
-			Status:          w.Status,
-			DesiredReplicas: w.DesiredReplicas,
-			ReadyReplicas:   w.ReadyReplicas,
-			Image:           w.Image,
-		}
-
+	for _, w := range statuses {
+		response.Workloads = append(response.Workloads, ToWorkloadInfo(w))
 		response.Summary.TotalWorkloads++
 		if w.Status == "Running" || w.Status == "Available" {
 			response.Summary.HealthyWorkloads++
@@ -163,4 +162,18 @@ func ToWorkloadStatusResponse(statuses []WorkloadStatus, pods []PodStatus) *Work
 	}
 
 	return response
+}
+
+func ToWorkloadStatusResponse(statuses []WorkloadStatus, pods []PodStatus) *WorkloadStatusResponse {
+	environmentID := ""
+	namespace := ""
+	if len(statuses) > 0 {
+		environmentID = statuses[0].EnvironmentID
+		namespace = statuses[0].Namespace
+	} else if len(pods) > 0 {
+		environmentID = pods[0].EnvironmentID
+		namespace = pods[0].Namespace
+	}
+
+	return NewWorkloadStatusResponse(environmentID, namespace, statuses, pods)
 }

@@ -24,7 +24,7 @@
 
 **Purpose**: Align feature-facing validation and contract references before implementation
 
-- [ ] T001 Capture implementation-time validation assumptions for populated and empty namespace scenarios in `specs/004-fix-environment-status/quickstart.md`
+- [x] T001 Capture implementation-time validation assumptions for populated and empty namespace scenarios in `specs/004-fix-environment-status/quickstart.md`
 
 ---
 
@@ -34,11 +34,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Add explicit workload/status unavailable error semantics in `internal/usecase/environment/init.go` and `internal/usecase/environment/environment.go`
-- [ ] T003 [P] Verify and, if needed, correct delivery-target-aware provisioner resolution for `/v1/environments/{id}/status`, `/v1/environments/{id}/workloads`, and `/v1/environments/{id}/workloads/{name}` in `internal/usecase/environment/environment.go`
-- [ ] T004 [P] Verify team-scoped environment lookup and unchanged authz/error semantics for affected environment endpoints in `internal/usecase/environment/environment.go` and `internal/handler/http/environment.go`
-- [ ] T005 [P] Add environment status summary helper structures for authoritative namespace-derived counts in `internal/model/environment/type.go`
-- [ ] T006 [P] Add workload response constructors that preserve environment and namespace context for empty namespaces in `internal/model/workload/type.go`
+- [x] T002 Add explicit workload/status unavailable error semantics in `internal/usecase/environment/init.go` and `internal/usecase/environment/environment.go`
+- [x] T003 [P] Verify and, if needed, correct delivery-target-aware provisioner resolution for `/v1/environments/{id}/status`, `/v1/environments/{id}/workloads`, and `/v1/environments/{id}/workloads/{name}` in `internal/usecase/environment/environment.go`
+- [x] T004 [P] Verify team-scoped environment lookup and unchanged authz/error semantics for affected environment endpoints in `internal/usecase/environment/environment.go` and `internal/handler/http/environment.go`
+- [x] T005 [P] Add environment status summary helper structures for authoritative namespace-derived counts in `internal/model/environment/type.go`
+- [x] T006 [P] Add workload response constructors that preserve environment and namespace context for empty namespaces in `internal/model/workload/type.go`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in priority order
 
@@ -52,9 +52,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement authoritative namespace summary derivation and cache-miss fallback in `internal/usecase/environment/environment.go`
-- [ ] T008 [US1] Update environment status response shaping in `internal/model/environment/type.go`
-- [ ] T009 [US1] Align `/v1/environments/{id}/status` error handling and contract annotations in `internal/handler/http/environment.go`
+- [x] T007 [US1] Implement authoritative namespace summary derivation and cache-miss fallback in `internal/usecase/environment/environment.go`
+- [x] T008 [US1] Update environment status response shaping in `internal/model/environment/type.go`
+- [x] T009 [US1] Align `/v1/environments/{id}/status` error handling and contract annotations in `internal/handler/http/environment.go`
 
 **Checkpoint**: User Story 1 should now return accurate environment status independently of the workload list endpoints
 
@@ -68,9 +68,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Implement consistent workload list assembly from resolved namespace deployments and pods in `internal/usecase/environment/environment.go`
-- [ ] T011 [US2] Update workload summary and empty-list response shaping in `internal/model/workload/type.go`
-- [ ] T012 [US2] Align `/v1/environments/{id}/workloads` error handling and contract annotations in `internal/handler/http/environment.go`
+- [x] T010 [US2] Implement consistent workload list assembly from resolved namespace deployments and pods in `internal/usecase/environment/environment.go`
+- [x] T011 [US2] Update workload summary and empty-list response shaping in `internal/model/workload/type.go`
+- [x] T012 [US2] Align `/v1/environments/{id}/workloads` error handling and contract annotations in `internal/handler/http/environment.go`
 
 **Checkpoint**: User Stories 1 and 2 should now both return consistent namespace-scoped operational data
 
@@ -84,9 +84,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Align workload detail resolution and missing-workload handling in `internal/usecase/environment/environment.go`
-- [ ] T014 [US3] Update workload detail response contract and not-found handling in `internal/handler/http/environment.go`
-- [ ] T015 [US3] Review `/v1/environments/{id}/gitops/status`, `/v1/environments/{id}/logs/stream`, and `/v1/environments/{id}/events/stream` for namespace/target-resolution and error-semantic consistency in `internal/usecase/environment/environment.go` and `internal/handler/http/environment.go`
+- [x] T013 [US3] Align workload detail resolution and missing-workload handling in `internal/usecase/environment/environment.go`
+- [x] T014 [US3] Update workload detail response contract and not-found handling in `internal/handler/http/environment.go`
+- [x] T015 [US3] Review `/v1/environments/{id}/gitops/status`, `/v1/environments/{id}/logs/stream`, and `/v1/environments/{id}/events/stream` for namespace/target-resolution and error-semantic consistency in `internal/usecase/environment/environment.go` and `internal/handler/http/environment.go`
 
 **Checkpoint**: All three user stories should now be independently functional and consistent with each other
 
@@ -96,8 +96,8 @@
 
 **Purpose**: Final validation and documentation alignment across all stories
 
-- [ ] T016 [P] Refresh feature documentation to match the final endpoint behavior in `specs/004-fix-environment-status/contracts/environment-operational-status.md` and `specs/004-fix-environment-status/quickstart.md`
-- [ ] T017 Run the end-to-end validation scenarios from `specs/004-fix-environment-status/quickstart.md` and capture any needed follow-up adjustments in `specs/004-fix-environment-status/quickstart.md`
+- [x] T016 [P] Refresh feature documentation to match the final endpoint behavior in `specs/004-fix-environment-status/contracts/environment-operational-status.md` and `specs/004-fix-environment-status/quickstart.md`
+- [x] T017 Run the end-to-end validation scenarios from `specs/004-fix-environment-status/quickstart.md` and capture any needed follow-up adjustments in `specs/004-fix-environment-status/quickstart.md`
 
 ---
 
