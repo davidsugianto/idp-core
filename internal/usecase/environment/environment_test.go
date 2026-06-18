@@ -10,6 +10,7 @@ import (
 	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
+	"github.com/davidsugianto/idp-core/internal/model/workload"
 	"github.com/davidsugianto/idp-core/internal/pkg/argocd"
 	gitopsRepo "github.com/davidsugianto/idp-core/internal/repository/gitops"
 	"github.com/golang/mock/gomock"
@@ -1125,7 +1126,7 @@ func TestGetStatus(t *testing.T) {
 		teamID  string
 		id      string
 		setup   func()
-		wantErr bool
+		assert  func(t *testing.T, result *environment.EnvironmentStatusResponse, err error)
 	}{
 		{
 			name:   "get status successfully",
@@ -1153,7 +1154,51 @@ func TestGetStatus(t *testing.T) {
 						HealthStatus: "Healthy",
 					}, nil)
 			},
-			wantErr: false,
+			assert: func(t *testing.T, result *environment.EnvironmentStatusResponse, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, 3, result.PodSummary.Total)
+				assert.Equal(t, 2, result.DeploymentSummary.Desired)
+			},
+		},
+		{
+			name:   "falls back to live state when cached summaries are unavailable",
+			teamID: "team-123",
+			id:     "env-1",
+			setup: func() {
+				mockEnvRepo.EXPECT().
+					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+					Return(&environment.Environment{
+						ID:          "env-1",
+						TeamID:      "team-123",
+						Namespace:   "idp-team-123-dev",
+						ArgoAppName: "env-env-1",
+					}, nil)
+				mockProvRepo.EXPECT().GetPodSummary("idp-team-123-dev").Return(environment.PodSummary{}, false)
+				mockProvRepo.EXPECT().GetDeploymentSummary("idp-team-123-dev").Return(environment.DeploymentSummary{}, false)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-dev").Return([]*appsv1.Deployment{{
+					ObjectMeta: metav1.ObjectMeta{Name: "nginx", UID: "uid-1"},
+					Spec: appsv1.DeploymentSpec{
+						Replicas: ptrInt32(2),
+						Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{Image: "nginx:latest"}}}},
+					},
+					Status: appsv1.DeploymentStatus{Replicas: 2, ReadyReplicas: 1, UpdatedReplicas: 2, AvailableReplicas: 1},
+				}}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-dev").Return([]*corev1.Pod{{
+					ObjectMeta: metav1.ObjectMeta{Name: "nginx-pod-1", UID: "pod-1"},
+					Status: corev1.PodStatus{Phase: corev1.PodRunning},
+				}, {
+					ObjectMeta: metav1.ObjectMeta{Name: "nginx-pod-2", UID: "pod-2"},
+					Status: corev1.PodStatus{Phase: corev1.PodPending},
+				}}, nil)
+				mockGitopsRepo.EXPECT().GetApplicationStatus(gomock.Any(), "env-env-1").Return(&environment.ArgoStatus{SyncStatus: "Synced", HealthStatus: "Healthy"}, nil)
+			},
+			assert: func(t *testing.T, result *environment.EnvironmentStatusResponse, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, environment.PodSummary{Total: 2, Running: 1, Pending: 1, Failed: 0}, result.PodSummary)
+				assert.Equal(t, environment.DeploymentSummary{Desired: 2, Ready: 1, Updated: 2, Available: 1}, result.DeploymentSummary)
+			},
 		},
 		{
 			name:   "environment not found",
@@ -1164,7 +1209,10 @@ func TestGetStatus(t *testing.T) {
 					GetByIDAndTeam(gomock.Any(), "nonexistent", "team-123").
 					Return(nil, nil)
 			},
-			wantErr: true,
+			assert: func(t *testing.T, result *environment.EnvironmentStatusResponse, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			},
 		},
 	}
 
@@ -1172,13 +1220,7 @@ func TestGetStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			result, err := uc.GetStatus(context.Background(), tt.teamID, tt.id)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-			}
+			tt.assert(t, result, err)
 		})
 	}
 }
@@ -1243,12 +1285,12 @@ func TestGetWorkloads(t *testing.T) {
 	})
 
 	tests := []struct {
-		name    string
-		teamID  string
-		id      string
-		uc      Usecase
-		setup   func()
-		wantErr bool
+		name   string
+		teamID string
+		id     string
+		uc     Usecase
+		setup  func()
+		assert func(t *testing.T, result *workload.WorkloadStatusResponse, err error)
 	}{
 		{
 			name:   "get workloads successfully",
@@ -1277,7 +1319,38 @@ func TestGetWorkloads(t *testing.T) {
 					GetPods("idp-team-123-dev").
 					Return([]*corev1.Pod{}, nil)
 			},
-			wantErr: false,
+			assert: func(t *testing.T, result *workload.WorkloadStatusResponse, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, "env-1", result.EnvironmentID)
+				assert.Equal(t, "idp-team-123-dev", result.Namespace)
+				assert.Len(t, result.Workloads, 1)
+			},
+		},
+		{
+			name:   "empty namespace preserves environment context",
+			teamID: "team-123",
+			id:     "env-1",
+			uc:     uc,
+			setup: func() {
+				mockEnvRepo.EXPECT().
+					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
+					Return(&environment.Environment{
+						ID:        "env-1",
+						TeamID:    "team-123",
+						Namespace: "idp-team-123-empty",
+					}, nil)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-empty").Return([]*appsv1.Deployment{}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-empty").Return([]*corev1.Pod{}, nil)
+			},
+			assert: func(t *testing.T, result *workload.WorkloadStatusResponse, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, "env-1", result.EnvironmentID)
+				assert.Equal(t, "idp-team-123-empty", result.Namespace)
+				assert.NotNil(t, result.Workloads)
+				assert.Len(t, result.Workloads, 0)
+			},
 		},
 		{
 			name:   "environment not found",
@@ -1289,7 +1362,10 @@ func TestGetWorkloads(t *testing.T) {
 					GetByIDAndTeam(gomock.Any(), "nonexistent", "team-123").
 					Return(nil, nil)
 			},
-			wantErr: true,
+			assert: func(t *testing.T, result *workload.WorkloadStatusResponse, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			},
 		},
 		{
 			name:   "kubernetes not configured",
@@ -1300,12 +1376,17 @@ func TestGetWorkloads(t *testing.T) {
 				mockEnvRepo.EXPECT().
 					GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
 					Return(&environment.Environment{
-						ID:        "env-1",
-						TeamID:    "team-123",
-						Namespace: "idp-team-123-dev",
+						ID:               "env-1",
+						TeamID:           "team-123",
+						Namespace:        "idp-team-123-dev",
+						DeliveryTargetID: "target-a",
 					}, nil)
 			},
-			wantErr: true,
+			assert: func(t *testing.T, result *workload.WorkloadStatusResponse, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.ErrorIs(t, err, ErrWorkloadStateUnavailable)
+			},
 		},
 	}
 
@@ -1313,13 +1394,7 @@ func TestGetWorkloads(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			result, err := tt.uc.GetWorkloads(context.Background(), tt.teamID, tt.id)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-			}
+			tt.assert(t, result, err)
 		})
 	}
 }
@@ -1342,7 +1417,7 @@ func TestGetWorkloadDetails(t *testing.T) {
 		id           string
 		workloadName string
 		setup        func()
-		wantErr      bool
+		assert       func(t *testing.T, result *workload.WorkloadInfo, err error)
 	}{
 		{
 			name:         "get workload details successfully",
@@ -1367,8 +1442,14 @@ func TestGetWorkloadDetails(t *testing.T) {
 						},
 						Status: appsv1.DeploymentStatus{Replicas: 2, ReadyReplicas: 2, UpdatedReplicas: 2, AvailableReplicas: 2},
 					}}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-dev").Return([]*corev1.Pod{}, nil)
 			},
-			wantErr: false,
+			assert: func(t *testing.T, result *workload.WorkloadInfo, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, "nginx", result.Name)
+				assert.Equal(t, "nginx:latest", result.Image)
+			},
 		},
 		{
 			name:         "workload not found",
@@ -1383,11 +1464,14 @@ func TestGetWorkloadDetails(t *testing.T) {
 						TeamID:    "team-123",
 						Namespace: "idp-team-123-dev",
 					}, nil)
-				mockProvRepo.EXPECT().
-					GetWorkloads("idp-team-123-dev").
-					Return([]*appsv1.Deployment{}, nil)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-dev").Return([]*appsv1.Deployment{}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-dev").Return([]*corev1.Pod{}, nil)
 			},
-			wantErr: true,
+			assert: func(t *testing.T, result *workload.WorkloadInfo, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.ErrorIs(t, err, ErrWorkloadNotFound)
+			},
 		},
 		{
 			name:         "environment not found",
@@ -1399,7 +1483,10 @@ func TestGetWorkloadDetails(t *testing.T) {
 					GetByIDAndTeam(gomock.Any(), "nonexistent", "team-123").
 					Return(nil, nil)
 			},
-			wantErr: true,
+			assert: func(t *testing.T, result *workload.WorkloadInfo, err error) {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			},
 		},
 	}
 
@@ -1407,14 +1494,7 @@ func TestGetWorkloadDetails(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			result, err := uc.GetWorkloadDetails(context.Background(), tt.teamID, tt.id, tt.workloadName)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, tt.workloadName, result.Name)
-			}
+			tt.assert(t, result, err)
 		})
 	}
 }

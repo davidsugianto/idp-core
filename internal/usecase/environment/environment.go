@@ -395,21 +395,19 @@ func (u *usecase) GetStatus(ctx context.Context, teamID, id string) (*environmen
 		return nil, ErrEnvironmentNotFound
 	}
 
-	response := &environment.EnvironmentStatusResponse{
-		EnvironmentResponse: *environment.ToEnvironmentResponse(env),
-	}
-
 	provisionerRepo, provisionerControlPlane, err := u.provisionerRepositoryForEnvironment(ctx, env)
 	if err != nil {
 		u.recordOperationOutcome(ctx, env, "environment_status", "resolution_failed", nil, err)
 		return nil, fmt.Errorf("%w: %w", ErrEnvironmentStatusUnavailable, err)
 	}
-	if podSummary, ok := provisionerRepo.GetPodSummary(env.Namespace); ok {
-		response.PodSummary = podSummary
+
+	podSummary, deploymentSummary, err := u.namespaceStatusSummary(env, provisionerRepo)
+	if err != nil {
+		u.recordOperationOutcome(ctx, env, "environment_status", "failed", provisionerControlPlane, err)
+		return nil, fmt.Errorf("%w: %w", ErrEnvironmentStatusUnavailable, err)
 	}
-	if deploySummary, ok := provisionerRepo.GetDeploymentSummary(env.Namespace); ok {
-		response.DeploymentSummary = deploySummary
-	}
+
+	response := environment.NewEnvironmentStatusResponse(env, podSummary, deploymentSummary)
 
 	if env.ArgoAppName != "" {
 		gitopsRepo, gitopsControlPlane, err := u.gitopsRepositoryForEnvironment(ctx, env)
@@ -623,36 +621,21 @@ func (u *usecase) GetWorkloads(ctx context.Context, teamID, id string) (*workloa
 		return nil, ErrEnvironmentNotFound
 	}
 
-	provisionerRepo, _, err := u.provisionerRepositoryForEnvironment(ctx, env)
+	provisionerRepo, controlPlane, err := u.provisionerRepositoryForEnvironment(ctx, env)
 	if err != nil {
-		return nil, err
+		u.recordOperationOutcome(ctx, env, "workload_list", "resolution_failed", nil, err)
+		return nil, fmt.Errorf("%w: %w", ErrWorkloadStateUnavailable, err)
 	}
 
-	// Get deployments from cache
-	deployments, err := provisionerRepo.GetWorkloads(env.Namespace)
+	workloadStatuses, podStatuses, err := u.namespaceWorkloadState(env, provisionerRepo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workloads: %w", err)
+		u.recordOperationOutcome(ctx, env, "workload_list", "failed", controlPlane, err)
+		return nil, fmt.Errorf("%w: %w", ErrWorkloadStateUnavailable, err)
 	}
 
-	// Get pods from cache
-	pods, err := provisionerRepo.GetPods(env.Namespace)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pods: %w", err)
-	}
-
-	// Convert to workload status
-	workloadStatuses := make([]workload.WorkloadStatus, len(deployments))
-	for i, d := range deployments {
-		workloadStatuses[i] = convertDeploymentToWorkloadStatus(d, id, env.Namespace)
-	}
-
-	// Convert pods
-	podStatuses := make([]workload.PodStatus, len(pods))
-	for i, p := range pods {
-		podStatuses[i] = convertPodToPodStatus(p, id, env.Namespace)
-	}
-
-	return workload.ToWorkloadStatusResponse(workloadStatuses, podStatuses), nil
+	response := workload.NewWorkloadStatusResponse(env.ID, env.Namespace, workloadStatuses, podStatuses)
+	u.recordOperationOutcome(ctx, env, "workload_list", "succeeded", controlPlane, nil)
+	return response, nil
 }
 
 // convertDeploymentToWorkloadStatus converts a K8s Deployment to WorkloadStatus
@@ -688,6 +671,14 @@ func convertDeploymentToWorkloadStatus(d *appsv1.Deployment, envID, namespace st
 		Status:            status,
 		Image:             image,
 	}
+}
+
+func convertDeploymentsToWorkloadStatuses(deployments []*appsv1.Deployment, envID, namespace string) []workload.WorkloadStatus {
+	statuses := make([]workload.WorkloadStatus, len(deployments))
+	for i, d := range deployments {
+		statuses[i] = convertDeploymentToWorkloadStatus(d, envID, namespace)
+	}
+	return statuses
 }
 
 // convertPodToPodStatus converts a K8s Pod to PodStatus
@@ -743,6 +734,74 @@ func convertPodToPodStatus(p *corev1.Pod, envID, namespace string) workload.PodS
 	}
 }
 
+func convertPodsToPodStatuses(pods []*corev1.Pod, envID, namespace string) []workload.PodStatus {
+	statuses := make([]workload.PodStatus, len(pods))
+	for i, p := range pods {
+		statuses[i] = convertPodToPodStatus(p, envID, namespace)
+	}
+	return statuses
+}
+
+func (u *usecase) namespaceWorkloadState(env *environment.Environment, provisionerRepo provisionerRepo.Repository) ([]workload.WorkloadStatus, []workload.PodStatus, error) {
+	deployments, err := provisionerRepo.GetWorkloads(env.Namespace)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get workloads: %w", err)
+	}
+
+	pods, err := provisionerRepo.GetPods(env.Namespace)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get pods: %w", err)
+	}
+
+	return convertDeploymentsToWorkloadStatuses(deployments, env.ID, env.Namespace), convertPodsToPodStatuses(pods, env.ID, env.Namespace), nil
+}
+
+func (u *usecase) namespaceStatusSummary(env *environment.Environment, provisionerRepo provisionerRepo.Repository) (environment.PodSummary, environment.DeploymentSummary, error) {
+	podSummary, podSummaryCached := provisionerRepo.GetPodSummary(env.Namespace)
+	deploymentSummary, deploymentSummaryCached := provisionerRepo.GetDeploymentSummary(env.Namespace)
+	if podSummaryCached && deploymentSummaryCached {
+		return podSummary, deploymentSummary, nil
+	}
+
+	workloadStatuses, podStatuses, err := u.namespaceWorkloadState(env, provisionerRepo)
+	if err != nil {
+		return environment.PodSummary{}, environment.DeploymentSummary{}, err
+	}
+
+	if !podSummaryCached {
+		podSummary = environment.PodSummary{Total: len(podStatuses)}
+		for _, pod := range podStatuses {
+			switch pod.Phase {
+			case "Running":
+				podSummary.Running++
+			case "Pending":
+				podSummary.Pending++
+			case "Failed":
+				podSummary.Failed++
+			}
+		}
+	}
+
+	if !deploymentSummaryCached {
+		for _, status := range workloadStatuses {
+			deploymentSummary.Desired += status.DesiredReplicas
+			deploymentSummary.Ready += status.ReadyReplicas
+			deploymentSummary.Updated += status.UpdatedReplicas
+			deploymentSummary.Available += status.AvailableReplicas
+		}
+	}
+
+	if !podSummaryCached && !deploymentSummaryCached && len(workloadStatuses) == 0 && len(podStatuses) == 0 {
+		return podSummary, deploymentSummary, nil
+	}
+
+	if !podSummaryCached || !deploymentSummaryCached {
+		return podSummary, deploymentSummary, nil
+	}
+
+	return environment.PodSummary{}, environment.DeploymentSummary{}, ErrWorkloadStateUnavailable
+}
+
 // GetWorkloadDetails fetches a specific workload and its pods' status
 func (u *usecase) GetWorkloadDetails(ctx context.Context, teamID, id, workloadName string) (*workload.WorkloadInfo, error) {
 	env, err := u.environmentRepo.GetByIDAndTeam(ctx, id, teamID)
@@ -753,39 +812,26 @@ func (u *usecase) GetWorkloadDetails(ctx context.Context, teamID, id, workloadNa
 		return nil, ErrEnvironmentNotFound
 	}
 
-	provisionerRepo, _, err := u.provisionerRepositoryForEnvironment(ctx, env)
+	provisionerRepo, controlPlane, err := u.provisionerRepositoryForEnvironment(ctx, env)
 	if err != nil {
-		return nil, err
+		u.recordOperationOutcome(ctx, env, "workload_detail", "resolution_failed", nil, err)
+		return nil, fmt.Errorf("%w: %w", ErrWorkloadStateUnavailable, err)
 	}
 
-	// Get all deployments from cache
-	deployments, err := provisionerRepo.GetWorkloads(env.Namespace)
+	workloadStatuses, _, err := u.namespaceWorkloadState(env, provisionerRepo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workloads: %w", err)
+		u.recordOperationOutcome(ctx, env, "workload_detail", "failed", controlPlane, err)
+		return nil, fmt.Errorf("%w: %w", ErrWorkloadStateUnavailable, err)
 	}
 
-	// Find the specific deployment
-	var targetDeployment *appsv1.Deployment
-	for _, d := range deployments {
-		if d.Name == workloadName {
-			targetDeployment = d
-			break
+	for _, status := range workloadStatuses {
+		if status.Name == workloadName {
+			info := workload.ToWorkloadInfo(status)
+			u.recordOperationOutcome(ctx, env, "workload_detail", "succeeded", controlPlane, nil)
+			return &info, nil
 		}
 	}
 
-	if targetDeployment == nil {
-		return nil, ErrWorkloadNotFound
-	}
-
-	// Convert deployment to workload info
-	ws := convertDeploymentToWorkloadStatus(targetDeployment, id, env.Namespace)
-
-	return &workload.WorkloadInfo{
-		Name:            ws.Name,
-		Kind:            ws.Kind,
-		Status:          ws.Status,
-		DesiredReplicas: ws.DesiredReplicas,
-		ReadyReplicas:   ws.ReadyReplicas,
-		Image:           ws.Image,
-	}, nil
+	u.recordOperationOutcome(ctx, env, "workload_detail", "not_found", controlPlane, ErrWorkloadNotFound)
+	return nil, ErrWorkloadNotFound
 }

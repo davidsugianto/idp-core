@@ -25,6 +25,12 @@ type informerManager struct {
 	mu          sync.RWMutex
 }
 
+func (m *informerManager) IsStarted() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.started
+}
+
 // newInformerManager creates a new informer manager
 func newInformerManager(client *k8sPkg.Client, store *statusStore) *informerManager {
 	return &informerManager{

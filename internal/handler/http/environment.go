@@ -200,7 +200,7 @@ func (h *Handler) GetEnvironmentStatus(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrEnvironmentStatusUnavailable) {
-			response.GinBadRequest(c, err)
+			response.GinBadRequest(c, sanitizeServerError(err))
 			return
 		}
 		response.GinInternalServerError(c, sanitizeServerError(err))
@@ -241,7 +241,7 @@ func (h *Handler) SyncEnvironment(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrSyncTargetUnavailable) {
-			response.GinBadRequest(c, err)
+			response.GinBadRequest(c, sanitizeServerError(err))
 			return
 		}
 		response.GinInternalServerError(c, sanitizeServerError(err))
@@ -283,7 +283,7 @@ func (h *Handler) GetGitOpsStatus(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, envUsecase.ErrNoArgoApp) || errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrGitOpsStatusUnavailable) {
-			response.GinBadRequest(c, err)
+			response.GinBadRequest(c, sanitizeServerError(err))
 			return
 		}
 		response.GinInternalServerError(c, sanitizeServerError(err))
@@ -322,6 +322,10 @@ func (h *Handler) GetWorkloads(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) {
 			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrWorkloadStateUnavailable) {
+			response.GinBadRequest(c, sanitizeServerError(err))
 			return
 		}
 		response.GinInternalServerError(c, sanitizeServerError(err))
@@ -367,6 +371,10 @@ func (h *Handler) GetWorkloadDetails(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, envUsecase.ErrEnvironmentNotFound) || errors.Is(err, envUsecase.ErrWorkloadNotFound) {
 			response.GinNotFound(c, err)
+			return
+		}
+		if errors.Is(err, envUsecase.ErrDeliveryTargetNotFound) || errors.Is(err, envUsecase.ErrTargetAccessDenied) || errors.Is(err, envUsecase.ErrTargetResolutionUnavailable) || errors.Is(err, envUsecase.ErrWorkloadStateUnavailable) {
+			response.GinBadRequest(c, sanitizeServerError(err))
 			return
 		}
 		response.GinInternalServerError(c, sanitizeServerError(err))

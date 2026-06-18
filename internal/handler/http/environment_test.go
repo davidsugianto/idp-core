@@ -475,6 +475,18 @@ func TestGetEnvironmentStatus(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:   "status returns bad request when workload state is unavailable",
+			teamID: "team-123",
+			envID:  "env-1",
+			setup: func() {
+				mockEnvRepo.EXPECT().GetByIDAndTeam(gomock.Any(), "env-1", "team-123").Return(&environment.Environment{ID: "env-1", TeamID: "team-123", Namespace: "idp-team-123-dev"}, nil)
+				mockProvRepo.EXPECT().GetPodSummary("idp-team-123-dev").Return(environment.PodSummary{}, false)
+				mockProvRepo.EXPECT().GetDeploymentSummary("idp-team-123-dev").Return(environment.DeploymentSummary{}, false)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-dev").Return(nil, errors.New("cache miss"))
+			},
+			wantStatus: http.StatusBadRequest,
+		},
+		{
 			name:       "missing team id",
 			teamID:     "",
 			envID:      "env-1",
@@ -616,6 +628,16 @@ func TestGetWorkloads(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:   "workloads returns bad request when workload state is unavailable",
+			teamID: "team-123",
+			envID:  "env-1",
+			setup: func() {
+				mockEnvRepo.EXPECT().GetByIDAndTeam(gomock.Any(), "env-1", "team-123").Return(&environment.Environment{ID: "env-1", TeamID: "team-123", Namespace: "idp-team-123-dev"}, nil)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-dev").Return(nil, errors.New("cluster unreachable"))
+			},
+			wantStatus: http.StatusBadRequest,
+		},
+		{
 			name:       "missing team id",
 			teamID:     "",
 			envID:      "env-1",
@@ -713,6 +735,7 @@ func TestGetWorkloadDetails(t *testing.T) {
 							},
 						},
 					}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-dev").Return([]*corev1.Pod{}, nil)
 				return handler, mockEnvRepo, mockProvRepo, mockGitopsRepo
 			},
 			wantStatus: http.StatusOK,
@@ -758,9 +781,23 @@ func TestGetWorkloadDetails(t *testing.T) {
 				mockProvRepo.EXPECT().
 					GetWorkloads("idp-team-123-dev").
 					Return([]*appsv1.Deployment{}, nil)
+				mockProvRepo.EXPECT().GetPods("idp-team-123-dev").Return([]*corev1.Pod{}, nil)
 				return handler, mockEnvRepo, mockProvRepo, mockGitopsRepo
 			},
 			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:     "workload detail returns bad request when workload state is unavailable",
+			teamID:   "team-123",
+			envID:    "env-1",
+			workload: "nginx",
+			setup: func(ctrl *gomock.Controller) (*Handler, *mocks.MockEnvironmentRepository, *mocks.MockProvisionerRepository, *mocks.MockGitopsRepository) {
+				handler, mockEnvRepo, mockProvRepo, mockGitopsRepo := setupTestHandler(ctrl)
+				mockEnvRepo.EXPECT().GetByIDAndTeam(gomock.Any(), "env-1", "team-123").Return(&environment.Environment{ID: "env-1", TeamID: "team-123", Namespace: "idp-team-123-dev"}, nil)
+				mockProvRepo.EXPECT().GetWorkloads("idp-team-123-dev").Return(nil, errors.New("cluster unreachable"))
+				return handler, mockEnvRepo, mockProvRepo, mockGitopsRepo
+			},
+			wantStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -1110,7 +1147,7 @@ func TestGetEnvironmentStatusSanitizesInternalErrors(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	handler, mockEnvRepo, mockProvRepo, mockGitopsRepo := setupTestHandler(ctrl)
+	handler, mockEnvRepo, mockProvRepo, _ := setupTestHandler(ctrl)
 	mockEnvRepo.EXPECT().
 		GetByIDAndTeam(gomock.Any(), "env-1", "team-123").
 		Return(&environment.Environment{ID: "env-1", TeamID: "team-123", Namespace: "idp-team-123-dev", ArgoAppName: "env-env-1"}, nil)
@@ -1120,8 +1157,8 @@ func TestGetEnvironmentStatusSanitizesInternalErrors(t *testing.T) {
 	mockProvRepo.EXPECT().
 		GetDeploymentSummary("idp-team-123-dev").
 		Return(environment.DeploymentSummary{}, false)
-	mockGitopsRepo.EXPECT().
-		GetApplicationStatus(gomock.Any(), "env-env-1").
+	mockProvRepo.EXPECT().
+		GetWorkloads("idp-team-123-dev").
 		Return(nil, errors.New("Get \"https://127.0.0.1:58934/apis/argoproj.io\": dial tcp 127.0.0.1:58934: connect: connection refused: token mismatch on kubeconfig bearer auth"))
 
 	router := setupTestRouter()
@@ -1135,7 +1172,7 @@ func TestGetEnvironmentStatusSanitizesInternalErrors(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.NotContains(t, w.Body.String(), "token")
 	assert.NotContains(t, w.Body.String(), "kubeconfig")
 	assert.NotContains(t, w.Body.String(), "bearer")

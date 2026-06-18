@@ -31,6 +31,7 @@ type Usecase interface {
 var (
 	ErrTargetResolutionUnavailable = errors.New("delivery target control plane is not configured")
 	ErrTargetAccessDenied          = errors.New("delivery target is not allowed for this environment")
+	ErrWorkloadStateUnavailable    = errors.New("environment workload state is unavailable")
 )
 
 func deliveryTargetAllowsPlacement(target *deliveryTargetModel.DeliveryTarget, teamID string) bool {

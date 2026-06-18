@@ -160,12 +160,28 @@ type PodSummary struct {
 	Failed  int `json:"failed"`
 }
 
+func (s PodSummary) IsZero() bool {
+	return s.Total == 0 && s.Running == 0 && s.Pending == 0 && s.Failed == 0
+}
+
 // DeploymentSummary contains deployment status
 type DeploymentSummary struct {
 	Desired   int `json:"desired"`
 	Ready     int `json:"ready"`
 	Updated   int `json:"updated"`
 	Available int `json:"available"`
+}
+
+func (s DeploymentSummary) IsZero() bool {
+	return s.Desired == 0 && s.Ready == 0 && s.Updated == 0 && s.Available == 0
+}
+
+func NewEnvironmentStatusResponse(env *Environment, podSummary PodSummary, deploymentSummary DeploymentSummary) *EnvironmentStatusResponse {
+	return &EnvironmentStatusResponse{
+		EnvironmentResponse: *ToEnvironmentResponse(env),
+		PodSummary:          podSummary,
+		DeploymentSummary:   deploymentSummary,
+	}
 }
 
 // ArgoStatus contains ArgoCD application status
