@@ -8,6 +8,7 @@ cron:
     cost-sync: "0 * * * *"
     budget-alert-check: "*/15 * * * *"
     rightsizing-generate: "0 6 * * *"
+    build-executor-dispatch: "*/1 * * * *"
   port: 8983
 
 database:

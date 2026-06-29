@@ -2,6 +2,7 @@ package migration
 
 import (
 	"github.com/davidsugianto/idp-core/internal/model/apikey"
+	buildApplicationModel "github.com/davidsugianto/idp-core/internal/model/build_application"
 	"github.com/davidsugianto/idp-core/internal/model/environment"
 	"github.com/davidsugianto/idp-core/internal/model/workload"
 	"gorm.io/gorm"
@@ -14,5 +15,12 @@ func Migrate(db *gorm.DB) error {
 		&workload.WorkloadStatus{},
 		&workload.PodStatus{},
 		&apikey.APIKey{},
+		&buildApplicationModel.BuildApplication{},
+		&buildApplicationModel.Build{},
+		&buildApplicationModel.BuildArtifact{},
+		&buildApplicationModel.SecurityVerification{},
+		&buildApplicationModel.DeploymentUpdate{},
+		&buildApplicationModel.LifecycleEvent{},
+		&buildApplicationModel.BuildLog{},
 	)
 }

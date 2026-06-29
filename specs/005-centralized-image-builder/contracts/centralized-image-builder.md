@@ -86,9 +86,9 @@ All endpoints remain protected by the existing authenticated, team-scoped access
 ## `DELETE /v1/build-applications/{id}`
 
 ### Success expectations
-- Returns an accepted deletion or deletion-complete response.
-- Prevents future build triggers for the deleted application.
-- Preserves historical build, security, and deployment records.
+- Returns `200` with a deletion-complete confirmation payload (`message: "build application deleted"`).
+- Applies logical deletion semantics: the application is marked deleted/suspended from future build triggers and soft-deleted from active list endpoints.
+- Preserves historical build, security, and deployment records for auditability.
 
 ## Build Resource
 
@@ -116,7 +116,7 @@ All endpoints remain protected by the existing authenticated, team-scoped access
 - Returns immediately after build acceptance.
 
 ### Success expectations
-- Returns `202` with the accepted build resource and its initial lifecycle state.
+- Returns `201` with the accepted build resource and its initial lifecycle state.
 - Emits a `build.queued` or equivalent lifecycle event.
 
 ### Failure expectations
@@ -141,7 +141,7 @@ All endpoints remain protected by the existing authenticated, team-scoped access
 ## `POST /v1/builds/{buildId}/retry`
 
 ### Success expectations
-- Returns `202` with a new build linked back to the original failed or canceled build.
+- Returns `200` with a new build linked back to the original failed or canceled build.
 
 ### Failure expectations
 - Returns `400` when retry is not allowed from the current build state.
@@ -150,7 +150,7 @@ All endpoints remain protected by the existing authenticated, team-scoped access
 ## `POST /v1/builds/{buildId}/cancel`
 
 ### Success expectations
-- Returns `202` when cancellation is accepted.
+- Returns `200` when cancellation is accepted.
 - Repeated cancellation requests for the same active build resolve idempotently.
 
 ### Failure expectations

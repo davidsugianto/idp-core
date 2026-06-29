@@ -10,6 +10,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/model/auditlog"
 	"github.com/davidsugianto/idp-core/internal/model/budget"
 	"github.com/davidsugianto/idp-core/internal/model/cost"
+	buildApplicationModel "github.com/davidsugianto/idp-core/internal/model/build_application"
 	deliveryTargetModel "github.com/davidsugianto/idp-core/internal/model/delivery_target"
 	environmentMovementModel "github.com/davidsugianto/idp-core/internal/model/environment_movement"
 	notificationModel "github.com/davidsugianto/idp-core/internal/model/notification"
@@ -51,6 +52,7 @@ import (
 	rightsizingRepository "github.com/davidsugianto/idp-core/internal/repository/rightsizing"
 	roleRepository "github.com/davidsugianto/idp-core/internal/repository/role"
 	serviceRepository "github.com/davidsugianto/idp-core/internal/repository/service"
+	buildApplicationRepository "github.com/davidsugianto/idp-core/internal/repository/build_application"
 	teamRepository "github.com/davidsugianto/idp-core/internal/repository/team"
 	templateRepository "github.com/davidsugianto/idp-core/internal/repository/template"
 	userRepository "github.com/davidsugianto/idp-core/internal/repository/user"
@@ -67,6 +69,7 @@ import (
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
 	serviceUsecase "github.com/davidsugianto/idp-core/internal/usecase/service"
+	buildApplicationUsecase "github.com/davidsugianto/idp-core/internal/usecase/build_application"
 	teamUsecase "github.com/davidsugianto/idp-core/internal/usecase/team"
 	templateUsecase "github.com/davidsugianto/idp-core/internal/usecase/template"
 	userUsecase "github.com/davidsugianto/idp-core/internal/usecase/user"
@@ -132,7 +135,7 @@ func main() {
 	dbClient := dbClientWrapper.DB
 
 	// Auto-migrate shared baseline tables.
-	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &deliveryTargetModel.DeliveryTarget{}, &environmentMovementModel.EnvironmentMovement{}, &notificationModel.Notification{}); err != nil {
+	if err := dbClient.AutoMigrate(&user.User{}, &team.Team{}, &team.TeamMember{}, &role.Role{}, &permission.Permission{}, &role.UserRole{}, &apikey.APIKey{}, &auditlog.AuditLog{}, &cost.CostRecord{}, &budget.Budget{}, &budget.BudgetAlert{}, &rightsizing.RightsizingRecommendation{}, &resourcequota.ResourceQuota{}, &service.Service{}, &service_version.ServiceVersion{}, &service_endpoint.ServiceEndpoint{}, &service_dependency.ServiceDependency{}, &service_environment.ServiceEnvironment{}, &deliveryTargetModel.DeliveryTarget{}, &environmentMovementModel.EnvironmentMovement{}, &notificationModel.Notification{}, &buildApplicationModel.BuildApplication{}, &buildApplicationModel.Build{}, &buildApplicationModel.BuildArtifact{}, &buildApplicationModel.SecurityVerification{}, &buildApplicationModel.DeploymentUpdate{}, &buildApplicationModel.LifecycleEvent{}, &buildApplicationModel.BuildLog{}); err != nil {
 		logs.Fatalf("cannot migrate database: %v", err)
 	}
 
@@ -235,6 +238,9 @@ func main() {
 	templateRepo := templateRepository.New(templateRepository.Dependencies{
 		Database: dbClient,
 	})
+	buildAppRepo := buildApplicationRepository.New(buildApplicationRepository.Dependencies{
+		Database: dbClient,
+	})
 	deliveryTargetRepo := deliveryTargetRepository.New(deliveryTargetRepository.Dependencies{
 		Database: dbClient,
 	})
@@ -320,6 +326,13 @@ func main() {
 		NotificationUC: notificationUC,
 		LiveUpdateUC:   liveUpdateUC,
 	})
+	buildAppUC := buildApplicationUsecase.New(buildApplicationUsecase.Dependencies{
+		BuildApplicationRepo: buildAppRepo,
+		DeliveryTargetRepo:   deliveryTargetRepo,
+		GitopsRepo:           gitopsRepo,
+		GitopsProvider:       buildApplicationUsecase.GitopsProvider(gitopsProvider),
+		NotificationUC:       notificationUC,
+	})
 
 	// Seed default data (roles, permissions, users, default team)
 	seeder := seed.NewSeeder(roleRepo, permRepo, userRepo, teamRepo)
@@ -371,6 +384,7 @@ func main() {
 		DeliveryTargetUseCase:      deliveryTargetUC,
 		EnvironmentMovementUseCase: environmentMovementUC,
 		NotificationUseCase:        notificationUC,
+		BuildApplicationUseCase:    buildAppUC,
 		LiveUpdateUseCase:          liveUpdateUC,
 		Config:                     cfg,
 		WebhookValidator:           webhookValidator,

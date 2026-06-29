@@ -915,6 +915,814 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/build-applications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List build applications for the caller's team",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "List build applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by runtime family",
+                        "name": "runtime_family",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by application status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by deployment automation toggle",
+                        "name": "deployment_automation_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a buildable application for a team using repository metadata and descriptor path",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Create build application",
+                "parameters": [
+                    {
+                        "description": "Build application create request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.CreateBuildApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/build-applications/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details for a build application in team scope",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Get build application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a build application in team scope",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Delete build application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update mutable fields on a build application in team scope",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Update build application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Build application update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.UpdateBuildApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/build-applications/{id}/builds": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List build history for a build application",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "List build history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Trigger an asynchronous build for a build application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Trigger build",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Build trigger request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.TriggerBuildRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/builds/{buildId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details for a build in team scope",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Get build detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build ID",
+                        "name": "buildId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/builds/{buildId}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel an active build",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Cancel build",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build ID",
+                        "name": "buildId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/builds/{buildId}/logs/stream": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Stream build logs incrementally with optional cursor and page size",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Stream build logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build ID",
+                        "name": "buildId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Last seen log sequence",
+                        "name": "after_sequence",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 200,
+                        "description": "Maximum log lines",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildLogStreamResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/builds/{buildId}/retry": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retry a failed or canceled build",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "build-applications"
+                ],
+                "summary": "Retry build",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Build ID",
+                        "name": "buildId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/costs": {
             "get": {
                 "security": [
@@ -7275,6 +8083,341 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "period": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse": {
+            "type": "object",
+            "properties": {
+                "build": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationBuilderProfile": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "supported_runtime_families": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationGitOpsTarget": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationListResponse": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationRegistryTarget": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registry_type": {
+                    "type": "string"
+                },
+                "repository_path": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse": {
+            "type": "object",
+            "properties": {
+                "application_descriptor_path": {
+                    "type": "string"
+                },
+                "builder_profile": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationBuilderProfile"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deployment_automation_enabled": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "gitops_target": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationGitOpsTarget"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registry_target": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationRegistryTarget"
+                },
+                "repository_url": {
+                    "type": "string"
+                },
+                "runtime_detection_mode": {
+                    "type": "string"
+                },
+                "runtime_family": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildArtifactResponse": {
+            "type": "object",
+            "properties": {
+                "image_digest": {
+                    "type": "string"
+                },
+                "published_image_reference": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "builds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildLogStreamResponse": {
+            "type": "object",
+            "properties": {
+                "build_id": {
+                    "type": "string"
+                },
+                "last_sequence": {
+                    "type": "integer"
+                },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "stream_state": {
+                    "type": "string"
+                },
+                "terminal_summary": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "artifact": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildArtifactResponse"
+                },
+                "deployment_update": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.DeploymentUpdateResponse"
+                },
+                "failure_reason": {
+                    "type": "string"
+                },
+                "finished_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "queued_at": {
+                    "type": "string"
+                },
+                "retry_of_build_id": {
+                    "type": "string"
+                },
+                "security_verification": {
+                    "$ref": "#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.SecurityVerificationResponse"
+                },
+                "source_revision_requested": {
+                    "type": "string"
+                },
+                "source_revision_resolved": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "trigger_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.CreateBuildApplicationRequest": {
+            "type": "object",
+            "required": [
+                "application_descriptor_path",
+                "name",
+                "repository_url"
+            ],
+            "properties": {
+                "application_descriptor_path": {
+                    "type": "string"
+                },
+                "builder_profile_id": {
+                    "type": "string"
+                },
+                "deployment_automation_enabled": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "gitops_target_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registry_target_id": {
+                    "type": "string"
+                },
+                "repository_url": {
+                    "type": "string"
+                },
+                "runtime_detection_mode": {
+                    "type": "string"
+                },
+                "runtime_family": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.DeploymentUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "failure_reason": {
+                    "type": "string"
+                },
+                "resulting_revision": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.SecurityVerificationResponse": {
+            "type": "object",
+            "properties": {
+                "policy_gate_reason": {
+                    "type": "string"
+                },
+                "policy_gate_status": {
+                    "type": "string"
+                },
+                "sbom_status": {
+                    "type": "string"
+                },
+                "scan_status": {
+                    "type": "string"
+                },
+                "signing_status": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.TriggerBuildRequest": {
+            "type": "object",
+            "properties": {
+                "idempotency_key": {
+                    "type": "string"
+                },
+                "source_revision": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_davidsugianto_idp-core_internal_model_build_application.UpdateBuildApplicationRequest": {
+            "type": "object",
+            "properties": {
+                "builder_profile_id": {
+                    "type": "string"
+                },
+                "deployment_automation_enabled": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "gitops_target_id": {
+                    "type": "string"
+                },
+                "registry_target_id": {
+                    "type": "string"
+                },
+                "runtime_detection_mode": {
+                    "type": "string"
+                },
+                "runtime_family": {
                     "type": "string"
                 },
                 "status": {

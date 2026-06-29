@@ -113,6 +113,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/microsoft/go-mssqldb v1.8.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.2.0 // indirect
@@ -174,6 +175,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/clickhouse v0.7.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
+	gorm.io/driver/sqlite v1.6.0 // indirect
 	gorm.io/driver/sqlserver v1.6.3 // indirect
 	gorm.io/plugin/opentelemetry v0.1.16 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect

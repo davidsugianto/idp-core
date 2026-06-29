@@ -25,9 +25,9 @@
 
 **Purpose**: Establish the feature-facing documentation, domain scaffolding, and migration baseline before story work begins
 
-- [ ] T001 Capture central design assumptions and validation prerequisites in `specs/005-centralized-image-builder/quickstart.md`
-- [ ] T002 Create feature migration scaffolding for build applications, builds, artifacts, security verification, deployment updates, and lifecycle events in `migrations/202606260001_create_build_application_tables.up.sql` and `migrations/202606260001_create_build_application_tables.down.sql`
-- [ ] T003 [P] Add new domain package scaffolding in `internal/model/build_application/type.go`, `internal/repository/build_application/init.go`, `internal/usecase/build_application/init.go`, and `internal/handler/http/build_application.go`
+- [X] T001 Capture central design assumptions and validation prerequisites in `specs/005-centralized-image-builder/quickstart.md`
+- [X] T002 Create feature migration scaffolding for build applications, builds, artifacts, security verification, deployment updates, and lifecycle events in `migrations/202606260001_create_build_application_tables.up.sql` and `migrations/202606260001_create_build_application_tables.down.sql`
+- [X] T003 [P] Add new domain package scaffolding in `internal/model/build_application/type.go`, `internal/repository/build_application/init.go`, `internal/usecase/build_application/init.go`, and `internal/handler/http/build_application.go`
 
 ---
 
@@ -37,12 +37,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement shared build application, build, artifact, security verification, deployment update, and lifecycle event models in `internal/model/build_application/type.go`
-- [ ] T005 [P] Implement repository interfaces and persistence methods for build applications and core build records in `internal/repository/build_application/init.go` and `internal/repository/build_application/build_application.go`
-- [ ] T006 [P] Implement execution-phase persistence for build state transitions, idempotency records, and retry/cancel linkage in `internal/repository/build_application/build_execution.go`
-- [ ] T007 Implement shared build lifecycle/status, idempotency, and retry validation helpers in `internal/usecase/build_application/init.go`
-- [ ] T008 Implement team-scoped authorization, audit/event emission helpers, and sanitized error mapping in `internal/usecase/build_application/helpers.go` and `internal/handler/http/build_application.go`
-- [ ] T009 Wire the new repository and usecase dependencies in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/handler.go`
+- [X] T004 Implement shared build application, build, artifact, security verification, deployment update, and lifecycle event models in `internal/model/build_application/type.go`
+- [X] T005 [P] Implement repository interfaces and persistence methods for build applications and core build records in `internal/repository/build_application/init.go` and `internal/repository/build_application/build_application.go`
+- [X] T006 [P] Implement execution-phase persistence for build state transitions, idempotency records, and retry/cancel linkage in `internal/repository/build_application/build_execution.go`
+- [X] T007 Implement shared build lifecycle/status, idempotency, and retry validation helpers in `internal/usecase/build_application/init.go`
+- [X] T008 Implement team-scoped authorization, audit/event emission helpers, and sanitized error mapping in `internal/usecase/build_application/helpers.go` and `internal/handler/http/build_application.go`
+- [X] T009 Wire the new repository and usecase dependencies in `cmd/http/main.go`, `cmd/http/server.go`, and `internal/handler/http/handler.go`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in priority order
 
@@ -56,12 +56,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Add build application request/response models and validation rules in `internal/model/build_application/type.go`
-- [ ] T011 [US1] Implement build application CRUD usecase methods in `internal/usecase/build_application/build_application.go`
-- [ ] T012 [US1] Implement build application CRUD repository queries in `internal/repository/build_application/build_application.go`
-- [ ] T013 [US1] Implement HTTP handlers for `POST/GET/PATCH/DELETE /v1/build-applications` in `internal/handler/http/build_application.go`
-- [ ] T014 [US1] Register build application routes and dependency plumbing in `cmd/http/server.go`, `cmd/http/main.go`, and `internal/handler/http/handler.go`
-- [ ] T015 [US1] Align application CRUD contracts and quickstart expectations, including explicit `DELETE /v1/build-applications/{id}` status semantics, in `specs/005-centralized-image-builder/contracts/centralized-image-builder.md` and `specs/005-centralized-image-builder/quickstart.md`
+- [X] T010 [P] [US1] Add build application request/response models and validation rules in `internal/model/build_application/type.go`
+- [X] T011 [US1] Implement build application CRUD usecase methods in `internal/usecase/build_application/build_application.go`
+- [X] T012 [US1] Implement build application CRUD repository queries in `internal/repository/build_application/build_application.go`
+- [X] T013 [US1] Implement HTTP handlers for `POST/GET/PATCH/DELETE /v1/build-applications` in `internal/handler/http/build_application.go`
+- [X] T014 [US1] Register build application routes and dependency plumbing in `cmd/http/server.go`, `cmd/http/main.go`, and `internal/handler/http/handler.go`
+- [X] T015 [US1] Align application CRUD contracts and quickstart expectations, including explicit `DELETE /v1/build-applications/{id}` status semantics, in `specs/005-centralized-image-builder/contracts/centralized-image-builder.md` and `specs/005-centralized-image-builder/quickstart.md
 
 **Checkpoint**: User Story 1 should now be fully functional and testable independently
 
@@ -75,12 +75,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Add build action, build detail, and build history response models in `internal/model/build_application/type.go`
-- [ ] T017 [US2] Implement build trigger, status, history, retry, and cancel orchestration in `internal/usecase/build_application/build_execution.go`
-- [ ] T018 [US2] Implement canonical build state persistence, idempotency tracking, and retry linkage in `internal/repository/build_application/build_execution.go`
-- [ ] T019 [US2] Implement build logs streaming and terminal-summary retrieval in `internal/repository/build_application/log_stream.go` and `internal/usecase/build_application/log_stream.go`
-- [ ] T020 [US2] Implement HTTP handlers for `POST /v1/build-applications/{id}/builds`, `GET /v1/build-applications/{id}/builds`, `GET /v1/builds/{buildId}`, `POST /v1/builds/{buildId}/retry`, `POST /v1/builds/{buildId}/cancel`, and `GET /v1/builds/{buildId}/logs/stream` in `internal/handler/http/build_application.go`
-- [ ] T021 [US2] Update route registration and handler dependencies for build execution endpoints in `cmd/http/server.go` and `internal/handler/http/handler.go`
+- [X] T016 [P] [US2] Add build action, build detail, and build history response models in `internal/model/build_application/type.go`
+- [X] T017 [US2] Implement build trigger, status, history, retry, and cancel orchestration in `internal/usecase/build_application/build_execution.go`
+- [X] T018 [US2] Implement canonical build state persistence, idempotency tracking, and retry linkage in `internal/repository/build_application/build_execution.go`
+- [X] T019 [US2] Implement build logs streaming and terminal-summary retrieval in `internal/repository/build_application/log_stream.go` and `internal/usecase/build_application/log_stream.go`
+- [X] T020 [US2] Implement HTTP handlers for `POST /v1/build-applications/{id}/builds`, `GET /v1/build-applications/{id}/builds`, `GET /v1/builds/{buildId}`, `POST /v1/builds/{buildId}/retry`, `POST /v1/builds/{buildId}/cancel`, and `GET /v1/builds/{buildId}/logs/stream` in `internal/handler/http/build_application.go`
+- [X] T021 [US2] Update route registration and handler dependencies for build execution endpoints in `cmd/http/server.go` and `internal/handler/http/handler.go`
 
 **Checkpoint**: User Stories 1 and 2 should now both work independently
 
@@ -94,12 +94,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [P] [US3] Extend artifact, security verification, deployment update, and lifecycle event models in `internal/model/build_application/type.go`
-- [ ] T023 [US3] Implement post-build security verification and deployment-readiness state transitions in `internal/usecase/build_application/post_build.go`
-- [ ] T024 [US3] Implement post-build persistence for artifact publication, security verification, deployment updates, and lifecycle events after execution completion in `internal/repository/build_application/post_build.go`
-- [ ] T025 [US3] Integrate GitOps update and deployment outcome recording through `internal/repository/gitops/` and `internal/usecase/build_application/post_build.go`
-- [ ] T026 [US3] Expose security verification, artifact, and deployment update fields in build detail/history handlers in `internal/handler/http/build_application.go`
-- [ ] T027 [US3] Align security-gated deployment contract and failure semantics in `specs/005-centralized-image-builder/contracts/centralized-image-builder.md` and `specs/005-centralized-image-builder/quickstart.md`
+- [X] T022 [P] [US3] Extend artifact, security verification, deployment update, and lifecycle event models in `internal/model/build_application/type.go`
+- [X] T023 [US3] Implement post-build security verification and deployment-readiness state transitions in `internal/usecase/build_application/post_build.go`
+- [X] T024 [US3] Implement post-build persistence for artifact publication, security verification, deployment updates, and lifecycle events after execution completion in `internal/repository/build_application/post_build.go`
+- [X] T025 [US3] Integrate GitOps update and deployment outcome recording through `internal/repository/gitops/` and `internal/usecase/build_application/post_build.go`
+- [X] T026 [US3] Expose security verification, artifact, and deployment update fields in build detail/history handlers in `internal/handler/http/build_application.go`
+- [X] T027 [US3] Align security-gated deployment contract and failure semantics in `specs/005-centralized-image-builder/contracts/centralized-image-builder.md` and `specs/005-centralized-image-builder/quickstart.md`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -109,13 +109,13 @@
 
 **Purpose**: Final validation and cross-story hardening
 
-- [ ] T028 [P] Add focused unit and handler coverage for build application flows in `internal/usecase/build_application/build_application_test.go` and `internal/handler/http/build_application_test.go`
-- [ ] T029 [P] Add repository-level coverage for idempotency, lifecycle ordering, and persistence rules in `internal/repository/build_application/build_application_test.go` and `internal/repository/build_application/build_execution_test.go`
-- [ ] T030 Harden observability and notification integration for lifecycle events in `internal/usecase/build_application/helpers.go` and `internal/usecase/notification/init.go`
-- [ ] T031 Refresh Swagger annotations and API-facing documentation in `internal/handler/http/build_application.go` and `docs/swagger/`
-- [ ] T032 Run the end-to-end validation scenarios from `specs/005-centralized-image-builder/quickstart.md` and capture follow-up adjustments in `specs/005-centralized-image-builder/quickstart.md`
-- [ ] T033 Implement explicit runtime-family and registry-type validation rules for supported values in `internal/model/build_application/type.go` and `internal/usecase/build_application/build_application.go`
-- [ ] T034 Implement and verify lifecycle event taxonomy coverage for application, build, security, and deployment transitions in `internal/usecase/build_application/helpers.go` and `internal/repository/build_application/post_build.go`
+- [X] T028 [P] Add focused unit and handler coverage for build application flows in `internal/usecase/build_application/build_application_test.go` and `internal/handler/http/build_application_test.go`
+- [X] T029 [P] Add repository-level coverage for idempotency, lifecycle ordering, and persistence rules in `internal/repository/build_application/build_application_test.go` and `internal/repository/build_application/build_execution_test.go`
+- [X] T030 Harden observability and notification integration for lifecycle events in `internal/usecase/build_application/helpers.go` and `internal/usecase/notification/init.go`
+- [X] T031 Refresh Swagger annotations and API-facing documentation in `internal/handler/http/build_application.go` and `docs/swagger/`
+- [X] T032 Run the end-to-end validation scenarios from `specs/005-centralized-image-builder/quickstart.md` and capture follow-up adjustments in `specs/005-centralized-image-builder/quickstart.md`
+- [X] T033 Implement explicit runtime-family and registry-type validation rules for supported values in `internal/model/build_application/type.go` and `internal/usecase/build_application/build_application.go`
+- [X] T034 Implement and verify lifecycle event taxonomy coverage for application, build, security, and deployment transitions in `internal/usecase/build_application/helpers.go` and `internal/repository/build_application/post_build.go`
 
 ---
 
