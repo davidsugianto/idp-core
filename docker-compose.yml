@@ -111,8 +111,9 @@ services:
       - DB_NAME=idp_core
       - APP_ENV=development
       - REDIS_MASTER_NAME=idp-core-redis_sentinel
-      - REDIS_ADDRESS=idp-core-redis_sentinel:26379
+      - REDIS_ADDRESS=idp-core-redis_sentinel:26379,redis-sentinel:26379,localhost:26379
       - REDIS_PASSWORD=redispassword
+      - GODEBUG=netdns=go
     ports:
       - "8983:8983"
     volumes:

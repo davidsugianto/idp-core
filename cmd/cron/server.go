@@ -16,6 +16,7 @@ import (
 	"github.com/davidsugianto/idp-core/internal/pkg/config"
 	"github.com/davidsugianto/idp-core/internal/pkg/redislock"
 	"github.com/davidsugianto/idp-core/internal/pkg/webhook"
+	buildApplicationUC "github.com/davidsugianto/idp-core/internal/usecase/build_application"
 	budgetUC "github.com/davidsugianto/idp-core/internal/usecase/budget"
 	costUC "github.com/davidsugianto/idp-core/internal/usecase/cost"
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
@@ -33,14 +34,15 @@ type Server struct {
 }
 
 type Dependencies struct {
-	Schedules         map[string]string
-	Port              int
-	CostUseCase       costUC.Usecase
-	BudgetUseCase     budgetUC.Usecase
-	RightsizingUseCase rightsizingUC.Usecase
-	Config            *config.Config
-	Distlock          redislock.IMutex
-	WebhookValidator  *webhook.Validator
+	Schedules               map[string]string
+	Port                    int
+	CostUseCase             costUC.Usecase
+	BudgetUseCase           budgetUC.Usecase
+	RightsizingUseCase      rightsizingUC.Usecase
+	BuildApplicationUseCase buildApplicationUC.Usecase
+	Config                  *config.Config
+	Distlock                redislock.IMutex
+	WebhookValidator        *webhook.Validator
 }
 
 func New(deps Dependencies) *Server {
@@ -49,11 +51,12 @@ func New(deps Dependencies) *Server {
 		schedules: deps.Schedules,
 		port:      deps.Port,
 		handler: cronHandler.New(cronHandler.Dependencies{
-			CostUseCase:        deps.CostUseCase,
-			BudgetUseCase:      deps.BudgetUseCase,
-			RightsizingUseCase: deps.RightsizingUseCase,
-			AuthConfig:         &deps.Config.Auth,
-			WebhookValidator:   deps.WebhookValidator,
+			CostUseCase:             deps.CostUseCase,
+			BudgetUseCase:           deps.BudgetUseCase,
+			RightsizingUseCase:      deps.RightsizingUseCase,
+			BuildApplicationUseCase: deps.BuildApplicationUseCase,
+			AuthConfig:              &deps.Config.Auth,
+			WebhookValidator:        deps.WebhookValidator,
 		}),
 		config:   deps.Config,
 		distlock: deps.Distlock,
@@ -67,6 +70,7 @@ func (s *Server) Run(ctx context.Context, graceTimeOut time.Duration) {
 	s.register(ctx, "cost-sync", s.handler.FinopsSyncCosts)
 	s.register(ctx, "budget-alert-check", s.handler.BudgetAlertCheck)
 	s.register(ctx, "rightsizing-generate", s.handler.RightsizingGenerate)
+	s.register(ctx, "build-executor-dispatch", s.handler.BuildExecutorDispatch)
 
 	httpServer := s.httpServer(ctx)
 	go func() {

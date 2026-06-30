@@ -10,6 +10,9 @@ import (
 )
 
 func (u *usecase) Create(ctx context.Context, notification *notificationModel.Notification) error {
+	if err := validateNotification(notification); err != nil {
+		return err
+	}
 	if notification.ID == "" {
 		notification.ID = uuid.New().String()
 	}

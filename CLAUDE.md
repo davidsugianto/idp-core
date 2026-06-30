@@ -72,5 +72,5 @@ Config loaded from `configs/config.yaml` with environment variable overrides. Se
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/004-fix-environment-status/plan.md`.
+shell commands, and other important information, read `specs/005-centralized-image-builder/plan.md`.
 <!-- SPECKIT END -->

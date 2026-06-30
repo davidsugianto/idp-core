@@ -14,6 +14,7 @@ import (
 	environmentMovementUsecase "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
 	liveUpdateUsecase "github.com/davidsugianto/idp-core/internal/usecase/live_update"
 	notificationUsecase "github.com/davidsugianto/idp-core/internal/usecase/notification"
+	buildApplicationUsecase "github.com/davidsugianto/idp-core/internal/usecase/build_application"
 	quotaUsecase "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUsecase "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUsecase "github.com/davidsugianto/idp-core/internal/usecase/role"
@@ -40,6 +41,7 @@ type Handler struct {
 	serviceUseCase             serviceUsecase.Usecase
 	templateUseCase            templateUsecase.Usecase
 	notificationUseCase        notificationUsecase.Usecase
+	buildApplicationUseCase    buildApplicationUsecase.Usecase
 	liveUpdateUseCase          liveUpdateUsecase.Usecase
 	authConfig                 *config.AuthConfig
 	webhookValidator           *webhook.Validator
@@ -65,6 +67,7 @@ type Dependencies struct {
 	ServiceUseCase             serviceUsecase.Usecase
 	TemplateUseCase            templateUsecase.Usecase
 	NotificationUseCase        notificationUsecase.Usecase
+	BuildApplicationUseCase    buildApplicationUsecase.Usecase
 	LiveUpdateUseCase          liveUpdateUsecase.Usecase
 	AuthConfig                 *config.AuthConfig
 	WebhookValidator           *webhook.Validator
@@ -91,6 +94,7 @@ func New(deps Dependencies) *Handler {
 		serviceUseCase:             deps.ServiceUseCase,
 		templateUseCase:            deps.TemplateUseCase,
 		notificationUseCase:        deps.NotificationUseCase,
+		buildApplicationUseCase:    deps.BuildApplicationUseCase,
 		liveUpdateUseCase:          deps.LiveUpdateUseCase,
 		authConfig:                 deps.AuthConfig,
 		webhookValidator:           deps.WebhookValidator,

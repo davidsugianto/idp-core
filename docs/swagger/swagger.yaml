@@ -202,6 +202,225 @@ definitions:
       status:
         type: string
     type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse:
+    properties:
+      build:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse'
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationBuilderProfile:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      supported_runtime_families:
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationGitOpsTarget:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationListResponse:
+    properties:
+      applications:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationRegistryTarget:
+    properties:
+      host:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registry_type:
+        type: string
+      repository_path:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse:
+    properties:
+      application_descriptor_path:
+        type: string
+      builder_profile:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationBuilderProfile'
+      created_at:
+        type: string
+      deployment_automation_enabled:
+        type: boolean
+      description:
+        type: string
+      gitops_target:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationGitOpsTarget'
+      id:
+        type: string
+      name:
+        type: string
+      registry_target:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationRegistryTarget'
+      repository_url:
+        type: string
+      runtime_detection_mode:
+        type: string
+      runtime_family:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildArtifactResponse:
+    properties:
+      image_digest:
+        type: string
+      published_image_reference:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildHistoryResponse:
+    properties:
+      builds:
+        items:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildLogStreamResponse:
+    properties:
+      build_id:
+        type: string
+      last_sequence:
+        type: integer
+      lines:
+        items:
+          type: string
+        type: array
+      stream_state:
+        type: string
+      terminal_summary:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse:
+    properties:
+      application_id:
+        type: string
+      artifact:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildArtifactResponse'
+      deployment_update:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.DeploymentUpdateResponse'
+      failure_reason:
+        type: string
+      finished_at:
+        type: string
+      id:
+        type: string
+      queued_at:
+        type: string
+      retry_of_build_id:
+        type: string
+      security_verification:
+        $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.SecurityVerificationResponse'
+      source_revision_requested:
+        type: string
+      source_revision_resolved:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      team_id:
+        type: string
+      trigger_type:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.CreateBuildApplicationRequest:
+    properties:
+      application_descriptor_path:
+        type: string
+      builder_profile_id:
+        type: string
+      deployment_automation_enabled:
+        type: boolean
+      description:
+        type: string
+      gitops_target_id:
+        type: string
+      name:
+        type: string
+      registry_target_id:
+        type: string
+      repository_url:
+        type: string
+      runtime_detection_mode:
+        type: string
+      runtime_family:
+        type: string
+    required:
+    - application_descriptor_path
+    - name
+    - repository_url
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.DeploymentUpdateResponse:
+    properties:
+      failure_reason:
+        type: string
+      resulting_revision:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.SecurityVerificationResponse:
+    properties:
+      policy_gate_reason:
+        type: string
+      policy_gate_status:
+        type: string
+      sbom_status:
+        type: string
+      scan_status:
+        type: string
+      signing_status:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.TriggerBuildRequest:
+    properties:
+      idempotency_key:
+        type: string
+      source_revision:
+        type: string
+    type: object
+  github_com_davidsugianto_idp-core_internal_model_build_application.UpdateBuildApplicationRequest:
+    properties:
+      builder_profile_id:
+        type: string
+      deployment_automation_enabled:
+        type: boolean
+      description:
+        type: string
+      gitops_target_id:
+        type: string
+      registry_target_id:
+        type: string
+      runtime_detection_mode:
+        type: string
+      runtime_family:
+        type: string
+      status:
+        type: string
+    type: object
   github_com_davidsugianto_idp-core_internal_model_cost.CostListResponse:
     properties:
       cost_records:
@@ -2412,6 +2631,530 @@ paths:
       summary: Get budget alerts
       tags:
       - budgets
+  /v1/build-applications:
+    get:
+      description: List build applications for the caller's team
+      parameters:
+      - description: Filter by name
+        in: query
+        name: name
+        type: string
+      - description: Filter by runtime family
+        in: query
+        name: runtime_family
+        type: string
+      - description: Filter by application status
+        in: query
+        name: status
+        type: string
+      - description: Filter by deployment automation toggle
+        in: query
+        name: deployment_automation_enabled
+        type: boolean
+      - default: 20
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List build applications
+      tags:
+      - build-applications
+    post:
+      consumes:
+      - application/json
+      description: Register a buildable application for a team using repository metadata
+        and descriptor path
+      parameters:
+      - description: Build application create request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.CreateBuildApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create build application
+      tags:
+      - build-applications
+  /v1/build-applications/{id}:
+    delete:
+      description: Soft delete a build application in team scope
+      parameters:
+      - description: Build application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete build application
+      tags:
+      - build-applications
+    get:
+      description: Get details for a build application in team scope
+      parameters:
+      - description: Build application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get build application
+      tags:
+      - build-applications
+    patch:
+      consumes:
+      - application/json
+      description: Update mutable fields on a build application in team scope
+      parameters:
+      - description: Build application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Build application update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.UpdateBuildApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildApplicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update build application
+      tags:
+      - build-applications
+  /v1/build-applications/{id}/builds:
+    get:
+      description: List build history for a build application
+      parameters:
+      - description: Build application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 20
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List build history
+      tags:
+      - build-applications
+    post:
+      consumes:
+      - application/json
+      description: Trigger an asynchronous build for a build application
+      parameters:
+      - description: Build application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Build trigger request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.TriggerBuildRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Trigger build
+      tags:
+      - build-applications
+  /v1/builds/{buildId}:
+    get:
+      description: Get details for a build in team scope
+      parameters:
+      - description: Build ID
+        in: path
+        name: buildId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get build detail
+      tags:
+      - build-applications
+  /v1/builds/{buildId}/cancel:
+    post:
+      description: Cancel an active build
+      parameters:
+      - description: Build ID
+        in: path
+        name: buildId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel build
+      tags:
+      - build-applications
+  /v1/builds/{buildId}/logs/stream:
+    get:
+      description: Stream build logs incrementally with optional cursor and page size
+      parameters:
+      - description: Build ID
+        in: path
+        name: buildId
+        required: true
+        type: string
+      - default: 0
+        description: Last seen log sequence
+        in: query
+        name: after_sequence
+        type: integer
+      - default: 200
+        description: Maximum log lines
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildLogStreamResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Stream build logs
+      tags:
+      - build-applications
+  /v1/builds/{buildId}/retry:
+    post:
+      description: Retry a failed or canceled build
+      parameters:
+      - description: Build ID
+        in: path
+        name: buildId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_davidsugianto_idp-core_internal_model_build_application.BuildActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Retry build
+      tags:
+      - build-applications
   /v1/costs:
     get:
       description: List cost records with filtering and pagination

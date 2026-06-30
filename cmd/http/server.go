@@ -18,6 +18,7 @@ import (
 	environmentMovementUC "github.com/davidsugianto/idp-core/internal/usecase/environment_movement"
 	liveUpdateUC "github.com/davidsugianto/idp-core/internal/usecase/live_update"
 	notificationUC "github.com/davidsugianto/idp-core/internal/usecase/notification"
+	buildApplicationUC "github.com/davidsugianto/idp-core/internal/usecase/build_application"
 	quotaUC "github.com/davidsugianto/idp-core/internal/usecase/quota"
 	rightsizingUC "github.com/davidsugianto/idp-core/internal/usecase/rightsizing"
 	roleUC "github.com/davidsugianto/idp-core/internal/usecase/role"
@@ -49,6 +50,7 @@ type Server struct {
 	deliveryTargetUseCase      deliveryTargetUC.Usecase
 	environmentMovementUseCase environmentMovementUC.Usecase
 	notificationUseCase        notificationUC.Usecase
+	buildApplicationUseCase    buildApplicationUC.Usecase
 	liveUpdateUseCase          liveUpdateUC.Usecase
 }
 
@@ -68,6 +70,7 @@ type Dependencies struct {
 	DeliveryTargetUseCase      deliveryTargetUC.Usecase
 	EnvironmentMovementUseCase environmentMovementUC.Usecase
 	NotificationUseCase        notificationUC.Usecase
+	BuildApplicationUseCase    buildApplicationUC.Usecase
 	LiveUpdateUseCase          liveUpdateUC.Usecase
 	Config                     *config.Config
 	WebhookValidator           *webhook.Validator
@@ -89,6 +92,7 @@ func New(deps Dependencies) *Server {
 		deliveryTargetUseCase:      deps.DeliveryTargetUseCase,
 		environmentMovementUseCase: deps.EnvironmentMovementUseCase,
 		notificationUseCase:        deps.NotificationUseCase,
+		buildApplicationUseCase:    deps.BuildApplicationUseCase,
 		liveUpdateUseCase:          deps.LiveUpdateUseCase,
 		handler: httpHandler.New(httpHandler.Dependencies{
 			EnvironmentUseCase:         deps.EnvironmentUseCase,
@@ -106,6 +110,7 @@ func New(deps Dependencies) *Server {
 			ServiceUseCase:             deps.ServiceUseCase,
 			TemplateUseCase:            deps.TemplateUseCase,
 			NotificationUseCase:        deps.NotificationUseCase,
+			BuildApplicationUseCase:    deps.BuildApplicationUseCase,
 			LiveUpdateUseCase:          deps.LiveUpdateUseCase,
 			AuthConfig:                 &deps.Config.Auth,
 			WebhookValidator:           deps.WebhookValidator,
@@ -259,6 +264,23 @@ func (s *Server) setupAPIRoutes(r *gin.Engine) {
 	quotas.GET("/namespace/:namespace/usage", s.handler.GetNamespaceUsage)
 	quotas.POST("/namespace/:namespace/usage/refresh", s.handler.RefreshNamespaceUsage)
 	quotas.POST("/check", s.handler.CheckQuota)
+
+	buildApps := v1.Group("/build-applications")
+	buildApps.Use(middleware.JWT(&s.config.Auth))
+	buildApps.GET("", s.handler.ListBuildApplications)
+	buildApps.POST("", s.handler.CreateBuildApplication)
+	buildApps.GET("/:id", s.handler.GetBuildApplication)
+	buildApps.PATCH("/:id", s.handler.UpdateBuildApplication)
+	buildApps.DELETE("/:id", s.handler.DeleteBuildApplication)
+	buildApps.POST("/:id/builds", s.handler.TriggerBuild)
+	buildApps.GET("/:id/builds", s.handler.ListBuilds)
+
+	builds := v1.Group("/builds")
+	builds.Use(middleware.JWT(&s.config.Auth))
+	builds.GET("/:buildId", s.handler.GetBuild)
+	builds.POST("/:buildId/retry", s.handler.RetryBuild)
+	builds.POST("/:buildId/cancel", s.handler.CancelBuild)
+	builds.GET("/:buildId/logs/stream", s.handler.StreamBuildLogs)
 
 	// Service routes (protected with JWT)
 	services := v1.Group("/services")
